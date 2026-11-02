@@ -1,13 +1,13 @@
 {
   "app": "Office Vehicle Manager",
   "web": {
-    "version": 30,
-    "notes": "Reports button at the bottom",
+    "version": 31,
+    "notes": "Green Dispatch button",
     "files": [
       {
         "name": "index.html",
-        "sha256": "9d63a986dcb675fe3fef2968275b7d6350f845aa3bb02d38bd665336cc38415f",
-        "size": 262394
+        "sha256": "a238c9f517ceeaf33228660a50cb31e31cb599a63f363eea1e3e28330b28516b",
+        "size": 262395
       },
       {
         "name": "art.js",
