@@ -1,13 +1,13 @@
 {
   "app": "Office Vehicle Manager",
   "web": {
-    "version": 14,
-    "notes": "First version with automatic updates.",
+    "version": 15,
+    "notes": "Log in with a code sent to your email.",
     "files": [
       {
         "name": "index.html",
-        "sha256": "06a971bd79a64fe1900660de4b41a9b7b38cf502f7ddded97b5dfba4c2863c57",
-        "size": 175891
+        "sha256": "6ec7e20deb31d22250b11bfc4aeba077094f87ad854585789e0da7d6c5a93d30",
+        "size": 180992
       },
       {
         "name": "art.js",
@@ -35,13 +35,13 @@
         "size": 13069
       }
     ],
-    "minNative": 14
+    "minNative": 15
   },
   "apk": {
-    "versionCode": 14,
-    "versionName": "2.3",
-    "notes": "Adds automatic app updates.",
+    "versionCode": 15,
+    "versionName": "2.4",
+    "notes": "Log in with an email code. Admin adds staff emails; no manual approval.",
     "file": "apk/OfficeVehicleManager.apk",
-    "sha256": "0b1efd2644d57fe5d548707cde68888679ecf89446cd0087ab0535643b043727"
+    "sha256": "1dcf5f328022b70af04f553eac9ab9aa13b95f0cfa0f8df6916841e8d99381a5"
   }
 }
