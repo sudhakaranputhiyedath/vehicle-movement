@@ -897,6 +897,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <div class="field" id="lNameWrap" hidden><label for="lName">Your name</label><input id="lName" autocomplete="name" maxlength="60"></div>
     <div class="field" id="lEmailWrap"><label for="lEmail">Email</label><input id="lEmail" type="email" autocomplete="username" inputmode="email" autocapitalize="off"></div>
     <div class="field" id="lPassWrap"><label for="lPass">Password</label><input id="lPass" type="password" autocomplete="current-password"></div>
+    <div class="field" id="lCodeWrap" hidden><label for="lCode">Code from the email</label><input id="lCode" inputmode="numeric" autocomplete="one-time-code" maxlength="10" style="font-family:var(--f-num);font-size:22px;letter-spacing:.3em;text-align:center"></div>
     <div class="field" id="lPass2Wrap" hidden><label for="lPass2">Confirm password</label><input id="lPass2" type="password" autocomplete="new-password"></div>
     <label class="check" for="lShow" id="lShowWrap" style="background:none;padding:0"><input type="checkbox" id="lShow"><span>Show password</span></label>
     <div class="err" id="lErr"></div>
@@ -904,6 +905,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <div class="actions" style="justify-content:space-between">
       <button class="linkbtn" type="button" id="lForgot">Forgot password?</button>
       <button class="linkbtn" type="button" id="lSwitch">Create account</button>
+    </div>
+    <div class="actions" style="justify-content:center">
+      <button class="linkbtn" type="button" id="lOtp">Log in with an email code instead</button>
+      <button class="linkbtn" type="button" id="lResend" hidden>Resend code</button>
     </div>
   </form>
 </div>
@@ -1701,17 +1706,61 @@ svg.leaflet-image-layer.leaflet-interactive path {
   // Login modes: "login", "signup", "forgot"
   function setMode(m) {
     authMode = m;
-    $("#lNameWrap").hidden = $("#lPass2Wrap").hidden = m !== "signup";
-    $("#lPassWrap").hidden = $("#lShowWrap").hidden = m === "forgot";
+    $("#lNameWrap").hidden = m !== "signup";
+    $("#lPass2Wrap").hidden = m !== "signup";
+    $("#lPassWrap").hidden = $("#lShowWrap").hidden = m === "forgot" || m === "otp" || m === "code";
+    $("#lEmailWrap").hidden = m === "code";
+    $("#lCodeWrap").hidden = m !== "code";
     $("#lForgot").hidden = m !== "login";
+    $("#lOtp").hidden = m !== "login";
+    $("#lResend").hidden = m !== "code";
     $("#lSwitch").textContent = m === "login" ? "Create account" : "Back to log in";
-    $("#lBtn").textContent = m === "signup" ? "Create account" : m === "forgot" ? "Ask admin to reset" : "Log in";
+    $("#lBtn").textContent = m === "signup" ? "Create account" : m === "forgot" ? "Ask admin to reset" : m === "otp" ? "Send code" : m === "code" ? "Verify" : "Log in";
     $("#lHint").textContent = m === "signup" ? "Create your account. Your office admin approves it before you can use the app."
       : m === "forgot" ? "Enter your email. Your office admin will set a temporary password and send it to you."
-      : "Log in with your email and password.";
+      : m === "otp" ? "Enter your email. We'll send you a login code."
+      : m === "code" ? "" : "Log in with your email and password.";
     $("#lPass").autocomplete = m === "signup" ? "new-password" : "current-password";
     $("#lErr").textContent = "";
-    setTimeout(() => (m === "signup" ? $("#lName") : $("#lEmail").value && m === "login" ? $("#lPass") : $("#lEmail")).focus(), 50);
+    setTimeout(() => (m === "signup" ? $("#lName") : m === "code" ? $("#lCode") : $("#lEmail").value && m === "login" ? $("#lPass") : $("#lEmail")).focus(), 50);
+  }
+  $("#lOtp").addEventListener("click", () => { $("#lInfo").hidden = true; setMode("otp"); });
+  // ---- email code login (needs the Supabase email template to include {{ .Token }} and working email delivery) ----
+  let pendingEmail = "", resendAt = 0, resendTimer = null;
+  function tickResend() {
+    clearInterval(resendTimer);
+    const upd = () => { const left = Math.ceil((resendAt - Date.now()) / 1000); $("#lResend").disabled = left > 0; $("#lResend").textContent = left > 0 ? `Resend code in ${left}s` : "Resend code"; if (left <= 0) clearInterval(resendTimer); };
+    upd(); resendTimer = setInterval(upd, 500);
+  }
+  $("#lResend").addEventListener("click", () => { if (Date.now() >= resendAt) sendCode(pendingEmail, true); });
+  async function sendCode(email, resend) {
+    const btn = $("#lBtn"); btn.disabled = true; if (!resend) btn.textContent = "Sending…"; $("#lErr").textContent = "";
+    const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false } }).catch(err => ({ error: err }));
+    btn.disabled = false; if (!resend) btn.textContent = "Send code";
+    if (error) {
+      const m = String(error.message || "");
+      $("#lErr").textContent = /signups? not allowed|not found|user.*not/i.test(m) ? "No account with this email. Tap Create account first."
+        : /sending|smtp|email.*(error|failed)|not authorized/i.test(m) ? "The code email couldn't be sent. Log in with your password, or ask your admin to check the email settings."
+        : authErr(m);
+      return;
+    }
+    LS.set("ovm_email", email); pendingEmail = email;
+    resendAt = Date.now() + 60000; tickResend();
+    setMode("code");
+    info(`We sent a code to <b>${esc(email)}</b>. It can take a minute; check Spam too. No email? Go back and log in with your password.`);
+    if (resend) toast("New code sent");
+  }
+  async function verifyCode(code) {
+    const btn = $("#lBtn"); btn.disabled = true; btn.textContent = "Checking…"; $("#lErr").textContent = "";
+    const r = await sb.auth.verifyOtp({ email: pendingEmail, token: code, type: "email" }).catch(err => ({ error: err }));
+    btn.disabled = false; btn.textContent = "Verify";
+    if (r.error || !r.data || !r.data.session) {
+      const m = String((r.error && r.error.message) || "");
+      $("#lErr").textContent = /expired|invalid/i.test(m) ? "That code is wrong or has expired. Check the latest email or tap Resend code." : authErr(m);
+      return;
+    }
+    $("#lCode").value = ""; $("#lInfo").hidden = true;
+    signedIn(r.data.session);
   }
   $("#lSwitch").addEventListener("click", () => { $("#lInfo").hidden = true; setMode(authMode === "login" ? "signup" : "login"); });
   $("#lForgot").addEventListener("click", () => { $("#lInfo").hidden = true; setMode("forgot"); });
@@ -1902,7 +1951,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     $("#login").hidden = false;
     if (!$("#lEmail").value) $("#lEmail").value = LS.get("ovm_email") || "";
     $("#lErr").textContent = msg || "";
-    setMode(authMode === "signup" || authMode === "forgot" ? authMode : "login");
+    setMode(["signup", "forgot", "otp", "code"].includes(authMode) ? authMode : "login");
   }
   function signedIn(session) {
     me = session.user;
@@ -1936,6 +1985,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
   $("#loginForm").addEventListener("submit", async e => {
     e.preventDefault();
     if (!sb) { $("#lErr").textContent = "The app couldn't start. Close and reopen it."; return; }
+    if (authMode === "code") {
+      const code = $("#lCode").value.replace(/\D/g, "");
+      if (code.length < 6) { $("#lErr").textContent = "Enter the code from the email."; return; }
+      return verifyCode(code);
+    }
+    if (authMode === "otp") {
+      const em = $("#lEmail").value.trim().toLowerCase();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { $("#lErr").textContent = "Enter a valid email address."; return; }
+      return sendCode(em, false);
+    }
     const email = $("#lEmail").value.trim().toLowerCase(), password = $("#lPass").value;
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { $("#lErr").textContent = "Enter a valid email address."; return; }
     const btn = $("#lBtn"), label = btn.textContent; $("#lErr").textContent = "";

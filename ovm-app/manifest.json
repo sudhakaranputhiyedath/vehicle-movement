@@ -1,13 +1,13 @@
 {
   "app": "Office Vehicle Manager",
   "web": {
-    "version": 16,
-    "notes": "Back to email and password login, with Create account and Forgot password.",
+    "version": 17,
+    "notes": "New: log in with a code sent to your email (password login still works).",
     "files": [
       {
         "name": "index.html",
-        "sha256": "ee4dd04820c43cddaf128514ec593c892a453c8c608e33da0f6822db2aa1049b",
-        "size": 187073
+        "sha256": "0774fa9daf4e1b9c17d816028d280fe6b851abe69c3f21aedeca5b1418301dce",
+        "size": 190994
       },
       {
         "name": "art.js",
