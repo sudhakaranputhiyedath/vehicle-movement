@@ -2256,7 +2256,7 @@ body.signed-out { background: var(--page) fixed; }
   const WX = { 0: ["Clear sky", "☀️"], 1: ["Mostly clear", "🌤️"], 2: ["Partly cloudy", "⛅"], 3: ["Cloudy", "☁️"], 45: ["Fog", "🌫️"], 48: ["Fog", "🌫️"],
     51: ["Light drizzle", "🌦️"], 53: ["Drizzle", "🌦️"], 55: ["Drizzle", "🌦️"], 61: ["Light rain", "🌧️"], 63: ["Rain", "🌧️"], 65: ["Heavy rain", "🌧️"],
     80: ["Showers", "🌦️"], 81: ["Showers", "🌧️"], 82: ["Heavy showers", "⛈️"], 95: ["Thunderstorm", "⛈️"], 96: ["Thunderstorm", "⛈️"], 99: ["Thunderstorm", "⛈️"] };
-  let wx = null, slideIdx = 0, slideTimer = null, slideTouch = 0;
+  let wx = null, slideIdx = 0, slideTimer = null, slideTouch = 0, slideAnim = false;
   try { wx = JSON.parse(localStorage.getItem("ovm_wx") || "null"); } catch {}
   function wxAdvice(w) {
     const c = w.code, t = w.max;
@@ -2294,18 +2294,28 @@ body.signed-out { background: var(--page) fixed; }
   function showSlide(i, smooth) {
     const box = $("#slides"); if (!box || !box.children.length) return;
     slideIdx = (i + box.children.length) % box.children.length;
-    box.scrollTo({ left: box.children[slideIdx].offsetLeft - box.offsetLeft, behavior: smooth ? "smooth" : "auto" });
+    // Animate scrollLeft ourselves (snap off during the move): smooth scrollTo + scroll-snap can stall in some Android WebViews
+    const from = box.scrollLeft, to = slideIdx * (box.clientWidth + 10);
+    if (!smooth || Math.abs(to - from) < 2) { box.scrollLeft = to; }
+    else {
+      slideAnim = true; box.style.scrollSnapType = "none"; const t0 = performance.now(), dur = 550;
+      const step = now => { const k = Math.min(1, (now - t0) / dur), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+        box.scrollLeft = from + (to - from) * e;
+        if (k < 1) requestAnimationFrame(step); else { box.scrollLeft = to; box.style.scrollSnapType = ""; slideAnim = false; } };
+      requestAnimationFrame(step);
+    }
     document.querySelectorAll("#slideDots i").forEach((d, k) => d.classList.toggle("on", k === slideIdx));
   }
   $("#slides").addEventListener("scroll", () => {
+    if (slideAnim) return;
     const box = $("#slides"); const i = Math.round(box.scrollLeft / Math.max(1, box.clientWidth + 10));
     if (i !== slideIdx) { slideIdx = i; document.querySelectorAll("#slideDots i").forEach((d, k) => d.classList.toggle("on", k === slideIdx)); }
   }, { passive: true });
   $("#slides").addEventListener("touchstart", () => { slideTouch = Date.now(); }, { passive: true });
   slideTimer = setInterval(() => {
-    if (document.visibilityState !== "visible" || $("#v-dashboard").hidden || Date.now() - slideTouch < 10000) return;
+    if (document.visibilityState !== "visible" || $("#v-dashboard").hidden || Date.now() - slideTouch < 8000 || slideAnim) return;
     showSlide(slideIdx + 1, true);
-  }, 7000);
+  }, 5000);
   async function loadWeather() {
     if (wx && Date.now() - (wx.at || 0) < 30 * 60000) return;
     try {

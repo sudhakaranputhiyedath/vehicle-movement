@@ -1,13 +1,13 @@
 {
   "app": "Office Vehicle Manager",
   "web": {
-    "version": 34,
-    "notes": "Muscat weather and driving tips on the home page",
+    "version": 35,
+    "notes": "Slides change automatically",
     "files": [
       {
         "name": "index.html",
-        "sha256": "d27ff1be1911c69f0a98e24ad595832709c8bb01bf1503f15bcb1016558e0c0a",
-        "size": 275947
+        "sha256": "e522a0890d769dfe7b184c1c16a1dd0ea647ccbd9c437552e08f72cb25c06ce5",
+        "size": 276617
       },
       {
         "name": "art.js",
