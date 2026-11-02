@@ -206,6 +206,7 @@ button.kpi:active, .trip[data-open-trip]:active { transform: scale(.985); }
 .update-bar .ub-txt { flex: 1; min-width: 160px; }
 .update-bar .ub-txt b { display: block; }
 .update-bar .ub-txt span { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+a.btn { text-decoration: none; }
 #map { height: 52vh; min-height: 280px; border-radius: var(--r); border: 1px solid var(--line); background: var(--bg); z-index: 0; }
 .gps-row { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
 .linkbtn { background: none; border: 0; padding: 0; color: var(--accent); font-weight: 600; cursor: pointer; text-decoration: underline; font-size: 13px; }
@@ -891,19 +892,18 @@ svg.leaflet-image-layer.leaflet-interactive path {
   <form class="login-card" id="loginForm" novalidate>
     <div class="login-hero" id="loginHero"></div>
     <h1>Office Vehicle Manager</h1>
-    <p class="hint" style="margin:0" id="lHint">Enter your email. We'll send you a login code.</p>
+    <p class="hint" style="margin:0" id="lHint">Log in with your email and password.</p>
     <div class="info" id="lInfo" hidden></div>
-    <div class="field" id="lNameWrap"><label for="lName">Your name <span style="text-transform:none;letter-spacing:0;font-weight:500">(first time only)</span></label><input id="lName" autocomplete="name" maxlength="60"></div>
+    <div class="field" id="lNameWrap" hidden><label for="lName">Your name</label><input id="lName" autocomplete="name" maxlength="60"></div>
     <div class="field" id="lEmailWrap"><label for="lEmail">Email</label><input id="lEmail" type="email" autocomplete="username" inputmode="email" autocapitalize="off"></div>
-    <div class="field" id="lCodeWrap" hidden><label for="lCode">Code from the email</label><input id="lCode" inputmode="numeric" autocomplete="one-time-code" maxlength="10" style="font-family:var(--f-num);font-size:22px;letter-spacing:.3em;text-align:center"></div>
-    <div class="field" id="lPassWrap" hidden><label for="lPass">Password</label><input id="lPass" type="password" autocomplete="current-password"></div>
-    <label class="check" for="lShow" id="lShowWrap" style="background:none;padding:0" hidden><input type="checkbox" id="lShow"><span>Show password</span></label>
+    <div class="field" id="lPassWrap"><label for="lPass">Password</label><input id="lPass" type="password" autocomplete="current-password"></div>
+    <div class="field" id="lPass2Wrap" hidden><label for="lPass2">Confirm password</label><input id="lPass2" type="password" autocomplete="new-password"></div>
+    <label class="check" for="lShow" id="lShowWrap" style="background:none;padding:0"><input type="checkbox" id="lShow"><span>Show password</span></label>
     <div class="err" id="lErr"></div>
-    <button class="btn" type="submit" id="lBtn">Send code</button>
-    <div class="actions" style="justify-content:center">
-      <button class="linkbtn" type="button" id="lResend" hidden>Resend code</button>
-      <button class="linkbtn" type="button" id="lBack" hidden>Use another email</button>
-      <button class="linkbtn" type="button" id="lAlt">Log in with password instead</button>
+    <button class="btn" type="submit" id="lBtn">Log in</button>
+    <div class="actions" style="justify-content:space-between">
+      <button class="linkbtn" type="button" id="lForgot">Forgot password?</button>
+      <button class="linkbtn" type="button" id="lSwitch">Create account</button>
     </div>
   </form>
 </div>
@@ -951,16 +951,19 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <section id="v-team" data-view hidden>
     <div class="head"><h2>Team</h2><a class="btn ghost small" href="#dashboard">Done</a></div>
-    <p class="hint" style="margin-top:0">Add your staff's emails here. When they log in with the code we email them, the app opens straight away. Nobody else can get in.</p>
-    <h3>Allowed emails</h3>
+    <p class="hint" style="margin-top:0">New accounts wait here until you approve them. Password reset requests also come here.</p>
+    <h3>Password reset requests</h3>
+    <div class="list" id="resetList"></div>
+    <h3>Waiting for approval</h3>
+    <div class="list" id="teamPending"></div>
+    <h3>Pre-approved emails</h3>
+    <p class="hint" style="margin:0 0 8px">Optional. Accounts created with these emails are approved automatically.</p>
     <form id="allowForm" class="filters" novalidate>
       <input class="search" id="allowEmail" type="email" inputmode="email" autocapitalize="off" placeholder="staff@company.com" maxlength="120">
       <input class="search" id="allowName" placeholder="Name (optional)" maxlength="60">
       <button class="btn" type="submit">Add</button>
     </form>
     <div class="list" id="allowList"></div>
-    <h3>Waiting for approval</h3>
-    <div class="list" id="teamPending"></div>
     <h3>Members</h3>
     <div class="list" id="teamMembers"></div>
   </section>
@@ -1690,75 +1693,38 @@ svg.leaflet-image-layer.leaflet-interactive path {
   }
 
   /* ---------- login / logout ---------- */
-  let sb = null, me = null, booted = false, loggingOut = false, member = null, authMode = "email", waitTimer = null, teamRows = [];
+  let sb = null, me = null, booted = false, loggingOut = false, member = null, authMode = "login", waitTimer = null, teamRows = [];
   const myName = () => (member && member.name) || (me && me.email) || "";
   const LS = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
   const initials = e => String(e || "?").split("@")[0].split(/[._-]+/).filter(Boolean).slice(0, 2).map(x => x[0]).join("").toUpperCase() || "?";
 
-  // Login modes: "email" (send code), "code" (enter code), "password"
-  let resendAt = 0, resendTimer = null;
+  // Login modes: "login", "signup", "forgot"
   function setMode(m) {
     authMode = m;
-    $("#lNameWrap").hidden = m !== "email";
-    $("#lEmailWrap").hidden = m === "code";
-    $("#lCodeWrap").hidden = m !== "code";
-    $("#lPassWrap").hidden = $("#lShowWrap").hidden = m !== "password";
-    $("#lResend").hidden = $("#lBack").hidden = m !== "code";
-    $("#lAlt").hidden = m === "code";
-    $("#lAlt").textContent = m === "password" ? "Log in with an email code instead" : "Log in with password instead";
-    $("#lBtn").textContent = m === "code" ? "Verify" : m === "password" ? "Log in" : "Send code";
-    $("#lHint").textContent = m === "code" ? "" : m === "password" ? "Log in with your email and password." : "Enter your email. We'll send you a login code.";
+    $("#lNameWrap").hidden = $("#lPass2Wrap").hidden = m !== "signup";
+    $("#lPassWrap").hidden = $("#lShowWrap").hidden = m === "forgot";
+    $("#lForgot").hidden = m !== "login";
+    $("#lSwitch").textContent = m === "login" ? "Create account" : "Back to log in";
+    $("#lBtn").textContent = m === "signup" ? "Create account" : m === "forgot" ? "Ask admin to reset" : "Log in";
+    $("#lHint").textContent = m === "signup" ? "Create your account. Your office admin approves it before you can use the app."
+      : m === "forgot" ? "Enter your email. Your office admin will set a temporary password and send it to you."
+      : "Log in with your email and password.";
+    $("#lPass").autocomplete = m === "signup" ? "new-password" : "current-password";
     $("#lErr").textContent = "";
-    if (m !== "code") $("#lInfo").hidden = true;
-    setTimeout(() => ({ email: $("#lEmail"), code: $("#lCode"), password: $("#lPass") }[m] || $("#lEmail")).focus(), 50);
+    setTimeout(() => (m === "signup" ? $("#lName") : $("#lEmail").value && m === "login" ? $("#lPass") : $("#lEmail")).focus(), 50);
   }
-  $("#lAlt").addEventListener("click", () => setMode(authMode === "password" ? "email" : "password"));
-  $("#lBack").addEventListener("click", () => setMode("email"));
-  $("#lResend").addEventListener("click", () => { if (Date.now() >= resendAt) sendCode(pendingEmail, true); });
-  function tickResend() {
-    clearInterval(resendTimer);
-    resendTimer = setInterval(() => {
-      const left = Math.ceil((resendAt - Date.now()) / 1000);
-      $("#lResend").disabled = left > 0;
-      $("#lResend").textContent = left > 0 ? `Resend code in ${left}s` : "Resend code";
-      if (left <= 0) clearInterval(resendTimer);
-    }, 500);
-  }
-  let pendingEmail = "";
-  const authErr = m => /rate|too many|seconds|security purposes/i.test(m) ? "Please wait a minute before asking for another code."
+  $("#lSwitch").addEventListener("click", () => { $("#lInfo").hidden = true; setMode(authMode === "login" ? "signup" : "login"); });
+  $("#lForgot").addEventListener("click", () => { $("#lInfo").hidden = true; setMode("forgot"); });
+  const authErr = m => /invalid login|invalid_credentials|invalid grant/i.test(m) ? "Wrong email or password."
+    : /not confirmed/i.test(m) ? "This email isn't confirmed yet. Open the confirmation email, or ask your admin to set a password for you."
+    : /already|exists|registered/i.test(m) ? "An account with this email already exists. Log in, or tap Forgot password."
+    : /sending|smtp|confirmation email/i.test(m) ? "The account couldn't be created because the confirmation email failed. Ask your admin to switch off email confirmation."
+    : /rate|too many|seconds/i.test(m) ? "Too many attempts. Wait a minute and try again."
     : /fetch|network|failed to/i.test(m) ? "No internet connection. Connect and try again."
-    : /expired|invalid.*(otp|token)|token.*(invalid|expired)/i.test(m) ? "That code is wrong or has expired. Check the latest email or tap Resend code."
-    : /invalid login|invalid_credentials|invalid grant/i.test(m) ? "Wrong email or password."
-    : /signups? not allowed|not allowed for otp/i.test(m) ? "New accounts are switched off. Ask your office admin."
-    : /sending|smtp|email.*(error|failed)|not authorized/i.test(m) ? "The code email couldn't be sent. Ask your office admin to check the email settings."
+    : /password/i.test(m) ? "Use a password with at least 6 characters."
     : (m || "Something went wrong. Try again.");
-  async function sendCode(email, resend) {
-    const name = $("#lName").value.trim();
-    const btn = $("#lBtn"); btn.disabled = true; btn.textContent = resend ? "Verify" : "Sending…"; $("#lErr").textContent = "";
-    const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true, data: name ? { name } : undefined } }).catch(err => ({ error: err }));
-    btn.disabled = false;
-    if (error) { if (!resend) btn.textContent = "Send code"; $("#lErr").textContent = authErr(String(error.message || "")); return; }
-    LS.set("ovm_email", email);
-    pendingEmail = email;
-    resendAt = Date.now() + 60000; tickResend();
-    setMode("code");
-    $("#lInfo").hidden = false;
-    $("#lInfo").innerHTML = `We sent a code to <b>${esc(email)}</b>. It can take a minute to arrive; check Spam too.`;
-    if (resend) toast("New code sent");
-  }
-  async function verifyCode(code) {
-    const btn = $("#lBtn"); btn.disabled = true; btn.textContent = "Checking…"; $("#lErr").textContent = "";
-    let r = await sb.auth.verifyOtp({ email: pendingEmail, token: code, type: "email" }).catch(err => ({ error: err }));
-    if (r.error && /invalid|expired/i.test(String(r.error.message || ""))) {
-      // a brand-new account's first code is a sign-up code
-      const r2 = await sb.auth.verifyOtp({ email: pendingEmail, token: code, type: "signup" }).catch(err => ({ error: err }));
-      if (!r2.error) r = r2;
-    }
-    btn.disabled = false; btn.textContent = "Verify";
-    if (r.error || !r.data || !r.data.session) { $("#lErr").textContent = authErr(String((r.error && r.error.message) || "")); return; }
-    $("#lCode").value = "";
-    signedIn(r.data.session);
-  }
+  const info = html => { $("#lInfo").hidden = false; $("#lInfo").innerHTML = html; };
+
   function showWaiting(title, html) {
     document.body.classList.add("signed-out");
     $("#login").hidden = true; $("#waiting").hidden = false;
@@ -1797,10 +1763,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
   }
   function renderTeam() {
     const pend = teamRows.filter(r => r.status === "pending"), rest = teamRows.filter(r => r.status !== "pending");
-    const ub = $("#userBtn"); if (pend.length) ub.dataset.badge = pend.length; else delete ub.dataset.badge;
+    const nBadge = pend.length + resetRows.length;
+    const ub = $("#userBtn"); if (nBadge) ub.dataset.badge = nBadge; else delete ub.dataset.badge;
     const tn = $("#teamNotice");
-    tn.hidden = !pend.length;
-    tn.innerHTML = pend.length ? `${pend.length === 1 ? "1 person is" : pend.length + " people are"} waiting for approval. <a class="linkbtn" href="#team">Review</a>` : "";
+    tn.hidden = !nBadge;
+    tn.innerHTML = nBadge ? [pend.length ? `${pend.length === 1 ? "1 person is" : pend.length + " people are"} waiting for approval.` : "", resetRows.length ? `${resetRows.length === 1 ? "1 password reset request." : resetRows.length + " password reset requests."}` : ""].filter(Boolean).join(" ") + ` <a class="linkbtn" href="#team">Review</a>` : "";
     const nm = r => `<div class="t">${esc(r.name || r.email.split("@")[0])}</div><div class="s">${esc(r.email)}</div>`;
     $("#teamPending").innerHTML = pend.length ? pend.map(r => `<div class="row"><div class="main">${nm(r)}<div class="s">Asked ${fmt(r.created_at)}</div></div>
       <div class="actions"><button class="btn small" type="button" data-approve="${esc(r.user_id)}">Approve</button><button class="btn ghost small" type="button" data-block="${esc(r.user_id)}">Reject</button></div></div>`).join("")
@@ -1810,7 +1777,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const chips = `${r.role === "admin" ? `<span class="chip ok">Admin</span>` : ""}${r.status === "blocked" ? `<span class="chip bad">Removed</span>` : ""}${self ? `<span class="chip mute">You</span>` : ""}`;
       const btns = self ? "" : r.status === "blocked"
         ? `<button class="btn ghost small" type="button" data-approve="${esc(r.user_id)}">Restore access</button>`
-        : `<button class="btn ghost small" type="button" data-role="${esc(r.user_id)}" data-to="${r.role === "admin" ? "member" : "admin"}">${r.role === "admin" ? "Make member" : "Make admin"}</button><button class="btn danger small" type="button" data-block="${esc(r.user_id)}">Remove access</button>`;
+        : `<button class="btn ghost small" type="button" data-setpw="${esc(r.email)}">Set password</button><button class="btn ghost small" type="button" data-role="${esc(r.user_id)}" data-to="${r.role === "admin" ? "member" : "admin"}">${r.role === "admin" ? "Make member" : "Make admin"}</button><button class="btn danger small" type="button" data-block="${esc(r.user_id)}">Remove access</button>`;
       return `<div class="row" style="flex-wrap:wrap"><div class="main">${nm(r)}<div class="gps-row">${chips}</div></div><div class="actions">${btns}</div></div>`;
     }).join("") || `<div class="empty">No members yet.</div>`;
   }
@@ -1827,6 +1794,61 @@ svg.leaflet-image-layer.leaflet-interactive path {
     }
     else if (b.dataset.role) setMember(b.dataset.role, { role: b.dataset.to }, b.dataset.to === "admin" ? "Now an admin" : "Now a member");
   });
+  let resetRows = [];
+  async function loadResets() {
+    const { data, error } = await sb.from("ovm_reset_requests").select("*").order("created_at", { ascending: false });
+    if (!error) { resetRows = data || []; renderResets(); renderTeam(); }
+  }
+  function renderResets() {
+    const el = $("#resetList"); if (!el) return;
+    el.innerHTML = resetRows.length ? resetRows.map(r => {
+      const m = teamRows.find(x => x.email === r.email) || {};
+      const a = ART.avatar(m.name || r.email);
+      return `<div class="row" style="flex-wrap:wrap"><span class="avatar" style="background:${a.color}" aria-hidden="true">${esc(a.ini)}</span>
+        <div class="main"><div class="t">${esc(m.name || r.email.split("@")[0])}</div><div class="s">${esc(r.email)}</div><div class="s">Asked ${fmt(r.created_at)}</div></div>
+        <div class="actions"><button class="btn small" type="button" data-setpw="${esc(r.email)}">Set password</button><button class="btn ghost small" type="button" data-dismissreset="${esc(r.email)}">Dismiss</button></div></div>`;
+    }).join("") : `<div class="empty">No one has asked for a new password.</div>`;
+  }
+  const tempPassword = () => { const c = "abcdefghjkmnpqrstuvwxyz23456789"; let s = ""; const r = new Uint32Array(8); (window.crypto || {}).getRandomValues ? crypto.getRandomValues(r) : r.forEach((_, i) => r[i] = Math.random() * 1e9); r.forEach(v => s += c[v % c.length]); return s.slice(0, 4) + "-" + s.slice(4); };
+  function setPasswordDialog(email) {
+    const m = teamRows.find(x => x.email === email) || {};
+    open("Set temporary password",
+      `<p style="margin:0">For <b>${esc(m.name || email)}</b><br><span class="hint">${esc(email)}</span></p>
+       ${field("spPw", "Temporary password", inp("spPw", `value="${esc(tempPassword())}" autocomplete="off" style="font-family:var(--f-num);font-size:18px;letter-spacing:.05em"`))}
+       <p class="hint" style="margin:0">Send this to them. They log in with it, then change it from their account menu.</p>`,
+      `<button class="btn ghost" type="button" data-dlgclose>Cancel</button><button class="btn" value="save">Set password</button>`,
+      async () => {
+        const pw = $("#spPw").value.trim();
+        if (pw.length < 6) return err("Use at least 6 characters."), false;
+        const { data, error } = await sb.functions.invoke("ovm-admin-set-password", { body: { email, password: pw } }).catch(e => ({ error: e }));
+        if (error || !data || !data.ok) {
+          let code = (data && data.error) || "";
+          try { if (!code && error && error.context && error.context.json) code = (await error.context.json()).error; } catch {}
+          err(code === "not_admin" ? "Only an admin can do this." : code === "not_a_member" ? "This email has no account yet." : code === "use_change_password" ? "For your own account use Change password." : "Couldn't set the password. Check the connection and try again.");
+          return false;
+        }
+        setTimeout(() => passwordSetDialog(email, m.name, pw), 50);
+        loadResets();
+        return true;
+      });
+  }
+  function passwordSetDialog(email, name, pw) {
+    const msg = `Hi ${name || ""}, your Office Vehicle Manager login:\nEmail: ${email}\nTemporary password: ${pw}\nPlease change it after you log in (tap your initials at the top, then Change password).`;
+    open("Password set",
+      `<p style="margin:0">Send these details to <b>${esc(name || email)}</b>:</p>
+       <div class="big-stat"><span>Email</span><b style="font-size:16px;font-family:var(--f-ui)">${esc(email)}</b><span style="margin-top:8px">Temporary password</span><b style="font-size:24px" id="pwShow">${esc(pw)}</b></div>`,
+      `<button class="btn ghost" type="button" id="pwCopy">Copy</button><a class="btn" href="https://wa.me/?text=${encodeURIComponent(msg)}">Send on WhatsApp</a><button class="btn ghost" type="button" data-dlgclose>Done</button>`, null);
+    $("#pwCopy").addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(msg); toast("Copied"); } catch { const r = document.createRange(); r.selectNodeContents($("#pwShow")); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); toast("Long-press to copy"); }
+    });
+  }
+  document.addEventListener("click", async e => {
+    if (!member || member.role !== "admin") return;
+    const sp = e.target.closest("[data-setpw]"); if (sp) { setPasswordDialog(sp.dataset.setpw); return; }
+    const dr = e.target.closest("[data-dismissreset]");
+    if (dr) { await sb.from("ovm_reset_requests").delete().eq("email", dr.dataset.dismissreset); loadResets(); }
+  });
+
   let allowRows = [];
   async function loadAllowed() {
     const { data, error } = await sb.from("ovm_allowed").select("*").order("created_at", { ascending: false });
@@ -1868,9 +1890,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   function startTeam() {
     if (!member || member.role !== "admin") return;
-    loadTeam(); loadAllowed();
+    loadTeam(); loadAllowed(); loadResets();
+    sb.channel("ovm-resets").on("postgres_changes", { event: "*", schema: "public", table: "ovm_reset_requests" }, () => loadResets()).subscribe();
     sb.channel("ovm-team").on("postgres_changes", { event: "*", schema: "public", table: "ovm_members" }, () => loadTeam()).subscribe();
-    setInterval(() => { if (document.visibilityState === "visible") loadTeam(); }, 60000);
+    setInterval(() => { if (document.visibilityState === "visible") { loadTeam(); loadResets(); } }, 60000);
   }
 
   function showLogin(msg) {
@@ -1879,7 +1902,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     $("#login").hidden = false;
     if (!$("#lEmail").value) $("#lEmail").value = LS.get("ovm_email") || "";
     $("#lErr").textContent = msg || "";
-    if (authMode !== "code") setMode(authMode === "password" ? "password" : "email");
+    setMode(authMode === "signup" || authMode === "forgot" ? authMode : "login");
   }
   function signedIn(session) {
     me = session.user;
@@ -1909,28 +1932,71 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if (!error && data) window.Android.setTrackingToken(String(data));
     } catch {}
   }
-  $("#lShow").addEventListener("change", e => { $("#lPass").type = e.target.checked ? "text" : "password"; });
+  $("#lShow").addEventListener("change", e => { $("#lPass").type = $("#lPass2").type = e.target.checked ? "text" : "password"; });
   $("#loginForm").addEventListener("submit", async e => {
     e.preventDefault();
     if (!sb) { $("#lErr").textContent = "The app couldn't start. Close and reopen it."; return; }
-    if (authMode === "code") {
-      const code = $("#lCode").value.replace(/\D/g, "");
-      if (code.length < 6) { $("#lErr").textContent = "Enter the code from the email."; return; }
-      return verifyCode(code);
-    }
-    const email = $("#lEmail").value.trim().toLowerCase();
+    const email = $("#lEmail").value.trim().toLowerCase(), password = $("#lPass").value;
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { $("#lErr").textContent = "Enter a valid email address."; return; }
-    if (authMode === "email") return sendCode(email, false);
-    const password = $("#lPass").value;
+    const btn = $("#lBtn"), label = btn.textContent; $("#lErr").textContent = "";
+    const done = () => { btn.disabled = false; btn.textContent = label; };
+
+    if (authMode === "forgot") {
+      btn.disabled = true; btn.textContent = "Sending…";
+      const { error } = await sb.rpc("ovm_request_reset", { p_email: email }).catch(err => ({ error: err }));
+      done();
+      if (error) { $("#lErr").textContent = authErr(String(error.message || "")); return; }
+      LS.set("ovm_email", email);
+      setMode("login");
+      info(`Request sent. Your office admin will set a temporary password for <b>${esc(email)}</b> and send it to you. Log in with it, then change it under your account.`);
+      return;
+    }
     if (!password) { $("#lErr").textContent = "Enter your password."; return; }
-    const btn = $("#lBtn"); btn.disabled = true; btn.textContent = "Logging in…"; $("#lErr").textContent = "";
+
+    if (authMode === "signup") {
+      const name = $("#lName").value.trim();
+      if (!name) { $("#lErr").textContent = "Enter your name."; return; }
+      if (password.length < 6) { $("#lErr").textContent = "Use a password with at least 6 characters."; return; }
+      if (password !== $("#lPass2").value) { $("#lErr").textContent = "The two passwords don't match."; return; }
+      btn.disabled = true; btn.textContent = "Creating account…";
+      const { data, error } = await sb.auth.signUp({ email, password, options: { data: { name } } }).catch(err => ({ error: err }));
+      done();
+      if (error) { $("#lErr").textContent = authErr(String(error.message || "")); return; }
+      LS.set("ovm_email", email);
+      $("#lPass2").value = "";
+      if (data && data.session) { $("#lPass").value = ""; signedIn(data.session); return; }
+      if (data && data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+        $("#lErr").textContent = "An account with this email already exists. Log in, or tap Forgot password."; return;
+      }
+      setMode("login");
+      info(`Account created. We sent a confirmation link to <b>${esc(email)}</b>. Open it, then log in here.`);
+      return;
+    }
+
+    btn.disabled = true; btn.textContent = "Logging in…";
     const { data, error } = await sb.auth.signInWithPassword({ email, password }).catch(err => ({ error: err }));
-    btn.disabled = false; btn.textContent = "Log in";
+    done();
     if (error || !data || !data.session) { $("#lErr").textContent = authErr(String((error && error.message) || "")); return; }
     LS.set("ovm_email", email);
     $("#lPass").value = "";
     signedIn(data.session);
   });
+
+  function changePasswordDialog() {
+    open("Change password",
+      `${field("cpNew", "New password", inp("cpNew", `type="password" autocomplete="new-password" minlength="6"`))}
+       ${field("cpNew2", "Confirm new password", inp("cpNew2", `type="password" autocomplete="new-password"`))}`,
+      `<button class="btn ghost" type="button" data-dlgclose>Cancel</button><button class="btn" value="save">Save password</button>`,
+      async () => {
+        const a = $("#cpNew").value, b = $("#cpNew2").value;
+        if (a.length < 6) return err("Use at least 6 characters."), false;
+        if (a !== b) return err("The two passwords don't match."), false;
+        const { error } = await sb.auth.updateUser({ password: a }).catch(e => ({ error: e }));
+        if (error) { err(/different|same/i.test(String(error.message)) ? "Choose a password different from the old one." : authErr(String(error.message || ""))); return false; }
+        toast("Password changed");
+        return true;
+      });
+  }
 
   /* ---------- app updates (native shell checks GitHub) ---------- */
   let upd = null, apkState = "";
@@ -1938,7 +2004,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
   function renderUpdateBar() {
     const bar = $("#updateBar"); if (!bar) return;
     const ic = `<span class="ub-ic"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></span>`;
-    if (upd && upd.apk) {
+    if (upd && upd.web && upd.web.ready) {
+      bar.innerHTML = `${ic}<div class="ub-txt"><b>Update available</b><span>${esc(upd.web.notes || "Improvements to the app.")}</span></div><button class="btn small" type="button" id="ubWeb">Update now</button>`;
+      bar.hidden = false;
+    } else if (upd && upd.apk) {
       const busy = apkState === "apk-downloading";
       bar.innerHTML = `${ic}<div class="ub-txt"><b>New app version ${esc(upd.apk.versionName || "")} available</b><span>${esc(upd.apk.notes || "Download it and tap Install.")}${apkState === "apk-failed" ? " · Download failed, try again." : ""}</span></div>
         <button class="btn small" type="button" id="ubApk" ${busy ? "disabled" : ""}>${busy ? "Downloading…" : apkState === "apk-ready" ? "Install again" : "Download & install"}</button>`;
@@ -1966,14 +2035,15 @@ svg.leaflet-image-layer.leaflet-interactive path {
   function accountDialog() {
     if (!me) return;
     const tracking = gps.tracking();
-    const pend = teamRows.filter(r => r.status === "pending").length;
-    const team = member && member.role === "admin" ? `<a class="btn ghost" href="#team" id="goTeam">Manage team${pend ? ` · ${pend} waiting` : ""}</a>` : "";
+    const pend = teamRows.filter(r => r.status === "pending").length + resetRows.length;
+    const team = member && member.role === "admin" ? `<a class="btn ghost" href="#team" id="goTeam">Manage team${pend ? ` · ${pend} to review` : ""}</a>` : "";
     const ai = window.Android && window.Android.appInfo ? appInfo() : null;
     const ver = ai ? `<div class="row" style="padding:10px 12px"><div class="main"><div class="t">App version ${esc(ai.versionName)}</div><div class="s">Update ${esc(String(ai.web))}</div></div><button class="btn ghost small" type="button" id="checkUpd">Check for updates</button></div>` : "";
-    open("Account", `<p style="margin:0">Logged in as<br><b>${esc(myName())}</b><br><span class="hint">${esc(me.email)}${member && member.role === "admin" ? " · Admin" : ""}</span></p>${team}${ver}${tracking ? `<p class="hint" style="margin:0">Live tracking is running on this phone. Logging out stops it.</p>` : ""}`,
+    open("Account", `<p style="margin:0">Logged in as<br><b>${esc(myName())}</b><br><span class="hint">${esc(me.email)}${member && member.role === "admin" ? " · Admin" : ""}</span></p>${team}<button class="btn ghost" type="button" id="goChangePw">Change password</button>${ver}${tracking ? `<p class="hint" style="margin:0">Live tracking is running on this phone. Logging out stops it.</p>` : ""}`,
       `<button class="btn ghost" type="button" data-dlgclose>Cancel</button><button class="btn danger" value="save">Log out</button>`,
       async () => { await doLogout(); return true; });
     const g = $("#goTeam"); if (g) g.addEventListener("click", () => dlg.close());
+    $("#goChangePw").addEventListener("click", () => { dlg.close(); setTimeout(changePasswordDialog, 50); });
   }
   $("#userBtn").addEventListener("click", accountDialog);
 

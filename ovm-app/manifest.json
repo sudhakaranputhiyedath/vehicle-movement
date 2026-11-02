@@ -1,13 +1,13 @@
 {
   "app": "Office Vehicle Manager",
   "web": {
-    "version": 15,
-    "notes": "Log in with a code sent to your email.",
+    "version": 16,
+    "notes": "Back to email and password login, with Create account and Forgot password.",
     "files": [
       {
         "name": "index.html",
-        "sha256": "6ec7e20deb31d22250b11bfc4aeba077094f87ad854585789e0da7d6c5a93d30",
-        "size": 180992
+        "sha256": "ee4dd04820c43cddaf128514ec593c892a453c8c608e33da0f6822db2aa1049b",
+        "size": 187073
       },
       {
         "name": "art.js",
@@ -38,10 +38,10 @@
     "minNative": 15
   },
   "apk": {
-    "versionCode": 15,
-    "versionName": "2.4",
-    "notes": "Log in with an email code. Admin adds staff emails; no manual approval.",
+    "versionCode": 16,
+    "versionName": "2.5",
+    "notes": "Email and password login, Create account, Forgot password.",
     "file": "apk/OfficeVehicleManager.apk",
-    "sha256": "1dcf5f328022b70af04f553eac9ab9aa13b95f0cfa0f8df6916841e8d99381a5"
+    "sha256": "ed29497efdf90d75d5008d967e5b7f2f829c4a5213e2cde284fefc6a632dfd69"
   }
 }
