@@ -1001,6 +1001,18 @@ svg.leaflet-image-layer.leaflet-interactive path {
 #v-dashboard .slide .em { font-size: 38px; }
 #v-dashboard .slide.wx .temp { font-size: 28px; }
 .slide-dots { margin-top: 6px; } .slide-dots i { cursor: pointer; }
+
+/* Recent trips (compact) on the home page */
+.recent { display: grid; gap: 6px; }
+.rt { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; font: inherit; color: var(--ink); background: var(--surface); border: 0; border-radius: 12px; padding: 5px 10px; box-shadow: 0 2px 10px rgba(20,40,60,.07); cursor: pointer; }
+.rt:active { transform: scale(.985); }
+.rt-ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: #fff; font: 700 11.5px var(--f-display); letter-spacing: 0; flex: none; overflow: hidden; }
+.rt-ic.c0 { background: linear-gradient(135deg, #0E7C8C, #2F5FD0); } .rt-ic.c1 { background: linear-gradient(135deg, #EA580C, #FBBF24); } .rt-ic.c2 { background: linear-gradient(135deg, #7C3AED, #C084FC); }
+.rt-main { flex: 1; min-width: 0; display: grid; }
+.rt-main b, .rt-main span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rt-main b { font-size: 14px; } .rt-main span { font-size: 12px; color: var(--muted); }
+.rt-side { display: grid; justify-items: end; flex: none; }
+.rt-side b { font-family: var(--f-num); font-size: 13px; color: #15803D; } .rt-side span { font-size: 11px; color: var(--muted); }
 /* ===== Colourful theme (web 26) ===== */
 .homebtn { text-decoration: none; cursor: pointer; transition: transform .12s ease, background .15s; }
 @media (max-width: 380px) { .brand { font-size: 17px; gap: 8px; letter-spacing: .01em; } .top-right { gap: 6px; } }
@@ -1176,6 +1188,8 @@ body.signed-out { background: var(--page) fixed; }
       <div class="slides" id="slides" aria-roledescription="carousel" aria-label="Weather and driving tips"></div>
       <div class="slide-dots" id="slideDots"></div>
     </div>
+    <div class="head" style="margin:10px 0 4px"><h3 style="margin:0">Recent trips</h3><a class="linkbtn" href="#trips">See all ›</a></div>
+    <div class="recent" id="recentTrips"></div>
   </section>
 
   <section id="v-more" data-view hidden>
@@ -1502,6 +1516,14 @@ body.signed-out { background: var(--page) fixed; }
     if (lastHello !== helloHtml) { $("#hello").innerHTML = helloHtml; lastHello = helloHtml; }
     { const tt = $("#tickerTxt"); if (tt && !tt.classList.contains("out")) { tickIdx = tickIdx % Math.max(1, helloFacts.length); const t = helloFacts[tickIdx] || ""; if (tt.textContent !== t) tt.textContent = t; } }
 
+    const recent = S.trips.filter(t => t.status !== "Out" && t.inTime).sort((a, b) => String(b.inTime).localeCompare(String(a.inTime))).slice(0, 3);
+    const recentHtml = recent.length ? recent.map((t, i) => {
+      const when = new Date(t.inTime), today = isToday(t.inTime);
+      return `<div class="rt" role="button" tabindex="0" data-open-trip="${esc(t._id)}"><span class="rt-ic c${i}">${esc(String(t.vehicleNumber || "").split(" ")[0].slice(-4))}</span>
+        <span class="rt-main"><b>${esc(t.vehicleNumber)} · ${esc(t.driverName)}</b><span>${esc(t.place || "")}${t.department ? " · " + esc(t.department) : ""}</span></span>
+        <span class="rt-side"><b>${t.totalDistance != null ? esc(Number(t.totalDistance).toLocaleString()) + " km" : "—"}</b><span>${today ? "Today " : when.toLocaleDateString([], { day: "numeric", month: "short" }) + " "}${when.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span></span></div>`;
+    }).join("") : `<div class="empty" style="padding:12px;font-size:13px">Returned trips will show here.</div>`;
+    if ($("#recentTrips").dataset.sig !== recentHtml) { $("#recentTrips").innerHTML = recentHtml; $("#recentTrips").dataset.sig = recentHtml; }
     $("#openTrips").innerHTML = open.length ? open.map(tripCard).join("")
       : `<div class="empty">${ART.empty("trips")}<span>No vehicle is out right now. Use <b>Dispatch</b> when a vehicle leaves the office.</span></div>`;
 

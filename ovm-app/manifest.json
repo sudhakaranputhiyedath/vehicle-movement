@@ -1,13 +1,13 @@
 {
   "app": "Office Vehicle Manager",
   "web": {
-    "version": 36,
-    "notes": "Home page fits on one screen",
+    "version": 37,
+    "notes": "Recent trips on the home page",
     "files": [
       {
         "name": "index.html",
-        "sha256": "688203cd88be22f5f49af95c90b3c3a840a49c44e344eaca7df5eb800fefe0db",
-        "size": 277791
+        "sha256": "a7d9bc8f36abb5999042dbf0e1d743f84042f3fa9dc392bd05f762cf9daa0284",
+        "size": 280394
       },
       {
         "name": "art.js",
