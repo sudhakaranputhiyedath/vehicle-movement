@@ -958,6 +958,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
 
 /* ===== Colourful theme (web 26) ===== */
+.homebtn { text-decoration: none; cursor: pointer; transition: transform .12s ease, background .15s; }
+@media (max-width: 380px) { .brand { font-size: 17px; gap: 8px; letter-spacing: .01em; } .top-right { gap: 6px; } }
+.homebtn:active { transform: scale(.9); background: rgba(255,255,255,.32) !important; }
+
 :root { --g-head: linear-gradient(120deg, #0D6A5B 0%, #0E7C8C 55%, #2F5FD0 100%);
   --g-btn: linear-gradient(135deg, #0D6A5B, #1497A0);
   --c1: #16A34A; --c2: #F97316; --c3: #2563EB; --c4: #9333EA; --c5: #E11D48; --c6: #0891B2; --c7: #CA8A04; --c8: #DB2777;
@@ -1060,7 +1064,7 @@ body.signed-out { background: var(--page) fixed; }
 
 
 <div class="top"><div class="top-in">
-  <div class="brand"><span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 16V11l2-5h10l2 5v5"/><path d="M3 16h18v3H3z"/><circle cx="7.5" cy="13" r=".8"/><circle cx="16.5" cy="13" r=".8"/></svg></span><span>Vehicle Manager</span></div>
+  <div class="brand"><a class="mark homebtn" href="#dashboard" id="homeBtn" aria-label="Home" title="Home"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.8V20h4.5v-5.5h4V20h4.5V9.8"/></svg></a><span>Vehicle Manager</span></div>
   <div class="top-right"><span class="sync" id="sync"><i></i><span>Connecting…</span></span><button class="userbtn" id="userBtn" type="button" aria-label="Account" hidden></button></div>
 </div></div>
 
@@ -2164,6 +2168,13 @@ body.signed-out { background: var(--page) fixed; }
     if (await write(() => db.collection("places").add({ name }), "Place added")) $("#placeName").value = "";
   });
   $("#sendMyLoc").addEventListener("click", sendMyLocation);
+  $("#homeBtn").addEventListener("click", e => {
+    e.preventDefault();
+    try { if (dlg.open) dlg.close(); } catch {}
+    if (location.hash !== "#dashboard") location.hash = "#dashboard";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
   $("#deptForm").addEventListener("submit", async e => {
     e.preventDefault(); if (!db) return;
     const name = $("#deptName").value.trim(); if (!name) return;

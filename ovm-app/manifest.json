@@ -1,13 +1,13 @@
 {
   "app": "Office Vehicle Manager",
   "web": {
-    "version": 27,
-    "notes": "Fix: saving a mobile number no longer gets stuck",
+    "version": 28,
+    "notes": "Home button at the top left",
     "files": [
       {
         "name": "index.html",
-        "sha256": "d784c78e6caa9c883bb4ede13c23e3f1a56f3867bf9749b0b0964298d685c2c6",
-        "size": 259842
+        "sha256": "dcb133396a989a2783440d3af13672b9282087f6a02247bffe819bacc8c57891",
+        "size": 260396
       },
       {
         "name": "art.js",
