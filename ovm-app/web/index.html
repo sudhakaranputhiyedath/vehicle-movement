@@ -36,10 +36,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
 .top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line);
-  padding-block: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  padding-block: 8px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 .top-in { max-width: 760px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.brand { font-family: var(--f-display); font-weight: 700; font-size: 22px; letter-spacing: .02em; text-transform: uppercase; line-height: 1.1; }
-.brand small { display: block; font-family: var(--f-ui); font-weight: 500; font-size: 12px; letter-spacing: .04em; color: var(--muted); text-transform: none; }
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; font-family: var(--f-display); font-weight: 700; font-size: 20px; letter-spacing: .03em; text-transform: uppercase; line-height: 1; white-space: nowrap; }
+.brand .mark { width: 34px; height: 34px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; flex: none; }
+.brand .mark svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.brand span { overflow: hidden; text-overflow: ellipsis; }
 .sync { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 99px; background: var(--bg); color: var(--muted); white-space: nowrap; }
 .sync i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
 .sync.live { color: var(--ok); background: var(--ok-soft); } .sync.live i { background: var(--ok); }
@@ -98,7 +100,20 @@ h3 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacin
 
 .tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--surface); border-top: 1px solid var(--line);
   padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
-.tabs-in { max-width: 760px; margin: 0 auto; display: grid; grid-template-columns: repeat(6, 1fr); }
+.tabs-in { max-width: 760px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); align-items: end; }
+.tabs .fab-slot { display: grid; justify-items: center; padding-bottom: 9px; }
+.fab { width: 58px; height: 58px; margin-top: -26px; border-radius: 50%; border: 4px solid var(--surface); background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; cursor: pointer;
+  box-shadow: 0 6px 18px rgba(13,106,91,.35); transition: transform .15s ease; }
+.fab:active { transform: scale(.92); }
+.fab svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+.fab-slot small { font-size: 11px; font-weight: 700; color: var(--accent); margin-top: 2px; }
+.more-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.more-tile { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: grid; gap: 8px; text-decoration: none; color: var(--ink); }
+.more-tile .ic { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; }
+.more-tile .ic svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.more-tile b { font-size: 16px; } .more-tile span { font-size: 13px; color: var(--muted); }
+.more-tile:active { transform: scale(.98); }
+.t-ok { background: var(--ok-soft); color: var(--ok); } .t-warn { background: var(--warn-soft); color: var(--warn); } .t-acc { background: var(--accent-soft); color: var(--accent); } .t-bad { background: var(--bad-soft); color: var(--bad); } .t-mute { background: var(--bg); color: var(--muted); }
 .tabs a { text-decoration: none; color: var(--muted); display: grid; justify-items: center; gap: 2px; padding: 8px 2px 9px; font-size: 11px; font-weight: 600; }
 .tabs a svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .tabs a[aria-current="page"] { color: var(--accent); }
@@ -117,7 +132,7 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
 .err { color: var(--bad); font-size: 14px; font-weight: 600; min-height: 1em; }
 .hint { font-size: 13px; color: var(--muted); }
 
-.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(76px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 9px 16px; border-radius: 10px; font-weight: 600; font-size: 14px; z-index: 20; max-width: calc(100vw - 32px); }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(108px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 9px 16px; border-radius: 10px; font-weight: 600; font-size: 14px; z-index: 20; max-width: calc(100vw - 32px); }
 @media (prefers-reduced-motion: no-preference) { .toast { animation: up .2s ease-out; } @keyframes up { from { opacity: 0; transform: translate(-50%, 8px); } } }
 body.signed-out .top, body.signed-out main, body.signed-out .tabs { display: none; }
 .login { min-height: 100vh; display: grid; place-items: center; padding-block: 24px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
@@ -207,6 +222,48 @@ button.kpi:active, .trip[data-open-trip]:active { transform: scale(.985); }
 .update-bar .ub-txt b { display: block; }
 .update-bar .ub-txt span { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
 a.btn { text-decoration: none; }
+@media (prefers-reduced-motion: no-preference) {
+  [data-view].enter { animation: viewIn .26s ease-out; }
+  [data-view].enter .list > *, [data-view].enter .kpis > *, [data-view].enter .more-grid > * { animation: itemIn .32s ease-out both; }
+  [data-view].enter .list > *:nth-child(2), [data-view].enter .kpis > *:nth-child(2), [data-view].enter .more-grid > *:nth-child(2) { animation-delay: .04s; }
+  [data-view].enter .list > *:nth-child(3), [data-view].enter .kpis > *:nth-child(3), [data-view].enter .more-grid > *:nth-child(3) { animation-delay: .08s; }
+  [data-view].enter .list > *:nth-child(4), [data-view].enter .kpis > *:nth-child(4), [data-view].enter .more-grid > *:nth-child(4) { animation-delay: .12s; }
+  [data-view].enter .list > *:nth-child(n+5), [data-view].enter .more-grid > *:nth-child(n+5) { animation-delay: .16s; }
+  @keyframes viewIn { from { opacity: 0; transform: translateY(6px); } }
+  @keyframes itemIn { from { opacity: 0; transform: translateY(10px); } }
+  .btn, .kpi, .row.tap, .trip, .more-tile { transition: transform .12s ease, box-shadow .12s ease; }
+  .btn:active, .row.tap:active { transform: scale(.97); }
+  .sk { position: relative; overflow: hidden; }
+  .sk::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent); transform: translateX(-100%); animation: shimmer 1.2s infinite; }
+  @keyframes shimmer { to { transform: translateX(100%); } }
+  .ptr.spin svg { animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+}
+.sk-row { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: flex; gap: 12px; align-items: center; }
+.sk-row .b { background: var(--bg); border-radius: 8px; }
+.ptr { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 58px); z-index: 7; width: 40px; height: 40px; margin-left: -20px; border-radius: 50%; background: var(--surface);
+  box-shadow: 0 4px 14px rgba(0,0,0,.18); display: grid; place-items: center; color: var(--accent); transform: translateY(-70px); opacity: 0; transition: opacity .15s; pointer-events: none; }
+.ptr svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+.chart-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; display: grid; gap: 8px; }
+.chart-card h4 { margin: 0; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.chart-card .tip { font-size: 13px; color: var(--ink); min-height: 1.2em; }
+.chart-card svg { width: 100%; height: auto; display: block; overflow: visible; }
+.chart-card svg text { fill: var(--muted); font: 500 10px var(--f-ui); }
+.chart-card svg .bar { fill: var(--accent); }
+.chart-card svg .bar.on { fill: var(--warn); }
+.chart-card svg .grid { stroke: var(--line); stroke-width: 1; }
+.chart-card svg .hit { fill: transparent; cursor: pointer; }
+.hbar { display: grid; grid-template-columns: minmax(0, 110px) 1fr auto; gap: 10px; align-items: center; font-size: 13px; }
+.hbar .lab { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hbar .track { height: 10px; border-radius: 5px; background: var(--bg); overflow: hidden; }
+.hbar .track i { display: block; height: 100%; border-radius: 5px; background: var(--accent); }
+.hbar .val { font-family: var(--f-num); font-variant-numeric: tabular-nums; font-size: 12px; min-width: 64px; text-align: right; }
+.photo-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.photo-row figure { margin: 0; display: grid; gap: 6px; }
+.photo-row figcaption { font-size: 12px; color: var(--muted); }
+.photo-row img { width: 100%; height: 140px; object-fit: cover; border-radius: 10px; cursor: zoom-in; }
+#v-reports .chart-card, #v-reports .stat-row { margin-bottom: 12px; }
+#v-fuel .stat-row { margin-bottom: 4px; }
 #map { height: 52vh; min-height: 280px; border-radius: var(--r); border: 1px solid var(--line); background: var(--bg); z-index: 0; }
 .gps-row { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
 .linkbtn { background: none; border: 0; padding: 0; color: var(--accent); font-weight: 600; cursor: pointer; text-decoration: underline; font-size: 13px; }
@@ -884,7 +941,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
 
 <div class="top"><div class="top-in">
-  <div class="brand">Office Vehicle Manager<small>Shared fleet register · all phones update live</small></div>
+  <div class="brand"><span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 16V11l2-5h10l2 5v5"/><path d="M3 16h18v3H3z"/><circle cx="7.5" cy="13" r=".8"/><circle cx="16.5" cy="13" r=".8"/></svg></span><span>Vehicle Manager</span></div>
   <div class="top-right"><span class="sync" id="sync"><i></i><span>Connecting…</span></span><button class="userbtn" id="userBtn" type="button" aria-label="Account" hidden></button></div>
 </div></div>
 
@@ -922,17 +979,30 @@ svg.leaflet-image-layer.leaflet-interactive path {
   </div>
 </div>
 
+<div class="ptr" id="ptr" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5"/></svg></div>
 <main>
   <div class="update-bar" id="updateBar" hidden></div>
   <div class="notice" id="notice" hidden></div>
 
   <section id="v-dashboard" data-view>
-    <div class="head"><h2>Dashboard</h2><button class="btn" data-act="dispatch" data-w>+ Dispatch out</button></div>
     <div class="hello" id="hello"></div>
     <div class="notice" id="teamNotice" hidden></div>
+    <div class="notice" id="svcAlert" hidden></div>
     <div class="kpis" id="kpis"></div>
     <h3>Vehicles out now</h3>
     <div class="list" id="openTrips"></div>
+  </section>
+
+  <section id="v-more" data-view hidden>
+    <div class="head"><h2>More</h2></div>
+    <div class="more-grid" id="moreGrid">
+      <a class="more-tile" href="#vehicles"><span class="ic t-acc"><svg viewBox="0 0 24 24"><path d="M5 16V11l2-5h10l2 5v5"/><path d="M3 16h18v3H3z"/></svg></span><b>Vehicles</b><span id="mVeh">Office vehicles</span></a>
+      <a class="more-tile" href="#drivers"><span class="ic t-ok"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg></span><b>Drivers</b><span id="mDrv">Driver list</span></a>
+      <a class="more-tile" href="#fuel"><span class="ic t-warn"><svg viewBox="0 0 24 24"><path d="M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16"/><path d="M3 21h13M15 9h2a2 2 0 0 1 2 2v5a1.5 1.5 0 0 0 3 0V8l-3-3"/><path d="M7 7h5v4H7z"/></svg></span><b>Fuel &amp; service</b><span id="mFuel">Fill-ups and servicing</span></a>
+      <a class="more-tile" href="#reports"><span class="ic t-bad"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><b>Reports</b><span>Charts and monthly export</span></a>
+      <a class="more-tile" href="#places"><span class="ic t-mute"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span><b>Places</b><span>Saved destinations</span></a>
+      <a class="more-tile" href="#team" id="mTeam" hidden><span class="ic t-acc"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c.8-3.5 3.6-5.5 7-5.5s6.2 2 7 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2 .7 3.4 2.4 4 5.2"/></svg></span><b>Team</b><span id="mTeamSub">Approvals and passwords</span></a>
+    </div>
   </section>
 
   <section id="v-vehicles" data-view hidden>
@@ -973,6 +1043,27 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <div class="list" id="teamMembers"></div>
   </section>
 
+  <section id="v-fuel" data-view hidden>
+    <div class="head"><h2>Fuel &amp; service</h2><div class="actions" data-w><button class="btn small" type="button" data-act="addFuel">+ Fuel</button><button class="btn ghost small" type="button" data-act="addService">+ Service</button></div></div>
+    <div class="stat-row" id="fuelStats"></div>
+    <h3>Service due</h3>
+    <div class="list" id="svcDue"></div>
+    <div class="filters" style="margin-top:18px">
+      <div class="seg" id="fsSeg"><button type="button" data-fs="fuel" aria-pressed="true">Fuel log</button><button type="button" data-fs="services" aria-pressed="false">Service log</button></div>
+      <select class="search" id="fsVeh" style="max-width:180px"><option value="">All vehicles</option></select>
+    </div>
+    <div class="list" id="fsList"></div>
+  </section>
+
+  <section id="v-reports" data-view hidden>
+    <div class="head"><h2>Reports</h2><div class="actions"><select class="search" id="repMonth" style="max-width:170px"></select><button class="btn ghost small" type="button" id="repExport">Share Excel</button></div></div>
+    <div class="stat-row" id="repStats"></div>
+    <div class="chart-card"><h4>Trips per day · last 14 days</h4><div id="chTrips"></div><div class="tip" id="chTripsTip">Tap a bar to see the day.</div></div>
+    <div class="chart-card"><h4>Km by vehicle · selected month</h4><div id="chKm" style="display:grid;gap:8px"></div></div>
+    <div class="chart-card"><h4>Trips by driver · selected month</h4><div id="chDrv" style="display:grid;gap:8px"></div></div>
+    <div class="chart-card"><h4>Fuel cost · last 6 months (OMR)</h4><div id="chFuel"></div><div class="tip" id="chFuelTip">Tap a bar to see the month.</div></div>
+  </section>
+
   <section id="v-map" data-view hidden>
     <div class="head"><h2>Live map</h2><div class="actions"><div class="seg" id="langSeg" aria-label="Map labels"><button type="button" data-lang="en" aria-pressed="true">English</button><button type="button" data-lang="local" aria-pressed="false">Arabic</button></div><button class="btn ghost small" type="button" id="fitBtn">Show all</button></div></div>
     <div class="notice" id="routeNote" hidden></div>
@@ -998,12 +1089,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
 </main>
 
 <nav class="tabs" aria-label="Sections"><div class="tabs-in">
-  <a href="#dashboard" data-tab="dashboard"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</a>
-  <a href="#vehicles" data-tab="vehicles"><svg viewBox="0 0 24 24"><path d="M5 16V11l2-5h10l2 5v5"/><path d="M3 16h18v3H3z"/><circle cx="7.5" cy="13" r=".8"/><circle cx="16.5" cy="13" r=".8"/></svg>Vehicles</a>
-  <a href="#drivers" data-tab="drivers"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg>Drivers</a>
-  <a href="#places" data-tab="places"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Places</a>
-  <a href="#map" data-tab="map"><svg viewBox="0 0 24 24"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg>Map</a>
+  <a href="#dashboard" data-tab="dashboard"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Home</a>
   <a href="#trips" data-tab="trips"><svg viewBox="0 0 24 24"><path d="M7 3h10v18H7z"/><path d="M10 7h4M10 11h4M10 15h2"/></svg>Trips</a>
+  <div class="fab-slot" data-w><button class="fab" type="button" data-act="dispatch" aria-label="Dispatch a vehicle"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button><small>Dispatch</small></div>
+  <a href="#map" data-tab="map"><svg viewBox="0 0 24 24"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg>Map</a>
+  <a href="#more" data-tab="more"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>More</a>
 </div></nav>
 
 <section class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
@@ -1026,7 +1116,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 (() => {
   const $ = s => document.querySelector(s);
   const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
-  const S = { vehicles: [], drivers: [], places: [], trips: [], positions: [] };
+  const S = { vehicles: [], drivers: [], places: [], trips: [], positions: [], fuel: [], services: [] };
 
   /* ---------- GPS (native bridge) ---------- */
   const gpsWait = {};
@@ -1084,7 +1174,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
   }
 
   /* ---------- routing ---------- */
-  const VIEWS = ["dashboard","vehicles","drivers","places","map","trips","team"];
+  const VIEWS = ["dashboard","vehicles","drivers","places","map","trips","team","more","fuel","reports"];
+  const TAB_OF = { vehicles: "more", drivers: "more", places: "more", team: "more", fuel: "more", reports: "more" };
   let lastView = null, sheetKey = null;
   function route() {
     const h = location.hash.slice(1);
@@ -1093,9 +1184,14 @@ svg.leaflet-image-layer.leaflet-interactive path {
     let v = VIEWS.includes(h) ? h : "dashboard";
     if (v === "team" && !(typeof member !== "undefined" && member && member.role === "admin")) v = "dashboard";
     document.querySelectorAll("[data-view]").forEach(s => s.hidden = s.id !== "v-" + v);
-    document.querySelectorAll("[data-tab]").forEach(a => a.dataset.tab === v ? a.setAttribute("aria-current","page") : a.removeAttribute("aria-current"));
-    if (v !== lastView) window.scrollTo(0, 0);
+    document.querySelectorAll("[data-tab]").forEach(a => a.dataset.tab === (TAB_OF[v] || v) ? a.setAttribute("aria-current","page") : a.removeAttribute("aria-current"));
+    if (v !== lastView) {
+      window.scrollTo(0, 0);
+      const sec = document.getElementById("v-" + v);
+      if (sec) { sec.classList.remove("enter"); void sec.offsetWidth; sec.classList.add("enter"); clearTimeout(sec._enterT); sec._enterT = setTimeout(() => sec.classList.remove("enter"), 700); }
+    }
     lastView = v;
+    if (v === "reports") setTimeout(renderReports, 30);
     if (v === "map") setTimeout(() => { ensureMap(); if (map) map.invalidateSize(); renderMap(); }, 60);
   }
   addEventListener("hashchange", route);
@@ -1103,8 +1199,15 @@ svg.leaflet-image-layer.leaflet-interactive path {
   function applyWrite() { document.querySelectorAll("[data-w]").forEach(el => el.hidden = !canWrite); }
 
   let lastHello = "";
+  let dataReady = false;
+  const skelRows = n => Array.from({ length: n }, () => `<div class="sk-row sk"><span class="b" style="width:52px;height:40px"></span><span style="flex:1;display:grid;gap:8px"><span class="b" style="height:14px;width:45%"></span><span class="b" style="height:11px;width:75%"></span></span></div>`).join("");
   /* ---------- render ---------- */
   function render() {
+    if (!dataReady && db) {
+      $("#kpis").innerHTML = Array.from({ length: 4 }, () => `<div class="kpi sk" style="height:76px"></div>`).join("");
+      ["#openTrips", "#vehicleList", "#driverList", "#tripList", "#placeList"].forEach(id => { const el = $(id); if (el) el.innerHTML = skelRows(3); });
+      return;
+    }
     const v = S.vehicles, open = S.trips.filter(t => t.status === "Out");
     const todays = S.trips.filter(t => isToday(t.outTime));
     const kmToday = S.trips.filter(t => t.inTime && isToday(t.inTime)).reduce((a, t) => a + (Number(t.totalDistance) || 0), 0);
@@ -1155,7 +1258,20 @@ svg.leaflet-image-layer.leaflet-interactive path {
     $("#tripList").innerHTML = trips.length ? trips.map(tripCard).join("")
       : `<div class="empty">${ART.empty("trips")}${S.trips.length ? "No trips match this filter." : "No trips recorded yet. Every dispatch is logged here."}</div>`;
     $("#exportBtn").hidden = !downloads || !S.trips.length;
+    if (dataReady) {
+      $("#mVeh").textContent = `${S.vehicles.length} ${S.vehicles.length === 1 ? "vehicle" : "vehicles"} · ${S.vehicles.filter(x => x.status === "Available").length} available`;
+      $("#mDrv").textContent = `${S.drivers.length} ${S.drivers.length === 1 ? "driver" : "drivers"}`;
+    }
     if (sheetKey) renderSheet();
+    renderFuel();
+    if (typeof renderReports === "function") renderReports();
+    if (dataReady) {
+      const dueSoon = S.vehicles.map(v => ({ v, i: svcInfo(v) })).filter(x => x.i.known && x.i.left <= 500);
+      $("#mFuel").textContent = dueSoon.length ? `${dueSoon.length} service ${dueSoon.length === 1 ? "due" : "due"}` : "Fill-ups and servicing";
+      const box = $("#svcAlert");
+      box.hidden = !dueSoon.length;
+      box.innerHTML = dueSoon.length ? `<b>Service due:</b> ${dueSoon.map(x => `${esc(x.v.vehicleNumber)} (${x.i.left < 0 ? "overdue " + km(-x.i.left) : km(x.i.left) + " left"})`).join(", ")}. <a class="linkbtn" href="#fuel">Open</a>` : "";
+    }
     renderMap();
   }
 
@@ -1227,6 +1343,22 @@ svg.leaflet-image-layer.leaflet-interactive path {
     $("#sheetBody").innerHTML = html;
   }
 
+  const photoCache = {};
+  function photoCells(t) {
+    const cell = kind => {
+      const key = t._id + "-" + kind, has = kind === "out" ? t.hasOutPhoto : t.hasInPhoto;
+      if (!has) return "";
+      const d = photoCache[key];
+      if (d === undefined) { photoCache[key] = null; db.doc("photos/" + key).get().then(r => { photoCache[key] = (r && r.data) || ""; if (sheetKey === "trip-" + t._id) renderSheet(); }).catch(() => { delete photoCache[key]; }); }
+      return `<figure><figcaption>${kind === "out" ? "When it left" : "When it came back"}</figcaption>${d ? `<img src="${esc(d)}" alt="Vehicle photo" data-bigphoto="${esc(key)}">` : `<div class="sk" style="height:120px;border-radius:10px;background:var(--bg)"></div>`}</figure>`;
+    };
+    return cell("out") + cell("in");
+  }
+  document.addEventListener("click", e => {
+    const im = e.target.closest("[data-bigphoto]"); if (!im) return;
+    open("Photo", `<img src="${esc(photoCache[im.dataset.bigphoto] || "")}" alt="Vehicle photo" style="width:100%;border-radius:12px">`, `<button class="btn" type="button" data-dlgclose>Close</button>`, null);
+  });
+
   function tripDetail(t) {
     const veh = vehOf(t), drv = S.drivers.find(d => d._id === t.driverId) || {};
     const isOut = t.status === "Out";
@@ -1250,6 +1382,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         <div class="full"><em>Purpose</em>${esc(t.purpose)}</div>
         ${t.remarks ? `<div class="full"><em>Remarks</em>${esc(t.remarks)}</div>` : ""}
       </div></div>
+      ${t.hasOutPhoto || t.hasInPhoto ? `<div class="td-card"><h4>Photos</h4><div class="photo-row" data-photos="${esc(t._id)}">${photoCells(t)}</div></div>` : ""}
       ${gpsBlock(t) ? `<div class="td-card"><h4>Location</h4>${gpsBlock(t)}</div>` : ""}
       ${isOut && canWrite ? `<button class="btn" type="button" data-markin="${esc(t._id)}" style="justify-content:center;padding:13px">Mark vehicle in</button>` : ""}`;
   }
@@ -1470,16 +1603,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
   });
   const foot = (del) => `${del ? `<button class="btn danger" type="button" data-dlgdel>Delete</button><span class="spacer"></span>` : ""}<button class="btn ghost" type="button" data-dlgclose>Cancel</button><button class="btn" value="save">Save</button>`;
 
-  async function uploadPhoto(inputId) {
+  async function uploadPhoto(inputId, maxDim = 480, quality = 0.72) {
     const f = $("#" + inputId)?.files?.[0];
     if (!f) return null;
     const url = URL.createObjectURL(f);
     try {
       const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = url; });
-      const k = Math.min(1, 480 / Math.max(img.width, img.height));
+      const k = Math.min(1, maxDim / Math.max(img.width, img.height));
       const c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
       c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-      return c.toDataURL("image/jpeg", 0.72);
+      return c.toDataURL("image/jpeg", quality);
     } finally { URL.revokeObjectURL(url); }
   }
 
@@ -1491,6 +1624,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
        <div class="two">${field("vType","Type", sel("vType", VEH_TYPES, x.vehicleType))}${field("vFuel","Fuel", sel("vFuel", FUELS, x.fuelType))}</div>
        <div class="two">${field("vOdo","Odometer (km)", inp("vOdo",`type="number" inputmode="numeric" min="0" value="${esc(x.currentOdometer ?? "")}"`))}
         ${field("vStatus","Status", x.status === "On Trip" ? `<input id="vStatus" value="On Trip" disabled>` : sel("vStatus", ["Available","Maintenance"], x.status))}</div>
+       <div class="two">${field("vSvcEvery","Service every (km)", inp("vSvcEvery",`type="number" inputmode="numeric" min="500" step="500" value="${esc(x.serviceEveryKm ?? 5000)}"`))}
+        ${field("vSvcLast","Last service at (km)", inp("vSvcLast",`type="number" inputmode="numeric" min="0" value="${esc(x.lastServiceKm ?? "")}" placeholder="optional"`))}</div>
        ${assets ? field("vPhoto","Photo (optional)", `<input id="vPhoto" type="file" accept="image/*">`) : ""}`,
       foot(editing),
       async action => {
@@ -1505,11 +1640,194 @@ svg.leaflet-image-layer.leaflet-interactive path {
         let photoId = x.photoId || null;
         try { const p = await uploadPhoto("vPhoto"); if (p) photoId = p; } catch { err("The photo couldn't be uploaded. Save without it or try a smaller image."); return false; }
         const body = { vehicleNumber: num, model, vehicleType: $("#vType").value, fuelType: $("#vFuel").value,
-          currentOdometer: Math.round(Number(odo)), status: x.status === "On Trip" ? "On Trip" : $("#vStatus").value, photoId, updatedAt: new Date().toISOString() };
+          currentOdometer: Math.round(Number(odo)), status: x.status === "On Trip" ? "On Trip" : $("#vStatus").value, photoId, updatedAt: new Date().toISOString(),
+          serviceEveryKm: Math.max(500, Math.round(Number($("#vSvcEvery").value) || 5000)),
+          lastServiceKm: $("#vSvcLast").value === "" ? (x.lastServiceKm ?? null) : Math.round(Number($("#vSvcLast").value)) };
         return editing ? write(() => db.doc("vehicles/" + x._id).update(body), "Vehicle updated")
                        : write(() => db.collection("vehicles").add({ ...body, createdAt: body.updatedAt }), "Vehicle added");
       });
   }
+
+  /* ---------- reports ---------- */
+  const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const monthKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+  function barChart(points, tipId, unit) {
+    // points: [{label, value, tip}]  single series, one hue, rounded tops, recessive grid
+    const W = 340, H = 150, L = 26, B = 22, T = 10, n = points.length || 1;
+    const max = Math.max(1, ...points.map(p => p.value));
+    const step = max <= 5 ? 1 : Math.ceil(max / 4 / 5) * 5 || 1;
+    const top = Math.ceil(max / step) * step;
+    const y = v => T + (H - T - B) * (1 - v / top);
+    const bw = (W - L) / n, w = Math.max(4, Math.min(22, bw - 6));
+    let g = "";
+    for (let t = 0; t <= top; t += step) g += `<line class="grid" x1="${L}" x2="${W}" y1="${y(t)}" y2="${y(t)}"/><text x="${L - 6}" y="${y(t) + 3}" text-anchor="end">${t}</text>`;
+    const every = Math.ceil(n / 7);
+    points.forEach((p, i) => {
+      const cx = L + bw * i + bw / 2, h = Math.max(0, y(0) - y(p.value)), r = Math.min(4, w / 2, h);
+      const x0 = cx - w / 2, y0 = y(p.value);
+      if (h > 0) g += `<path class="bar" data-i="${i}" d="M${x0},${y(0)} V${y0 + r} Q${x0},${y0} ${x0 + r},${y0} H${x0 + w - r} Q${x0 + w},${y0} ${x0 + w},${y0 + r} V${y(0)} Z"/>`;
+      if (i % every === 0 || i === n - 1) g += `<text x="${cx}" y="${H - 6}" text-anchor="middle">${esc(p.label)}</text>`;
+      g += `<rect class="hit" data-i="${i}" x="${L + bw * i}" y="${T}" width="${bw}" height="${H - T - B}"><title>${esc(p.tip)}</title></rect>`;
+    });
+    const id = "c" + Math.random().toString(36).slice(2, 7);
+    setTimeout(() => {
+      const svg = document.getElementById(id); if (!svg) return;
+      svg.addEventListener("click", e => {
+        const hit = e.target.closest("[data-i]"); if (!hit) return;
+        const i = Number(hit.dataset.i);
+        svg.querySelectorAll(".bar").forEach(b => b.classList.toggle("on", Number(b.dataset.i) === i));
+        const tip = document.getElementById(tipId); if (tip) tip.textContent = points[i].tip;
+      });
+    });
+    return `<svg id="${id}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Bar chart">${g}</svg>`;
+  }
+  function hbars(rows, fmtVal) {
+    if (!rows.length) return `<div class="hint">Nothing in this month yet.</div>`;
+    const max = Math.max(1, ...rows.map(r => r.value));
+    return rows.map(r => `<div class="hbar"><span class="lab">${esc(r.label)}</span><span class="track"><i style="width:${Math.max(2, Math.round(r.value / max * 100))}%"></i></span><span class="val">${fmtVal(r.value)}</span></div>`).join("");
+  }
+  let repMonthSel = "";
+  function renderReports() {
+    const sel = $("#repMonth"); if (!sel || $("#v-reports").hidden) return;
+    const now = new Date();
+    const months = Array.from({ length: 12 }, (_, i) => { const d = new Date(now.getFullYear(), now.getMonth() - i, 1); return { k: monthKey(d), t: MONTHS[d.getMonth()] + " " + d.getFullYear() }; });
+    if (!repMonthSel) repMonthSel = months[0].k;
+    sel.innerHTML = months.map(m => `<option value="${m.k}" ${m.k === repMonthSel ? "selected" : ""}>${m.t}</option>`).join("");
+    const inMonth = iso => iso && monthKey(new Date(iso)) === repMonthSel;
+    const trips = S.trips.filter(t => inMonth(t.outTime));
+    const kmTotal = trips.reduce((a, t) => a + (Number(t.totalDistance) || 0), 0);
+    const fuelCost = S.fuel.filter(f => inMonth(f.date)).reduce((a, f) => a + (Number(f.cost) || 0), 0);
+    $("#repStats").innerHTML = `<div><b>${trips.length}</b><span>Trips</span></div><div><b>${kmTotal.toLocaleString()}</b><span>Km driven</span></div><div><b>${fuelCost.toFixed(1)}</b><span>Fuel OMR</span></div>`;
+    const days = Array.from({ length: 14 }, (_, i) => { const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 13 + i); return d; });
+    $("#chTrips").innerHTML = barChart(days.map(d => { const c = S.trips.filter(t => new Date(t.outTime).toDateString() === d.toDateString()).length; return { label: d.getDate() + "", value: c, tip: `${d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })} · ${c} ${c === 1 ? "trip" : "trips"}` }; }), "chTripsTip");
+    const perV = {}; trips.forEach(t => { perV[t.vehicleNumber] = (perV[t.vehicleNumber] || 0) + (Number(t.totalDistance) || 0); });
+    $("#chKm").innerHTML = hbars(Object.entries(perV).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value), v => v.toLocaleString() + " km");
+    const perD = {}; trips.forEach(t => { perD[t.driverName] = (perD[t.driverName] || 0) + 1; });
+    $("#chDrv").innerHTML = hbars(Object.entries(perD).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value), v => v + (v === 1 ? " trip" : " trips"));
+    const six = Array.from({ length: 6 }, (_, i) => new Date(now.getFullYear(), now.getMonth() - 5 + i, 1));
+    $("#chFuel").innerHTML = barChart(six.map(d => { const c = S.fuel.filter(f => monthKey(new Date(f.date)) === monthKey(d)).reduce((a, f) => a + (Number(f.cost) || 0), 0); return { label: MONTHS[d.getMonth()], value: Math.round(c), tip: `${MONTHS[d.getMonth()]} ${d.getFullYear()} · ${OMR(c)}` }; }), "chFuelTip");
+  }
+  $("#repMonth").addEventListener("change", e => { repMonthSel = e.target.value; renderReports(); });
+  $("#repExport").addEventListener("click", () => {
+    const inMonth = iso => iso && monthKey(new Date(iso)) === repMonthSel;
+    const q = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const lines = [`Office Vehicle Manager report,${q(repMonthSel)}`, "", "TRIPS", "Vehicle,Driver,Employee,Department,Place,Purpose,Out,In,Start km,End km,Distance km,Status"];
+    S.trips.filter(t => inMonth(t.outTime)).forEach(t => lines.push([t.vehicleNumber, t.driverName, t.employeeName, t.department, t.place, t.purpose, t.outTime, t.inTime, t.startOdometer, t.endOdometer, t.totalDistance, t.status].map(q).join(",")));
+    lines.push("", "FUEL", "Vehicle,Date,Litres,Cost OMR,Odometer,Full tank,Station");
+    S.fuel.filter(f => inMonth(f.date)).forEach(f => lines.push([f.vehicleNumber, f.date, f.liters, f.cost, f.odometer, f.fullTank ? "Yes" : "No", f.station].map(q).join(",")));
+    lines.push("", "SERVICES", "Vehicle,Date,Type,Odometer,Cost OMR,Notes");
+    S.services.filter(r => inMonth(r.date)).forEach(r => lines.push([r.vehicleNumber, r.date, r.type, r.odometer, r.cost, r.notes].map(q).join(",")));
+    try { window.Android.shareCsv(`vehicle-report-${repMonthSel}.csv`, "\ufeff" + lines.join("\r\n")); } catch { toast("Sharing works in the phone app."); }
+  });
+
+  /* ---------- fuel & service ---------- */
+  const OMR = n => (Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 }) + " OMR";
+  const todayInput = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+  const fmtDay = iso => { const d = new Date(iso); return isNaN(d) ? "—" : d.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" }); };
+  let fsTab = "fuel";
+  function svcInfo(v) {
+    const every = Number(v.serviceEveryKm) || 5000;
+    if (v.lastServiceKm == null || v.lastServiceKm === "") return { known: false, every };
+    const due = Number(v.lastServiceKm) + every, left = due - (Number(v.currentOdometer) || 0);
+    return { known: true, every, due, left, state: left < 0 ? "bad" : left <= 500 ? "warn" : "ok" };
+  }
+  /** km per litre for a full-tank fill: distance since the previous full-tank fill of the same vehicle / litres now */
+  function kmpl(f) {
+    if (!f.fullTank) return null;
+    const prev = S.fuel.filter(x => x.vehicleId === f.vehicleId && x.fullTank && Number(x.odometer) < Number(f.odometer)).sort((a, b) => Number(b.odometer) - Number(a.odometer))[0];
+    if (!prev || !Number(f.liters)) return null;
+    return (Number(f.odometer) - Number(prev.odometer)) / Number(f.liters);
+  }
+  function renderFuel() {
+    const el = $("#fsList"); if (!el) return;
+    const sel = $("#fsVeh"), cur = sel.value;
+    sel.innerHTML = `<option value="">All vehicles</option>` + S.vehicles.map(v => `<option value="${esc(v._id)}" ${v._id === cur ? "selected" : ""}>${esc(v.vehicleNumber)}</option>`).join("");
+    const now = new Date(), month = S.fuel.filter(f => { const d = new Date(f.date); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); });
+    const effs = S.fuel.map(kmpl).filter(x => x != null && isFinite(x) && x > 0);
+    $("#fuelStats").innerHTML = `<div><b>${month.reduce((a, f) => a + (Number(f.liters) || 0), 0).toLocaleString(undefined, { maximumFractionDigits: 1 })}</b><span>Litres this month</span></div>
+      <div><b>${(month.reduce((a, f) => a + (Number(f.cost) || 0), 0)).toFixed(1)}</b><span>OMR this month</span></div>
+      <div><b>${effs.length ? (effs.reduce((a, b) => a + b, 0) / effs.length).toFixed(1) : "—"}</b><span>Avg km/litre</span></div>`;
+    const due = S.vehicles.map(v => ({ v, i: svcInfo(v) })).sort((a, b) => (a.i.known ? a.i.left : 1e9) - (b.i.known ? b.i.left : 1e9));
+    $("#svcDue").innerHTML = due.length ? due.map(({ v, i }) => `<div class="row">${photo(v.photoId, v.vehicleType)}
+        <div class="main"><span class="plate">${esc(v.vehicleNumber)}</span><div class="s odo">${i.known ? `Next service at ${km(i.due)} · now ${km(v.currentOdometer)}` : "Last service not recorded"}</div></div>
+        ${i.known ? `<span class="chip ${i.state}">${i.left < 0 ? `Overdue ${km(-i.left)}` : `${km(i.left)} left`}</span>` : canWrite ? `<button class="btn ghost small" type="button" data-svcfor="${esc(v._id)}">Add service</button>` : ""}</div>`).join("")
+      : `<div class="empty">${ART.empty("vehicles")}Add vehicles first.</div>`;
+    document.querySelectorAll("#fsSeg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.fs === fsTab));
+    const vf = r => !sel.value || r.vehicleId === sel.value;
+    if (fsTab === "fuel") {
+      const rows = S.fuel.filter(vf);
+      el.innerHTML = rows.length ? rows.map(f => { const e = kmpl(f); return `<div class="row"><span class="ic t-warn" style="width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex:none"><svg viewBox="0 0 24 24" style="width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9"><path d="M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16M3 21h13M7 7h5v4H7z"/></svg></span>
+        <div class="main"><div class="t"><span class="plate" style="font-size:14px">${esc(f.vehicleNumber)}</span> · ${Number(f.liters).toLocaleString(undefined, { maximumFractionDigits: 2 })} L · ${OMR(f.cost)}</div>
+        <div class="s">${fmtDay(f.date)} · <span class="odo">${km(f.odometer)}</span>${f.station ? " · " + esc(f.station) : ""}${f.by ? " · by " + esc(who(f.by)) : ""}</div></div>
+        ${e ? `<span class="chip ok">${e.toFixed(1)} km/L</span>` : f.fullTank ? "" : `<span class="chip mute">Part fill</span>`}
+        ${canWrite ? `<button class="btn ghost small" type="button" data-delfuel="${esc(f._id)}" aria-label="Delete">✕</button>` : ""}</div>`; }).join("")
+        : `<div class="empty">${ART.empty("trips")}No fuel recorded yet. Tap <b>+ Fuel</b> after each fill-up.</div>`;
+    } else {
+      const rows = S.services.filter(vf);
+      el.innerHTML = rows.length ? rows.map(r => `<div class="row"><span class="ic t-acc" style="width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex:none"><svg viewBox="0 0 24 24" style="width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.8-.7-.7-2.8z"/></svg></span>
+        <div class="main"><div class="t"><span class="plate" style="font-size:14px">${esc(r.vehicleNumber)}</span> · ${esc(r.type)}</div>
+        <div class="s">${fmtDay(r.date)} · <span class="odo">${km(r.odometer)}</span>${r.cost ? " · " + OMR(r.cost) : ""}${r.notes ? " · " + esc(r.notes) : ""}</div></div>
+        ${canWrite ? `<button class="btn ghost small" type="button" data-delsvc="${esc(r._id)}" aria-label="Delete">✕</button>` : ""}</div>`).join("")
+        : `<div class="empty">${ART.empty("trips")}No services recorded yet. Tap <b>+ Service</b> after each service or repair.</div>`;
+    }
+  }
+  function fuelForm() {
+    if (!S.vehicles.length) { toast("Add a vehicle first"); return; }
+    open("Add fuel",
+      `<div class="two">${field("fVeh", "Vehicle", sel("fVeh", S.vehicles.map(v => [v._id, v.vehicleNumber])))}${field("fDate", "Date", inp("fDate", `type="date" value="${todayInput()}"`))}</div>
+       <div class="two">${field("fLit", "Litres", inp("fLit", `type="number" inputmode="decimal" step="0.01" min="0"`))}${field("fCost", "Cost (OMR)", inp("fCost", `type="number" inputmode="decimal" step="0.001" min="0"`))}</div>
+       <div class="two">${field("fOdo", "Odometer (km)", inp("fOdo", `type="number" inputmode="numeric" min="0" value="${esc(S.vehicles[0].currentOdometer ?? "")}"`))}${field("fSt", "Station (optional)", inp("fSt", `maxlength="60"`))}</div>
+       <label class="check" for="fFull"><input type="checkbox" id="fFull" checked><span>Filled the tank full (needed for km/litre)</span></label>`,
+      `<button class="btn ghost" type="button" data-dlgclose>Cancel</button><button class="btn" value="save">Save</button>`,
+      async () => {
+        const v = S.vehicles.find(x => x._id === $("#fVeh").value), lit = Number($("#fLit").value), cost = Number($("#fCost").value), odo = Number($("#fOdo").value);
+        if (!v) return err("Choose a vehicle."), false;
+        if (!(lit > 0)) return err("Enter the litres filled."), false;
+        if (!(cost >= 0) || $("#fCost").value === "") return err("Enter the cost."), false;
+        if (!(odo > 0)) return err("Enter the odometer reading."), false;
+        const ok = await write(() => db.collection("fuel").add({ vehicleId: v._id, vehicleNumber: v.vehicleNumber, date: new Date($("#fDate").value || Date.now()).toISOString(), liters: lit, cost, odometer: Math.round(odo), fullTank: $("#fFull").checked, station: $("#fSt").value.trim(), by: myName() }), "Fuel saved");
+        if (ok && odo > (Number(v.currentOdometer) || 0)) write(() => db.doc("vehicles/" + v._id).update({ currentOdometer: Math.round(odo) }));
+        return ok;
+      });
+    $("#fVeh").addEventListener("change", e => { const v = S.vehicles.find(x => x._id === e.target.value); if (v) $("#fOdo").value = v.currentOdometer ?? ""; });
+  }
+  function serviceForm(preV) {
+    if (!S.vehicles.length) { toast("Add a vehicle first"); return; }
+    const v0 = S.vehicles.find(x => x._id === preV) || S.vehicles[0];
+    open("Add service",
+      `<div class="two">${field("sVeh", "Vehicle", sel("sVeh", S.vehicles.map(v => [v._id, v.vehicleNumber]), v0._id))}${field("sDate", "Date", inp("sDate", `type="date" value="${todayInput()}"`))}</div>
+       <div class="two">${field("sType", "Type", sel("sType", ["Service", "Oil change", "Tyres", "Battery", "Repair", "Other"]))}${field("sOdo", "Odometer (km)", inp("sOdo", `type="number" inputmode="numeric" min="0" value="${esc(v0.currentOdometer ?? "")}"`))}</div>
+       <div class="two">${field("sCost", "Cost (OMR, optional)", inp("sCost", `type="number" inputmode="decimal" step="0.001" min="0"`))}${field("sNotes", "Notes (optional)", inp("sNotes", `maxlength="120"`))}</div>
+       <p class="hint" style="margin:0">"Service" and "Oil change" reset the next-service reminder for this vehicle.</p>`,
+      `<button class="btn ghost" type="button" data-dlgclose>Cancel</button><button class="btn" value="save">Save</button>`,
+      async () => {
+        const v = S.vehicles.find(x => x._id === $("#sVeh").value), odo = Number($("#sOdo").value), type = $("#sType").value;
+        if (!v) return err("Choose a vehicle."), false;
+        if (!(odo > 0)) return err("Enter the odometer reading."), false;
+        const ok = await write(() => db.collection("services").add({ vehicleId: v._id, vehicleNumber: v.vehicleNumber, date: new Date($("#sDate").value || Date.now()).toISOString(), type, odometer: Math.round(odo), cost: Number($("#sCost").value) || 0, notes: $("#sNotes").value.trim(), by: myName() }), "Service saved");
+        if (ok) {
+          const patch = {};
+          if (type === "Service" || type === "Oil change") { patch.lastServiceKm = Math.round(odo); patch.lastServiceDate = new Date().toISOString(); }
+          if (odo > (Number(v.currentOdometer) || 0)) patch.currentOdometer = Math.round(odo);
+          if (Object.keys(patch).length) write(() => db.doc("vehicles/" + v._id).update(patch));
+        }
+        return ok;
+      });
+    $("#sVeh").addEventListener("change", e => { const v = S.vehicles.find(x => x._id === e.target.value); if (v) $("#sOdo").value = v.currentOdometer ?? ""; });
+  }
+  document.addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.act === "addFuel") { if (db) fuelForm(); }
+    else if (b.dataset.act === "addService") { if (db) serviceForm(); }
+    else if (b.dataset.svcfor) { if (db) serviceForm(b.dataset.svcfor); }
+    else if (b.dataset.fs) { fsTab = b.dataset.fs; renderFuel(); }
+    else if (b.dataset.delfuel || b.dataset.delsvc) {
+      if (!b.dataset.armed) { b.dataset.armed = "1"; b.textContent = "Delete?"; return; }
+      const path = b.dataset.delfuel ? "fuel/" + b.dataset.delfuel : "services/" + b.dataset.delsvc;
+      write(() => db.doc(path).delete(), "Deleted");
+    }
+  });
+  $("#fsVeh").addEventListener("change", renderFuel);
 
   function driverForm(d) {
     const editing = !!d; d = d || { status: "Available" };
@@ -1548,6 +1866,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
        <div class="two">${field("tOut","Out time", inp("tOut",`type="datetime-local" value="${localInput(new Date())}"`))}
         ${field("tOdo","Start odometer (km)", inp("tOdo",`type="number" inputmode="numeric" min="0" value="${esc(vs[0].currentOdometer ?? "")}"`))}</div>
        ${field("tRem","Remarks (optional)", inp("tRem",`maxlength="200"`))}
+       ${field("tPhoto","Photo of the vehicle (optional)", `<input id="tPhoto" type="file" accept="image/*" capture="environment">`)}
        ${gps.has ? `<label class="check" for="tTrack"><input type="checkbox" id="tTrack"><span>This phone goes with the vehicle. Track it live on the map.</span></label>` : ""}`,
       `<button class="btn ghost" type="button" data-dlgclose>Cancel</button><button class="btn" value="save">Dispatch</button>`,
       async () => {
@@ -1559,11 +1878,13 @@ svg.leaflet-image-layer.leaflet-interactive path {
         if (odo === "" || Number(odo) < 0) return err("Enter the start odometer."), false;
         const outTime = new Date($("#tOut").value || Date.now()).toISOString();
         const track = !!($("#tTrack") && $("#tTrack").checked); let newTripId = null;
+        let outPhoto = null; try { outPhoto = await uploadPhoto("tPhoto", 1024, 0.6); } catch { return err("That photo couldn't be read. Try another or leave it out."), false; }
         const ok = await write(async () => {
-          const ref = await db.collection("trips").add({ dispatchedBy: myName(), vehicleId: v._id, vehicleNumber: v.vehicleNumber, vehiclePhotoId: v.photoId || null,
+          const ref = await db.collection("trips").add({ dispatchedBy: myName(), hasOutPhoto: !!outPhoto, vehicleId: v._id, vehicleNumber: v.vehicleNumber, vehiclePhotoId: v.photoId || null,
             driverId: d._id, driverName: d.name, employeeName: emp, department: dept, place, purpose, outTime, inTime: null,
             startOdometer: Math.round(Number(odo)), endOdometer: null, totalDistance: null, status: "Out", remarks: $("#tRem").value.trim() });
           newTripId = ref.id;
+          if (outPhoto) await db.doc("photos/" + ref.id + "-out").set({ tripId: ref.id, kind: "out", data: outPhoto, at: new Date().toISOString(), by: myName() });
           await db.doc("vehicles/" + v._id).update({ status: "On Trip" });
           await db.doc("drivers/" + d._id).update({ status: "On Trip" });
           if (!S.places.some(p => p.name.toLowerCase() === place.toLowerCase())) await db.collection("places").add({ name: place });
@@ -1580,15 +1901,18 @@ svg.leaflet-image-layer.leaflet-interactive path {
       `<p class="hint"><span class="plate">${esc(t.vehicleNumber)}</span> · ${esc(t.driverName)} · left ${fmt(t.outTime)} at <span class="odo">${km(t.startOdometer)}</span></p>
        <div class="two">${field("iIn","In time", inp("iIn",`type="datetime-local" value="${localInput(new Date())}"`))}
         ${field("iOdo","End odometer (km)", inp("iOdo",`type="number" inputmode="numeric" min="${esc(t.startOdometer)}"`))}</div>
-       ${field("iRem","Remarks (optional)", inp("iRem",`maxlength="200" value="${esc(t.remarks||"")}"`))}`,
+       ${field("iRem","Remarks (optional)", inp("iRem",`maxlength="200" value="${esc(t.remarks||"")}"`))}
+       ${field("iPhoto","Photo of the vehicle (optional)", `<input id="iPhoto" type="file" accept="image/*" capture="environment">`)}`,
       `<button class="btn ghost" type="button" data-dlgclose>Cancel</button><button class="btn" value="save">Mark in</button>`,
       async () => {
         const end = $("#iOdo").value;
         if (end === "") return err("Enter the end odometer reading."), false;
         if (Number(end) < Number(t.startOdometer)) return err(`End reading can't be below the start (${km(t.startOdometer)}).`), false;
         const endN = Math.round(Number(end)), inTime = new Date($("#iIn").value || Date.now()).toISOString();
+        let inPhoto = null; try { inPhoto = await uploadPhoto("iPhoto", 1024, 0.6); } catch { return err("That photo couldn't be read. Try another or leave it out."), false; }
         const ok = await write(async () => {
-          await db.doc("trips/" + t._id).update({ inTime, endOdometer: endN, totalDistance: endN - Number(t.startOdometer), status: "Returned", remarks: $("#iRem").value.trim(), markedInBy: myName() });
+          await db.doc("trips/" + t._id).update({ inTime, endOdometer: endN, totalDistance: endN - Number(t.startOdometer), status: "Returned", remarks: $("#iRem").value.trim(), markedInBy: myName(), ...(inPhoto ? { hasInPhoto: true } : {}) });
+          if (inPhoto) await db.doc("photos/" + t._id + "-in").set({ tripId: t._id, kind: "in", data: inPhoto, at: new Date().toISOString(), by: myName() });
           if (S.vehicles.some(v => v._id === t.vehicleId)) await db.doc("vehicles/" + t.vehicleId).update({ status: "Available", currentOdometer: endN });
           if (S.drivers.some(d => d._id === t.driverId)) await db.doc("drivers/" + t.driverId).update({ status: "Available" });
         }, `${t.vehicleNumber} is back · ${km(endN - Number(t.startOdometer))}`);
@@ -1622,6 +1946,27 @@ svg.leaflet-image-layer.leaflet-interactive path {
     else if (b.dataset.f) { tripFilter = b.dataset.f; document.querySelectorAll("#tripSeg button").forEach(x => x.setAttribute("aria-pressed", x === b)); render(); }
   });
   $("#tripSearch").addEventListener("input", render);
+  (() => {
+    let y0 = null, pulling = false, dist = 0;
+    const ptr = $("#ptr");
+    const blocked = () => document.body.classList.contains("signed-out") || $("#dlg").open || sheetKey || location.hash === "#map";
+    addEventListener("touchstart", e => { if (window.scrollY <= 0 && !blocked()) { y0 = e.touches[0].clientY; pulling = true; dist = 0; } }, { passive: true });
+    addEventListener("touchmove", e => {
+      if (!pulling || y0 == null) return;
+      dist = Math.max(0, Math.min(120, e.touches[0].clientY - y0));
+      ptr.style.opacity = dist > 10 ? 1 : 0;
+      ptr.style.transform = `translateY(${dist - 70}px) rotate(${dist * 3}deg)`;
+    }, { passive: true });
+    addEventListener("touchend", async () => {
+      if (!pulling) return; pulling = false;
+      if (dist > 75 && db) {
+        ptr.classList.add("spin"); ptr.style.transform = "translateY(10px)";
+        try { await db.reloadAll(); toast("Updated"); } catch { toast("Couldn't refresh. Check the connection."); }
+        ptr.classList.remove("spin");
+      }
+      ptr.style.opacity = 0; ptr.style.transform = "translateY(-70px)"; y0 = null; dist = 0;
+    });
+  })();
   setInterval(() => { if (document.visibilityState === "visible") render(); }, 30000);
   $("#placeForm").addEventListener("submit", async e => {
     e.preventDefault(); if (!db) return;
@@ -1639,7 +1984,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   /* ---------- live data: Supabase (table ovm_docs) ---------- */
   const SB_URL = "https://ttxkexsrzuejwhxqetjl.supabase.co";
   const SB_KEY = "sb_publishable_dfCrOnlBlLCWxWnyr6szdQ_xDE14jCM";
-  const COLS = ["vehicles","drivers","places","trips","positions"];
+  const COLS = ["vehicles","drivers","places","trips","positions","fuel","services"];
 
   function makeDb(sb) {
     const cache = {}, listeners = {};
@@ -1687,6 +2032,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
             if (!cur) throw { code: "not_found" };
             await put(col, id, { ...cur, ...patch });
           },
+          set: async data => { await put(col, id, data); },
           delete: async () => {
             const { error } = await sb.from("ovm_docs").delete().eq("collection", col).eq("id", id);
             if (error) throw error;
@@ -1811,6 +2157,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     if (!error) { teamRows = data || []; renderTeam(); renderAllowed(); }
   }
   function renderTeam() {
+    { const n = teamRows.filter(r => r.status === "pending").length + resetRows.length; const sub = $("#mTeamSub"); if (sub) sub.textContent = n ? `${n} to review` : "Approvals and passwords"; }
     const pend = teamRows.filter(r => r.status === "pending"), rest = teamRows.filter(r => r.status !== "pending");
     const nBadge = pend.length + resetRows.length;
     const ub = $("#userBtn"); if (nBadge) ub.dataset.badge = nBadge; else delete ub.dataset.badge;
@@ -1939,6 +2286,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   function startTeam() {
     if (!member || member.role !== "admin") return;
+    $("#mTeam").hidden = false;
     loadTeam(); loadAllowed(); loadResets();
     sb.channel("ovm-resets").on("postgres_changes", { event: "*", schema: "public", table: "ovm_reset_requests" }, () => loadResets()).subscribe();
     sb.channel("ovm-team").on("postgres_changes", { event: "*", schema: "public", table: "ovm_members" }, () => loadTeam()).subscribe();
@@ -1963,7 +2311,14 @@ svg.leaflet-image-layer.leaflet-interactive path {
     $("#login").hidden = true;
     const ub = $("#userBtn"); ub.hidden = false; ub.textContent = initials(me.email); ub.title = me.email;
     if (!booted) {
-      booted = true; boot(); startTeam(); ensureDeviceKey();
+      booted = true; boot(); startTeam();
+      ensureDeviceKey().then(() => {
+        try {
+          if (member && member.role === "admin" && window.Android && window.Android.setNotifications && LS.get("ovm_notify_set") !== "1" && window.Android.hasTrackingToken()) {
+            window.Android.setNotifications(true); LS.set("ovm_notify_set", "1");
+          }
+        } catch {}
+      });
       // If an admin removes this person's access, return them to the waiting screen
       setInterval(async () => {
         if (document.visibilityState !== "visible") return;
@@ -2097,12 +2452,25 @@ svg.leaflet-image-layer.leaflet-interactive path {
     const pend = teamRows.filter(r => r.status === "pending").length + resetRows.length;
     const team = member && member.role === "admin" ? `<a class="btn ghost" href="#team" id="goTeam">Manage team${pend ? ` · ${pend} to review` : ""}</a>` : "";
     const ai = window.Android && window.Android.appInfo ? appInfo() : null;
+    const canNotify = member && member.role === "admin" && window.Android && window.Android.setNotifications;
+    const nOn = canNotify ? (() => { try { return window.Android.notificationsOn(); } catch { return false; } })() : false;
+    const nHours = canNotify ? (() => { try { return window.Android.overdueHours(); } catch { return 4; } })() : 4;
+    const notifyBox = canNotify ? `<div class="td-card" style="padding:12px 14px"><label class="check" for="nOn" style="background:none;padding:0"><input type="checkbox" id="nOn" ${nOn ? "checked" : ""}><span><b>Trip notifications on this phone</b><br><span class="hint">Vehicle left, came back, or is out too long. Checked about every 15 minutes.</span></span></label>
+      <div class="field"><label for="nHours">Warn when a vehicle is out longer than</label>${sel("nHours", [2, 3, 4, 6, 8, 12].map(h => [String(h), h + " hours"]), String(nHours))}</div></div>` : "";
     const ver = ai ? `<div class="row" style="padding:10px 12px"><div class="main"><div class="t">App version ${esc(ai.versionName)}</div><div class="s">Update ${esc(String(ai.web))}</div></div><button class="btn ghost small" type="button" id="checkUpd">Check for updates</button></div>` : "";
-    open("Account", `<p style="margin:0">Logged in as<br><b>${esc(myName())}</b><br><span class="hint">${esc(me.email)}${member && member.role === "admin" ? " · Admin" : ""}</span></p>${team}<button class="btn ghost" type="button" id="goChangePw">Change password</button>${ver}${tracking ? `<p class="hint" style="margin:0">Live tracking is running on this phone. Logging out stops it.</p>` : ""}`,
+    open("Account", `<p style="margin:0">Logged in as<br><b>${esc(myName())}</b><br><span class="hint">${esc(me.email)}${member && member.role === "admin" ? " · Admin" : ""}</span></p>${team}<button class="btn ghost" type="button" id="goChangePw">Change password</button>${notifyBox}${ver}${tracking ? `<p class="hint" style="margin:0">Live tracking is running on this phone. Logging out stops it.</p>` : ""}`,
       `<button class="btn ghost" type="button" data-dlgclose>Cancel</button><button class="btn danger" value="save">Log out</button>`,
       async () => { await doLogout(); return true; });
     const g = $("#goTeam"); if (g) g.addEventListener("click", () => dlg.close());
     $("#goChangePw").addEventListener("click", () => { dlg.close(); setTimeout(changePasswordDialog, 50); });
+    if ($("#nOn")) {
+      $("#nOn").addEventListener("change", async e => {
+        await ensureDeviceKey();
+        try { window.Android.setNotifications(e.target.checked); LS.set("ovm_notify_set", "1"); if (e.target.checked) window.Android.testNotification(); } catch {}
+        toast(e.target.checked ? "Notifications on" : "Notifications off");
+      });
+      $("#nHours").addEventListener("change", e => { try { window.Android.setOverdueHours(Number(e.target.value)); } catch {} toast("Saved"); });
+    }
   }
   $("#userBtn").addEventListener("click", accountDialog);
 
@@ -2130,6 +2498,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
       drivers: (a, b) => String(a.name).localeCompare(b.name),
       places: (a, b) => String(a.name).localeCompare(b.name),
       trips: (a, b) => String(b.outTime).localeCompare(String(a.outTime)),
+      fuel: (a, b) => String(b.date).localeCompare(String(a.date)),
+      services: (a, b) => String(b.date).localeCompare(String(a.date)),
     };
     let loaded = new Set(), live = false;
     const status = () => {
@@ -2140,7 +2510,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     for (const col of COLS) {
       db.collection(col).onSnapshot(snap => {
         S[col] = snap.docs.map(d => ({ ...d.data(), _id: d.id })).sort(sorters[col]);
-        loaded.add(col); if (loaded.size === COLS.length) clearTimeout(timer);
+        loaded.add(col); if (loaded.size === COLS.length) { clearTimeout(timer); dataReady = true; }
         if (col === "trips") { const tr = gps.tracking(); const tt = tr && S.trips.find(x => x._id === tr); if (tt && tt.status !== "Out") gps.stop(); }
         status(); render();
       }, () => { setSync("off", "No internet"); });

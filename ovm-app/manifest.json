@@ -1,13 +1,13 @@
 {
   "app": "Office Vehicle Manager",
   "web": {
-    "version": 17,
-    "notes": "New: log in with a code sent to your email (password login still works).",
+    "version": 18,
+    "notes": "New look, Dispatch button, Fuel & service log, Reports, trip photos.",
     "files": [
       {
         "name": "index.html",
-        "sha256": "0774fa9daf4e1b9c17d816028d280fe6b851abe69c3f21aedeca5b1418301dce",
-        "size": 190994
+        "sha256": "2cbddfcbe7cc27959bde8f7881862102f5ee20f031bf0959005d6079cb30cd23",
+        "size": 226277
       },
       {
         "name": "art.js",
@@ -38,10 +38,10 @@
     "minNative": 15
   },
   "apk": {
-    "versionCode": 16,
-    "versionName": "2.5",
-    "notes": "Email and password login, Create account, Forgot password.",
+    "versionCode": 18,
+    "versionName": "3.0",
+    "notes": "Adds trip notifications for admins and taking photos with the camera.",
     "file": "apk/OfficeVehicleManager.apk",
-    "sha256": "ed29497efdf90d75d5008d967e5b7f2f829c4a5213e2cde284fefc6a632dfd69"
+    "sha256": "75313905540f74ad1dc0d1dedb86066bd697aede41de25459ced8041721f683e"
   }
 }
