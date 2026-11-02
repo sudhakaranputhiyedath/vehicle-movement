@@ -1,13 +1,13 @@
 {
   "app": "Office Vehicle Manager",
   "web": {
-    "version": 24,
-    "notes": "Send your location on WhatsApp or SMS",
+    "version": 25,
+    "notes": "Green dot = online, red dot = offline",
     "files": [
       {
         "name": "index.html",
-        "sha256": "835dbb3f341e9056be5ca8a0a6a6bc6f52a56b46c62384d0020f8dfced77263a",
-        "size": 249521
+        "sha256": "331ec211cef38ed10a4c0d9715064c520ff7a1a421f7b64d7d2eba1e4ef4e1fb",
+        "size": 250380
       },
       {
         "name": "art.js",

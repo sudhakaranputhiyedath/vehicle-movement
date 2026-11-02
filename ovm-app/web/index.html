@@ -42,10 +42,12 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .brand .mark { width: 34px; height: 34px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; flex: none; }
 .brand .mark svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
 .brand span { overflow: hidden; text-overflow: ellipsis; }
-.sync { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 99px; background: var(--bg); color: var(--muted); white-space: nowrap; }
-.sync i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
-.sync.live { color: var(--ok); background: var(--ok-soft); } .sync.live i { background: var(--ok); }
-.sync.off { color: var(--bad); background: var(--bad-soft); } .sync.off i { background: var(--bad); }
+/* connection dot only: green = online, red = offline, grey = connecting */
+.sync { position: relative; cursor: pointer; display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--bg); }
+.sync span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.sync i { width: 14px; height: 14px; border-radius: 50%; background: #9aa3a0; box-shadow: 0 0 0 3px color-mix(in srgb, #9aa3a0 25%, transparent); transition: background .3s, box-shadow .3s; }
+.sync.live i { background: #16a34a; box-shadow: 0 0 0 3px color-mix(in srgb, #16a34a 25%, transparent); }
+.sync.off i { background: #dc2626; box-shadow: 0 0 0 3px color-mix(in srgb, #dc2626 25%, transparent); }
 
 main { max-width: 760px; margin: 0 auto; padding-block: 16px 110px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 .notice { background: var(--warn-soft); color: var(--ink); border-radius: var(--r); padding: 10px 14px; margin-bottom: 14px; font-size: 14px; }
@@ -1227,7 +1229,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
   const chipFor = st => { const m = { "Available":"ok", "On Trip":"warn", "Out":"warn", "Maintenance":"bad", "Off Duty":"mute", "Returned":"ok" }; return `<span class="chip ${m[st]||"mute"}">${esc(st)}</span>`; };
   const photo = (id, type) => id ? `<img class="thumb" src="${esc(id)}" alt="">` : `<div class="thumb art" aria-hidden="true">${ART.vehicle(type)}</div>`;
   function toast(msg) { const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2400); }
-  function setSync(cls, text) { const el = $("#sync"); el.className = "sync " + cls; el.lastElementChild.textContent = text; }
+  let syncState = ["", "Connecting…"];
+  function setSync(cls, text) {
+    syncState = [cls, text];
+    if (!navigator.onLine) { cls = "off"; text = "Offline"; }
+    const el = $("#sync"); el.className = "sync " + cls; el.lastElementChild.textContent = text;
+    el.title = cls === "live" ? "Online" : cls === "off" ? "Offline" : text; el.setAttribute("aria-label", el.title);
+  }
+  $("#sync").addEventListener("click", () => toast($("#sync").classList.contains("live") ? "Online · data is live" : $("#sync").classList.contains("off") ? "Offline · check the internet connection" : "Connecting…"));
+  window.addEventListener("offline", () => setSync(...syncState));
+  window.addEventListener("online", () => setSync(...syncState));
   function notice(text) { const n = $("#notice"); n.textContent = text || ""; n.hidden = !text; }
   async function write(fn, okMsg) {
     try { await fn(); if (okMsg) toast(okMsg); return true; }
