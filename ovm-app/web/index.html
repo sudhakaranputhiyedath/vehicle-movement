@@ -113,6 +113,11 @@ h3 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacin
 .more-tile .ic svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
 .more-tile b { font-size: 16px; } .more-tile span { font-size: 13px; color: var(--muted); }
 .more-tile:active { transform: scale(.98); }
+.share-opts { display: grid; gap: 10px; }
+.share-opts a, .share-opts button { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; text-decoration: none; cursor: pointer; text-align: left; }
+.share-opts .si { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; color: #fff; flex: none; }
+.share-opts .si svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.loc-msg { white-space: pre-wrap; font-size: 13px; background: var(--bg, #f1f3f2); border-radius: 12px; padding: 10px 12px; margin: 0; word-break: break-all; }
 .t-ok { background: var(--ok-soft); color: var(--ok); } .t-warn { background: var(--warn-soft); color: var(--warn); } .t-acc { background: var(--accent-soft); color: var(--accent); } .t-bad { background: var(--bad-soft); color: var(--bad); } .t-mute { background: var(--bg); color: var(--muted); }
 .tabs a { text-decoration: none; color: var(--muted); display: grid; justify-items: center; gap: 2px; padding: 8px 2px 9px; font-size: 11px; font-weight: 600; }
 .tabs a svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
@@ -1021,6 +1026,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <a class="more-tile" href="#fuel"><span class="ic t-warn"><svg viewBox="0 0 24 24"><path d="M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16"/><path d="M3 21h13M15 9h2a2 2 0 0 1 2 2v5a1.5 1.5 0 0 0 3 0V8l-3-3"/><path d="M7 7h5v4H7z"/></svg></span><b>Fuel &amp; service</b><span id="mFuel">Fill-ups and servicing</span></a>
       <a class="more-tile" href="#reports"><span class="ic t-bad"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><b>Reports</b><span>Charts and monthly export</span></a>
       <a class="more-tile" href="#places"><span class="ic t-mute"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span><b>Places &amp; departments</b><span>Lists for the dispatch form</span></a>
+      <button class="more-tile" type="button" id="sendMyLoc" style="text-align:left;font:inherit;cursor:pointer"><span class="ic t-ok"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/><path d="M19 3l2 2-2 2"/></svg></span><b>Send my location</b><span>Share where you are on WhatsApp or SMS</span></button>
       <a class="more-tile" href="#team" id="mTeam" hidden><span class="ic t-acc"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c.8-3.5 3.6-5.5 7-5.5s6.2 2 7 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2 .7 3.4 2.4 4 5.2"/></svg></span><b>Team</b><span id="mTeamSub">Approvals and passwords</span></a>
     </div>
   </section>
@@ -1179,6 +1185,31 @@ svg.leaflet-image-layer.leaflet-interactive path {
   const gpsMsg = e => ({ denied: "Location permission is off, so the location wasn't saved.", off: "Location (GPS) is off, so the location wasn't saved.", timeout: "Couldn't get a GPS fix, so the location wasn't saved." }[e] || "");
   const ago = iso => { const m = Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000)); return m < 1 ? "just now" : m < 60 ? m + " min ago" : Math.floor(m / 60) + " h " + (m % 60) + " min ago"; };
   const fresh = iso => Date.now() - new Date(iso) < 5 * 60000;
+  /* ---------- share a location (WhatsApp / SMS / copy / Google Maps) ---------- */
+  const gmaps = (lat, lng) => `https://www.google.com/maps?q=${Number(lat).toFixed(6)},${Number(lng).toFixed(6)}`;
+  function shareLocation(title, lat, lng, about, at) {
+    const when = new Date(at || Date.now()).toLocaleString([], { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+    const msg = `📍 ${about}\nLocation at ${when}:\n${gmaps(lat, lng)}`;
+    const ic = (bg, path) => `<span class="si" style="background:${bg}"><svg viewBox="0 0 24 24">${path}</svg></span>`;
+    open(title, `<p class="loc-msg" id="locMsg">${esc(msg)}</p>
+      <div class="share-opts">
+        <a href="https://wa.me/?text=${encodeURIComponent(msg)}">${ic("#25a244", '<path d="M4 20l1.4-4A8 8 0 1 1 8 18.6z"/>')}Send on WhatsApp</a>
+        <a href="sms:?body=${encodeURIComponent(msg)}">${ic("#2f6fd6", '<path d="M4 5h16v11H8l-4 4z"/>')}Send as SMS</a>
+        <button type="button" id="locCopy">${ic("#6b7280", '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V4h12"/>')}Copy message</button>
+        <a href="${gmaps(lat, lng)}">${ic("#c2410c", '<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>')}Open in Google Maps</a>
+      </div>`, `<button class="btn ghost" type="button" data-dlgclose>Close</button>`, null);
+    $("#locCopy").addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(msg); toast("Copied. Paste it in any app."); }
+      catch { const r = document.createRange(); r.selectNodeContents($("#locMsg")); const sl = getSelection(); sl.removeAllRanges(); sl.addRange(r); try { document.execCommand("copy"); toast("Copied. Paste it in any app."); } catch { toast("Long-press the message to copy"); } }
+    });
+  }
+  async function sendMyLocation() {
+    if (!gps.has) { toast("Location works only in the phone app."); return; }
+    toast("Getting your location…");
+    const f = await gps.fix();
+    if (!f || f.lat == null) { toast(f && f.error ? gpsMsg(f.error).replace(", so the location wasn't saved", "").replace("so the location wasn't saved", "") : "Couldn't get your location. Try again outside."); return; }
+    shareLocation("Send my location", f.lat, f.lng, `${myName()} is here${f.acc ? ` (±${Math.round(f.acc)} m)` : ""}`);
+  }
   const mapLink = (l, label) => `<a class="linkbtn" href="https://www.google.com/maps?q=${Number(l.lat)},${Number(l.lng)}">${label}</a>`;
   let routeTrip = null, map = null, mapLayer = null, fitted = false;
   let db = null, assets = null, downloads = null, canWrite = true, tripFilter = "all";
@@ -1449,7 +1480,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   function gpsBlock(t) {
     const bits = [], open = t.status === "Out";
     const pos = S.positions.find(p => p._id === t._id);
-    if (open && pos) bits.push(`<span class="chip ${fresh(pos.at) ? "ok" : "mute"}">${fresh(pos.at) ? "Live" : "Last seen"} · ${ago(pos.at)}</span><button class="linkbtn" type="button" data-maptrip="${esc(t._id)}">View on map</button>`);
+    if (open && pos) bits.push(`<span class="chip ${fresh(pos.at) ? "ok" : "mute"}">${fresh(pos.at) ? "Live" : "Last seen"} · ${ago(pos.at)}</span><button class="linkbtn" type="button" data-maptrip="${esc(t._id)}">View on map</button><button class="linkbtn" type="button" data-shareloc="${esc(t._id)}">Share location</button>`);
     if (t.outLoc) bits.push(mapLink(t.outLoc, "Out location"));
     if (t.inLoc) bits.push(mapLink(t.inLoc, "In location"));
     if (!open && t.tracked) bits.push(`<button class="linkbtn" type="button" data-route="${esc(t._id)}">View route</button>`);
@@ -1975,6 +2006,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     else if (b.dataset.editDriver) { if (canWrite) driverForm(S.drivers.find(d => d._id === b.dataset.editDriver)); }
     else if (b.dataset.markin) markInForm(S.trips.find(t => t._id === b.dataset.markin));
     else if (b.dataset.delPlace) write(() => db.doc("places/" + b.dataset.delPlace).delete(), "Place removed");
+    else if (b.dataset.shareloc) { const t = S.trips.find(x => x._id === b.dataset.shareloc), pos = S.positions.find(x => x._id === b.dataset.shareloc); if (t && pos) shareLocation("Share vehicle location", pos.lat, pos.lng, `${t.vehicleNumber} · driver ${t.driverName}${t.place ? " · going to " + t.place : ""}`, pos.at); }
     else if (b.dataset.delDept) write(() => db.doc("settings/" + b.dataset.delDept).delete(), "Department removed");
     else if (b.dataset.track) { const t = S.trips.find(x => x._id === b.dataset.track); if (t) { gps.start(t); db.doc("trips/" + t._id).update({ tracked: true }).catch(() => {}); } }
     else if (b.dataset.untrack) { gps.stop(); }
@@ -2018,6 +2050,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     if (S.places.some(p => p.name.toLowerCase() === name.toLowerCase())) { toast("That place is already saved"); return; }
     if (await write(() => db.collection("places").add({ name }), "Place added")) $("#placeName").value = "";
   });
+  $("#sendMyLoc").addEventListener("click", sendMyLocation);
   $("#deptForm").addEventListener("submit", async e => {
     e.preventDefault(); if (!db) return;
     const name = $("#deptName").value.trim(); if (!name) return;

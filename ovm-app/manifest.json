@@ -1,13 +1,13 @@
 {
   "app": "Office Vehicle Manager",
   "web": {
-    "version": 23,
-    "notes": "Fix: adding a department now saves",
+    "version": 24,
+    "notes": "Send your location on WhatsApp or SMS",
     "files": [
       {
         "name": "index.html",
-        "sha256": "a408243e58fce276816060b7c5eb3c261618734bb365c403aa126ab304f9b4e0",
-        "size": 245532
+        "sha256": "835dbb3f341e9056be5ca8a0a6a6bc6f52a56b46c62384d0020f8dfced77263a",
+        "size": 249521
       },
       {
         "name": "art.js",
