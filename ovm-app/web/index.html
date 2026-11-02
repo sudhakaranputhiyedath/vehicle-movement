@@ -102,7 +102,7 @@ h3 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacin
 
 .tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--surface); border-top: 1px solid var(--line);
   padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
-.tabs-in { max-width: 760px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); align-items: end; }
+.tabs-in { max-width: 760px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); align-items: end; }
 .tabs .fab-slot { display: grid; justify-items: center; padding-bottom: 9px; }
 .fab { width: 58px; height: 58px; margin-top: -26px; border-radius: 50%; border: 4px solid var(--surface); background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; cursor: pointer;
   box-shadow: 0 6px 18px rgba(13,106,91,.35); transition: transform .15s ease; }
@@ -998,6 +998,7 @@ h3::before { content: ""; width: 4px; height: 14px; border-radius: 2px; backgrou
 .tabs a svg.cic { width: 28px; height: 28px; stroke-linecap: round; padding: 3px; border-radius: 12px; transition: transform .15s ease, background .15s; filter: saturate(.85); }
 .tabs a.tab-trips[aria-current="page"] { color: #EA580C; } .tabs a.tab-trips[aria-current="page"] svg { background: #FFEDD5; }
 .tabs a.tab-map[aria-current="page"] { color: #0284C7; } .tabs a.tab-map[aria-current="page"] svg { background: #E0F2FE; }
+.tabs a.tab-reports[aria-current="page"] { color: #E11D48; } .tabs a.tab-reports[aria-current="page"] svg { background: #FFE4E6; }
 .tabs a.tab-more[aria-current="page"] { color: #7C3AED; } .tabs a.tab-more[aria-current="page"] svg { background: #EDE9FE; }
 .tabs a[aria-current="page"] svg.cic { transform: scale(1.12); filter: none; width: 34px; }
 .tabs a { font-size: 12px; }
@@ -1235,6 +1236,7 @@ body.signed-out { background: var(--page) fixed; }
   <a href="#trips" data-tab="trips" class="tab-trips"><svg class="cic" viewBox="0 0 24 24"><rect x="4.5" y="3.5" width="15" height="18" rx="2.5" fill="#FB923C" stroke="none"/><rect x="8" y="2" width="8" height="4" rx="1.5" fill="#C2410C" stroke="none"/><path d="M8 10h8M8 13.5h8M8 17h5" stroke="#fff" stroke-width="1.8"/></svg>Trips</a>
   <a href="#map" data-tab="map" class="tab-map"><svg class="cic" viewBox="0 0 24 24"><path d="M2.5 6.2 8.5 4l7 2.2 6-2.2v14l-6 2.2-7-2.2-6 2.2z" fill="#38BDF8" stroke="none"/><path d="M8.5 4v14M15.5 6.2v14" stroke="#0369A1" stroke-width="1.2"/><path d="M2.5 13.5c3-1.5 5-.5 7 1s5 1 6.5-1 3.5-2.2 5.5-1.5" stroke="#22C55E" stroke-width="2.2" fill="none"/><path d="M15.5 2.5a3.2 3.2 0 0 1 3.2 3.2c0 2.4-3.2 5.3-3.2 5.3s-3.2-2.9-3.2-5.3a3.2 3.2 0 0 1 3.2-3.2z" fill="#EF4444" stroke="#fff" stroke-width="1"/><circle cx="15.5" cy="5.7" r="1.1" fill="#fff" stroke="none"/></svg>Map</a>
   <div class="fab-slot" data-w><button class="fab" type="button" data-act="dispatch" aria-label="Dispatch a vehicle"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button><small>Dispatch</small></div>
+  <a href="#reports" data-tab="reports" class="tab-reports"><svg class="cic" viewBox="0 0 24 24"><rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="#FFE4E6" stroke="none"/><rect x="5.5" y="12" width="3.2" height="7" rx="1.2" fill="#F43F5E" stroke="none"/><rect x="10.4" y="7.5" width="3.2" height="11.5" rx="1.2" fill="#3B82F6" stroke="none"/><rect x="15.3" y="10" width="3.2" height="9" rx="1.2" fill="#F59E0B" stroke="none"/><path d="M5 9l4.5-3.5 4 2 5.5-4" stroke="#16A34A" stroke-width="1.6" fill="none"/></svg>Reports</a>
   <a href="#more" data-tab="more" class="tab-more"><svg class="cic" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2.5" fill="#8B5CF6" stroke="none"/><rect x="13" y="3" width="8" height="8" rx="4" fill="#EC4899" stroke="none"/><rect x="3" y="13" width="8" height="8" rx="4" fill="#F59E0B" stroke="none"/><rect x="13" y="13" width="8" height="8" rx="2.5" fill="#10B981" stroke="none"/></svg>More</a>
 </div></nav>
 
@@ -1361,7 +1363,7 @@ body.signed-out { background: var(--page) fixed; }
 
   /* ---------- routing ---------- */
   const VIEWS = ["dashboard","vehicles","drivers","places","map","trips","team","more","fuel","reports"];
-  const TAB_OF = { vehicles: "more", drivers: "more", places: "more", team: "more", fuel: "more", reports: "more" };
+  const TAB_OF = { vehicles: "more", drivers: "more", places: "more", team: "more", fuel: "more" };
   let lastView = null, sheetKey = null;
   function route() {
     const h = location.hash.slice(1);

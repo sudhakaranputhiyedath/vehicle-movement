@@ -1,13 +1,13 @@
 {
   "app": "Office Vehicle Manager",
   "web": {
-    "version": 29,
-    "notes": "Colourful bottom icons",
+    "version": 30,
+    "notes": "Reports button at the bottom",
     "files": [
       {
         "name": "index.html",
-        "sha256": "ad25ad53fe673bcad399037d623b41847439f1e4105b81c7498f5b7c79e91057",
-        "size": 261746
+        "sha256": "9d63a986dcb675fe3fef2968275b7d6350f845aa3bb02d38bd665336cc38415f",
+        "size": 262394
       },
       {
         "name": "art.js",
