@@ -264,6 +264,12 @@ a.btn { text-decoration: none; }
 .photo-row img { width: 100%; height: 140px; object-fit: cover; border-radius: 10px; cursor: zoom-in; }
 #v-reports .chart-card, #v-reports .stat-row { margin-bottom: 12px; }
 #v-fuel .stat-row { margin-bottom: 4px; }
+.lockscreen { position: fixed; inset: 0; z-index: 30; background: var(--bg); display: grid; place-items: center; padding: 24px max(16px, env(safe-area-inset-left, 0px)); }
+.lockscreen .box { width: 100%; max-width: 340px; display: grid; gap: 16px; justify-items: center; text-align: center; }
+.lockscreen .fp { width: 96px; height: 96px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; border: 0; cursor: pointer; }
+.lockscreen .fp svg { width: 54px; height: 54px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+.lockscreen h1 { font-family: var(--f-display); font-weight: 700; font-size: 26px; text-transform: uppercase; letter-spacing: .02em; margin: 0; }
+@media (prefers-reduced-motion: no-preference) { .lockscreen:not([hidden]) .fp { animation: pulse 1.8s ease-in-out infinite; } @keyframes pulse { 50% { transform: scale(1.06); } } }
 #map { height: 52vh; min-height: 280px; border-radius: var(--r); border: 1px solid var(--line); background: var(--bg); z-index: 0; }
 .gps-row { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
 .linkbtn { background: none; border: 0; padding: 0; color: var(--accent); font-weight: 600; cursor: pointer; text-decoration: underline; font-size: 13px; }
@@ -1102,6 +1108,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
   <div class="sheet-top"><button class="sheet-back" type="button" id="sheetBack" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><div class="sheet-title" id="sheetTitle"></div></div>
   <div class="sheet-body" id="sheetBody"></div>
 </section>
+
+<div class="lockscreen" id="lockScreen" hidden>
+  <div class="box">
+    <button class="fp" type="button" id="lockBtn" aria-label="Unlock"><svg viewBox="0 0 24 24"><path d="M6.5 7.5A7 7 0 0 1 19 12v1.5"/><path d="M5 11.5V12a7 7 0 0 0 1 3.6"/><path d="M9 12a3 3 0 0 1 6 0v1a10 10 0 0 1-1.2 4.8"/><path d="M12 12v1.5a13 13 0 0 1-2.2 7"/><path d="M15.8 19.5A13 13 0 0 0 17 13.5V12a5 5 0 0 0-8.6-3.5"/><path d="M7 18.5A10 10 0 0 0 7 12"/></svg></button>
+    <h1>Vehicle Manager is locked</h1>
+    <p class="hint" id="lockMsg" style="margin:0">Tap to unlock with your fingerprint, face or phone PIN.</p>
+    <button class="btn" type="button" id="lockBtn2" style="width:100%;justify-content:center">Unlock</button>
+    <button class="linkbtn" type="button" id="lockLogout">Log out instead</button>
+  </div>
+</div>
 
 <dialog id="dlg"><form method="dialog" class="dlg" id="dlgForm" novalidate>
   <header id="dlgTitle"></header>
@@ -2318,6 +2334,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     const ub = $("#userBtn"); ub.hidden = false; ub.textContent = initials(me.email); ub.title = me.email;
     if (!booted) {
       booted = true; boot(); startTeam(); renderPhoneHint();
+      if (lockOn()) lockNow();
       ensureDeviceKey().then(() => {
         try {
           if (member && member.role === "admin" && window.Android && window.Android.setNotifications && LS.get("ovm_notify_set") !== "1" && window.Android.hasTrackingToken()) {
@@ -2426,6 +2443,44 @@ svg.leaflet-image-layer.leaflet-interactive path {
     signedIn(data.session);
   });
 
+  /* ---------- app lock (fingerprint / face / phone PIN) ---------- */
+  const canLock = () => !!(window.Android && window.Android.unlock && window.Android.lockStatus);
+  const lockOn = () => canLock() && LS.get("ovm_lock") === "1";
+  let unlocking = false, hiddenAt = 0;
+  function askUnlock(onOk) {
+    if (unlocking) return;
+    unlocking = true;
+    window.__unlockResult = (id, r) => {
+      unlocking = false;
+      if (r === "ok") { if (onOk) onOk(); else { $("#lockScreen").hidden = true; document.body.style.overflow = sheetKey ? "hidden" : ""; } }
+      else if (String(r).startsWith("error")) $("#lockMsg").textContent = "Couldn't unlock (" + String(r).slice(6) + "). Tap to try again.";
+      else $("#lockMsg").textContent = "Tap to unlock with your fingerprint, face or phone PIN.";
+    };
+    try { window.Android.unlock("u" + Date.now()); } catch { unlocking = false; }
+  }
+  function lockNow() {
+    if (!lockOn() || !me || document.body.classList.contains("signed-out")) return;
+    if ($("#dlg").open) dlg.close();
+    $("#lockMsg").textContent = "Tap to unlock with your fingerprint, face or phone PIN.";
+    $("#lockScreen").hidden = false; document.body.style.overflow = "hidden";
+    setTimeout(() => askUnlock(), 250);
+  }
+  $("#lockBtn").addEventListener("click", () => askUnlock());
+  $("#lockBtn2").addEventListener("click", () => askUnlock());
+  $("#lockLogout").addEventListener("click", () => { $("#lockScreen").hidden = true; doLogout(); });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") hiddenAt = Date.now();
+    else if (hiddenAt && Date.now() - hiddenAt > 60000 && !unlocking) lockNow();
+  });
+  function setLock(on, box) {
+    if (!on) { LS.set("ovm_lock", "0"); toast("App lock off"); return; }
+    let st = "none"; try { st = window.Android.lockStatus(); } catch {}
+    if (st === "none") { box.checked = false; toast("First set a screen lock (PIN or fingerprint) in your phone's Settings."); return; }
+    // confirm once that it works before switching it on
+    askUnlock(() => { LS.set("ovm_lock", "1"); toast("App lock on"); });
+    setTimeout(() => { if (LS.get("ovm_lock") !== "1" && !unlocking) box.checked = false; }, 30000);
+  }
+
   function phoneDialog() {
     open(member && member.phone ? "Change mobile number" : "Add mobile number",
       `${field("pnNum", "Mobile number", inp("pnNum", `type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="e.g. 9123 4567" value="${esc(member && member.phone ? showPhone(member.phone) : "")}"`))}
@@ -2512,12 +2567,13 @@ svg.leaflet-image-layer.leaflet-interactive path {
     const notifyBox = canNotify ? `<div class="td-card" style="padding:12px 14px"><label class="check" for="nOn" style="background:none;padding:0"><input type="checkbox" id="nOn" ${nOn ? "checked" : ""}><span><b>Trip notifications on this phone</b><br><span class="hint">Vehicle left, came back, or is out too long. Checked about every 15 minutes.</span></span></label>
       <div class="field"><label for="nHours">Warn when a vehicle is out longer than</label>${sel("nHours", [2, 3, 4, 6, 8, 12].map(h => [String(h), h + " hours"]), String(nHours))}</div></div>` : "";
     const ver = ai ? `<div class="row" style="padding:10px 12px"><div class="main"><div class="t">App version ${esc(ai.versionName)}</div><div class="s">Update ${esc(String(ai.web))}</div></div><button class="btn ghost small" type="button" id="checkUpd">Check for updates</button></div>` : "";
-    open("Account", `<p style="margin:0">Logged in as<br><b>${esc(myName())}</b><br><span class="hint">${esc(me.email)}${member && member.role === "admin" ? " · Admin" : ""}</span></p>${team}<button class="btn ghost" type="button" id="goPhone">${member && member.phone ? "Mobile " + esc(showPhone(member.phone)) + " · Change" : "Add mobile number for login"}</button><button class="btn ghost" type="button" id="goChangePw">Change password</button>${notifyBox}${ver}${tracking ? `<p class="hint" style="margin:0">Live tracking is running on this phone. Logging out stops it.</p>` : ""}`,
+    open("Account", `<p style="margin:0">Logged in as<br><b>${esc(myName())}</b><br><span class="hint">${esc(me.email)}${member && member.role === "admin" ? " · Admin" : ""}</span></p>${team}${canLock() ? `<div class="td-card" style="padding:12px 14px"><label class="check" for="lockOn" style="background:none;padding:0"><input type="checkbox" id="lockOn" ${lockOn() ? "checked" : ""}><span><b>Lock app with fingerprint</b><br><span class="hint">Asks for your fingerprint, face or phone PIN when you open the app or come back after a minute.</span></span></label></div>` : ""}<button class="btn ghost" type="button" id="goPhone">${member && member.phone ? "Mobile " + esc(showPhone(member.phone)) + " · Change" : "Add mobile number for login"}</button><button class="btn ghost" type="button" id="goChangePw">Change password</button>${notifyBox}${ver}${tracking ? `<p class="hint" style="margin:0">Live tracking is running on this phone. Logging out stops it.</p>` : ""}`,
       `<button class="btn ghost" type="button" data-dlgclose>Cancel</button><button class="btn danger" value="save">Log out</button>`,
       async () => { await doLogout(); return true; });
     const g = $("#goTeam"); if (g) g.addEventListener("click", () => dlg.close());
     $("#goChangePw").addEventListener("click", () => { dlg.close(); setTimeout(changePasswordDialog, 50); });
     $("#goPhone").addEventListener("click", () => { dlg.close(); setTimeout(phoneDialog, 50); });
+    if ($("#lockOn")) $("#lockOn").addEventListener("change", e => setLock(e.target.checked, e.target));
     if ($("#nOn")) {
       $("#nOn").addEventListener("change", async e => {
         await ensureDeviceKey();

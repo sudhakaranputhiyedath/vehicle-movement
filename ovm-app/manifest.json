@@ -1,13 +1,13 @@
 {
   "app": "Office Vehicle Manager",
   "web": {
-    "version": 19,
-    "notes": "Log in with your mobile number. Add it under your account (tap your initials).",
+    "version": 20,
+    "notes": "Small improvements.",
     "files": [
       {
         "name": "index.html",
-        "sha256": "858d4d853487a491bd9f27f42732cc3d3fd9f40ab9b2ac319974af0e060a48b7",
-        "size": 230691
+        "sha256": "92ecfdad447818324ebe74c485529269d2c5a6b4c10bf211bcaeec45cf35c1b0",
+        "size": 235188
       },
       {
         "name": "art.js",
@@ -38,10 +38,10 @@
     "minNative": 15
   },
   "apk": {
-    "versionCode": 18,
-    "versionName": "3.0",
-    "notes": "Adds trip notifications for admins and taking photos with the camera.",
+    "versionCode": 19,
+    "versionName": "3.1",
+    "notes": "Lock the app with your fingerprint, face or phone PIN.",
     "file": "apk/OfficeVehicleManager.apk",
-    "sha256": "75313905540f74ad1dc0d1dedb86066bd697aede41de25459ced8041721f683e"
+    "sha256": "174f2df309f0b340dc7492231360dd24f36f8aa5034eb8cf9c2ea74e58ad2428"
   }
 }
