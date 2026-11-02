@@ -1772,7 +1772,10 @@ body.signed-out { background: var(--page) fixed; }
     const btn = e.submitter;
     if (!onSubmit) return dlg.close();
     btn && (btn.disabled = true);
-    const done = await onSubmit(btn ? btn.value : "save");
+    let done = false;
+    try {
+      done = await Promise.race([onSubmit(btn ? btn.value : "save"), new Promise((_, no) => setTimeout(() => no(new Error("timeout")), 25000))]);
+    } catch (x) { err(/timeout/.test(String(x && x.message)) ? "This is taking too long. Check the internet connection and try again." : "Something went wrong. Try again."); }
     btn && (btn.disabled = false);
     if (done) dlg.close();
   });
@@ -2243,6 +2246,20 @@ body.signed-out { background: var(--page) fixed; }
     };
   }
 
+  /* Database function call that can't hang: if the client doesn't answer in 10 s, call the REST API directly */
+  async function rpc(fn, args) {
+    const slow = new Promise(r => setTimeout(() => r("slow"), 10000));
+    const first = await Promise.race([sb.rpc(fn, args || {}).then(x => x, e => ({ error: e })), slow]);
+    if (first !== "slow") return first;
+    try {
+      let tok = null; try { tok = JSON.parse(localStorage.getItem("ovm-auth") || "null"); tok = tok && (tok.access_token || (tok.currentSession && tok.currentSession.access_token)); } catch {}
+      const ctl = new AbortController(); setTimeout(() => ctl.abort(), 15000);
+      const res = await fetch(SB_URL + "/rest/v1/rpc/" + fn, { method: "POST", signal: ctl.signal,
+        headers: { apikey: SB_KEY, Authorization: "Bearer " + (tok || SB_KEY), "Content-Type": "application/json" }, body: JSON.stringify(args || {}) });
+      const body = await res.json().catch(() => null);
+      return res.ok ? { data: body, error: null } : { data: null, error: { message: (body && body.message) || "HTTP " + res.status } };
+    } catch (e) { return { data: null, error: { message: "network: " + e.message } }; }
+  }
   /* ---------- login / logout ---------- */
   let sb = null, me = null, booted = false, loggingOut = false, member = null, authMode = "login", waitTimer = null, teamRows = [];
   const myName = () => (member && member.name) || (me && me.email) || "";
@@ -2335,7 +2352,7 @@ body.signed-out { background: var(--page) fixed; }
     const { data, error } = await sb.from("ovm_members").select("*").eq("user_id", me.id).maybeSingle();
     if (error) throw error;
     if (data) return data;
-    const r = await sb.rpc("ovm_join", { p_name: (me.user_metadata && me.user_metadata.name) || "" });
+    const r = await rpc("ovm_join", { p_name: (me.user_metadata && me.user_metadata.name) || "" });
     if (r.error) throw r.error;
     return r.data;
   }
@@ -2539,7 +2556,7 @@ body.signed-out { background: var(--page) fixed; }
   async function ensureDeviceKey() {
     try {
       if (!window.Android || !window.Android.setTrackingToken || window.Android.hasTrackingToken()) return;
-      const { data, error } = await sb.rpc("ovm_device_token");
+      const { data, error } = await rpc("ovm_device_token");
       if (!error && data) window.Android.setTrackingToken(String(data));
     } catch {}
   }
@@ -2567,7 +2584,7 @@ body.signed-out { background: var(--page) fixed; }
 
     if (authMode === "forgot") {
       btn.disabled = true; btn.textContent = "Sending…";
-      const { error } = await sb.rpc("ovm_request_reset", { p_email: email }).catch(err => ({ error: err }));
+      const { error } = await rpc("ovm_request_reset", { p_email: email }).catch(err => ({ error: err }));
       done();
       if (error) { $("#lErr").textContent = authErr(String(error.message || "")); return; }
       LS.set("ovm_email", email);
@@ -2745,7 +2762,7 @@ body.signed-out { background: var(--page) fixed; }
       async () => {
         const v = normPhone($("#pnNum").value);
         if (!v) return err("Enter a valid mobile number."), false;
-        const { data, error } = await sb.rpc("ovm_set_phone", { p_phone: v }).catch(e => ({ error: e }));
+        const { data, error } = await rpc("ovm_set_phone", { p_phone: v }).catch(e => ({ error: e }));
         if (error) return err("Couldn't save. Check the connection and try again."), false;
         if (data === "taken") return err("This number is already used by another account."), false;
         if (data !== "ok") return err("Enter a valid mobile number."), false;
