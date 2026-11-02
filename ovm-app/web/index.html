@@ -1152,7 +1152,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 (() => {
   const $ = s => document.querySelector(s);
   const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
-  const S = { vehicles: [], drivers: [], places: [], departments: [], trips: [], positions: [], fuel: [], services: [] };
+  const S = { vehicles: [], drivers: [], places: [], departments: [], settings: [], trips: [], positions: [], fuel: [], services: [] };
 
   /* ---------- GPS (native bridge) ---------- */
   const gpsWait = {};
@@ -1929,7 +1929,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
           await db.doc("vehicles/" + v._id).update({ status: "On Trip" });
           await db.doc("drivers/" + d._id).update({ status: "On Trip" });
           if (!S.places.some(p => p.name.toLowerCase() === place.toLowerCase())) await db.collection("places").add({ name: place });
-          if (!S.departments.some(p => String(p.name).toLowerCase() === dept.toLowerCase())) await db.collection("departments").add({ name: dept });
+          if (!S.departments.some(p => String(p.name).toLowerCase() === dept.toLowerCase())) await db.collection("settings").add({ type: "department", name: dept }).catch(() => {});
         }, `${v.vehicleNumber} dispatched`);
         if (ok && newTripId) afterDispatch(newTripId, v, d, track);
         return ok;
@@ -1975,7 +1975,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     else if (b.dataset.editDriver) { if (canWrite) driverForm(S.drivers.find(d => d._id === b.dataset.editDriver)); }
     else if (b.dataset.markin) markInForm(S.trips.find(t => t._id === b.dataset.markin));
     else if (b.dataset.delPlace) write(() => db.doc("places/" + b.dataset.delPlace).delete(), "Place removed");
-    else if (b.dataset.delDept) write(() => db.doc("departments/" + b.dataset.delDept).delete(), "Department removed");
+    else if (b.dataset.delDept) write(() => db.doc("settings/" + b.dataset.delDept).delete(), "Department removed");
     else if (b.dataset.track) { const t = S.trips.find(x => x._id === b.dataset.track); if (t) { gps.start(t); db.doc("trips/" + t._id).update({ tracked: true }).catch(() => {}); } }
     else if (b.dataset.untrack) { gps.stop(); }
     else if (b.dataset.maptrip) { routeTrip = S.positions.find(p => p._id === b.dataset.maptrip) || null; fitted = false; if (location.hash === "#map") renderMap(); else location.hash = "#map"; }
@@ -2022,7 +2022,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     e.preventDefault(); if (!db) return;
     const name = $("#deptName").value.trim(); if (!name) return;
     if (S.departments.some(p => p.name.toLowerCase() === name.toLowerCase())) { toast("That department is already saved"); return; }
-    if (await write(() => db.collection("departments").add({ name }), "Department added")) $("#deptName").value = "";
+    if (await write(() => db.collection("settings").add({ type: "department", name }), "Department added")) $("#deptName").value = "";
   });
   // Department names for the dispatch list: saved ones plus any used on earlier trips
   function deptNames() {
@@ -2041,7 +2041,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   /* ---------- live data: Supabase (table ovm_docs) ---------- */
   const SB_URL = "https://ttxkexsrzuejwhxqetjl.supabase.co";
   const SB_KEY = "sb_publishable_dfCrOnlBlLCWxWnyr6szdQ_xDE14jCM";
-  const COLS = ["vehicles","drivers","places","departments","trips","positions","fuel","services"];
+  const COLS = ["vehicles","drivers","places","settings","trips","positions","fuel","services"];
 
   function makeDb(sb) {
     const cache = {}, listeners = {};
@@ -2732,7 +2732,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       positions: (a, b) => String(a.vehicleNumber).localeCompare(b.vehicleNumber),
       drivers: (a, b) => String(a.name).localeCompare(b.name),
       places: (a, b) => String(a.name).localeCompare(b.name),
-      departments: (a, b) => String(a.name).localeCompare(b.name),
+      settings: (a, b) => String(a.name || "").localeCompare(String(b.name || "")),
       trips: (a, b) => String(b.outTime).localeCompare(String(a.outTime)),
       fuel: (a, b) => String(b.date).localeCompare(String(a.date)),
       services: (a, b) => String(b.date).localeCompare(String(a.date)),
@@ -2746,6 +2746,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     for (const col of COLS) {
       db.collection(col).onSnapshot(snap => {
         S[col] = snap.docs.map(d => ({ ...d.data(), _id: d.id })).sort(sorters[col]);
+        if (col === "settings") S.departments = S.settings.filter(x => x.type === "department"); // departments live in the "settings" collection
         loaded.add(col); if (loaded.size === COLS.length) { clearTimeout(timer); dataReady = true; }
         if (col === "trips") { const tr = gps.tracking(); const tt = tr && S.trips.find(x => x._id === tr); if (tt && tt.status !== "Out") gps.stop(); }
         status(); render();
