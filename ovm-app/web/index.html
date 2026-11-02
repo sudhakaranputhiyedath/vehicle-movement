@@ -3031,7 +3031,7 @@ body.signed-out { background: var(--page) fixed; }
   window.__appUpdateEvent = kind => {
     if (kind === "latest") toast("You have the latest version");
     else if (kind === "check-failed") toast("Couldn't check for updates. Check the internet connection.");
-    else if (kind === "web-not-ready") toast("The update is still downloading. Try again in a minute.");
+    else if (kind === "web-not-ready") { toast("Downloading the update again. The button will come back in a minute."); upd = null; renderUpdateBar(); }
     else { apkState = kind; if (kind === "apk-failed") toast("Couldn't download the new version. Try again."); if (kind === "apk-ready") toast("Tap Install on the next screen"); renderUpdateBar(); }
   };
   document.addEventListener("click", e => {

@@ -1,13 +1,13 @@
 {
   "app": "Office Vehicle Manager",
   "web": {
-    "version": 37,
-    "notes": "Recent trips on the home page",
+    "version": 38,
+    "notes": "Recent trips on the home page and update fixes",
     "files": [
       {
         "name": "index.html",
-        "sha256": "a7d9bc8f36abb5999042dbf0e1d743f84042f3fa9dc392bd05f762cf9daa0284",
-        "size": 280394
+        "sha256": "bce36c418171c5373126c4f0b62f49d420728a0df434821809446c2389d3b55c",
+        "size": 280442
       },
       {
         "name": "art.js",
@@ -38,10 +38,10 @@
     "minNative": 15
   },
   "apk": {
-    "versionCode": 20,
-    "versionName": "3.2",
-    "notes": "Fingerprint login on the login screen. Install this update to use it.",
+    "versionCode": 21,
+    "versionName": "3.3",
+    "notes": "Makes app updates more reliable.",
     "file": "apk/OfficeVehicleManager.apk",
-    "sha256": "ce81c17cf11af0b86d5e5b8501772f03aae3c116cb50c726e4149dfe6a4debd0"
+    "sha256": "e0d3b12eb6fc3ab7e8b8bd2e2e20074feafb1478ab0f1ae78d2501d80a214369"
   }
 }
