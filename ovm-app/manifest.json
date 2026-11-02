@@ -1,13 +1,13 @@
 {
   "app": "Office Vehicle Manager",
   "web": {
-    "version": 32,
-    "notes": "Live facts on the greeting card",
+    "version": 33,
+    "notes": "Fix: screen no longer shakes when the info changes",
     "files": [
       {
         "name": "index.html",
-        "sha256": "8285b2509a524eec101d76bd67311ed77475d3c9e666111bd673fb21c0eaf584",
-        "size": 266972
+        "sha256": "88a15a091fc49ec375c0d6b8dba7fe9bc8c975e715463f4530d95c717c8bf1ee",
+        "size": 267303
       },
       {
         "name": "art.js",

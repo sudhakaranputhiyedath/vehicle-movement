@@ -172,9 +172,9 @@ body.signed-out .top, body.signed-out main, body.signed-out .tabs { display: non
 .hello .txt { position: relative; z-index: 1; max-width: 62%; display: grid; gap: 2px; }
 .hello .hi { font-family: var(--f-display); font-weight: 700; font-size: 24px; letter-spacing: .02em; text-transform: uppercase; line-height: 1.1; text-wrap: balance; }
 .hello .date { font-size: 13px; opacity: .85; }
-.hello .ticker { margin-top: 8px; min-height: 2.7em; display: flex; align-items: center; font-size: 13.5px; font-weight: 600; line-height: 1.35;
+.hello .ticker { margin-top: 8px; height: calc(2 * 1.35em + 12px); overflow: hidden; contain: layout paint; display: flex; align-items: center; font-size: 13.5px; font-weight: 600; line-height: 1.35;
   background: rgba(255,255,255,.14); border-radius: 10px; padding: 6px 10px; max-width: 100%; backdrop-filter: blur(2px); }
-.hello .ticker span { transition: opacity .35s ease, transform .35s ease; overflow-wrap: anywhere; }
+.hello .ticker span { transition: opacity .35s ease, transform .35s ease; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; will-change: opacity, transform; }
 .hello .ticker span.out { opacity: 0; transform: translateY(-6px); }
 .hello .sum { margin-top: 8px; display: inline-flex; gap: 6px; flex-wrap: wrap; }
 .hello .sum span { background: rgba(255,255,255,.16); border-radius: 99px; padding: 3px 10px; font-size: 12px; font-weight: 600; }
@@ -1452,10 +1452,11 @@ body.signed-out { background: var(--page) fixed; }
     const greet = hr < 12 ? "Good morning" : hr < 17 ? "Good afternoon" : "Good evening";
     const helloHtml = `<div class="txt"><div class="hi">${greet}${first ? ", " + esc(first) : ""}</div>
       <div class="date">${new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}</div>
-      <div class="ticker" id="ticker" aria-live="polite"><span id="tickerTxt">${esc(helloFacts[tickIdx % Math.max(1, helloFacts.length)] || "")}</span></div>
+      <div class="ticker" id="ticker" aria-live="polite"><span id="tickerTxt"></span></div>
       <div class="sum"><a href="#view-ontrip">${open.length} out now ›</a><a href="#view-available">${v.filter(x => x.status === "Available").length} available ›</a></div></div>
       <div class="pic">${ART.banner()}</div>`;
     if (lastHello !== helloHtml) { $("#hello").innerHTML = helloHtml; lastHello = helloHtml; }
+    { const tt = $("#tickerTxt"); if (tt && !tt.classList.contains("out")) { tickIdx = tickIdx % Math.max(1, helloFacts.length); const t = helloFacts[tickIdx] || ""; if (tt.textContent !== t) tt.textContent = t; } }
 
     $("#openTrips").innerHTML = open.length ? open.map(tripCard).join("")
       : `<div class="empty">${ART.empty("trips")}No vehicle is out right now. Use <b>Dispatch out</b> when a vehicle leaves the office.</div>`;
