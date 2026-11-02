@@ -1,13 +1,13 @@
 {
   "app": "Office Vehicle Manager",
   "web": {
-    "version": 31,
-    "notes": "Green Dispatch button",
+    "version": 32,
+    "notes": "Live facts on the greeting card",
     "files": [
       {
         "name": "index.html",
-        "sha256": "a238c9f517ceeaf33228660a50cb31e31cb599a63f363eea1e3e28330b28516b",
-        "size": 262395
+        "sha256": "8285b2509a524eec101d76bd67311ed77475d3c9e666111bd673fb21c0eaf584",
+        "size": 266972
       },
       {
         "name": "art.js",
