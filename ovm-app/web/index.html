@@ -137,6 +137,13 @@ dialog::backdrop { background: rgba(0,0,0,.45); }
 body.signed-out .top, body.signed-out main, body.signed-out .tabs { display: none; }
 .login { min-height: 100vh; display: grid; place-items: center; padding-block: 24px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 .login-card { width: 100%; max-width: 380px; display: grid; gap: 14px; }
+.fp-box { display: grid; gap: 8px; justify-items: center; text-align: center; padding: 14px; border-radius: 16px; background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.fp-btn { display: grid; justify-items: center; gap: 6px; width: 100%; padding: 14px 12px; border: 0; border-radius: 14px; background: var(--accent); color: #fff; font: inherit; font-weight: 700; font-size: 16px; cursor: pointer; }
+.fp-btn svg { width: 44px; height: 44px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+.fp-btn:active { transform: scale(.98); }
+.fp-btn[disabled] { opacity: .6; }
+.fp-or { display: flex; align-items: center; gap: 10px; color: var(--muted, #888); font-size: 12px; width: 100%; }
+.fp-or::before, .fp-or::after { content: ""; flex: 1; height: 1px; background: currentColor; opacity: .3; }
 .login-mark { width: 64px; height: 64px; border-radius: 16px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; }
 .login-mark svg { width: 38px; height: 38px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .login h1 { font-family: var(--f-display); font-weight: 700; font-size: 30px; text-transform: uppercase; letter-spacing: .02em; line-height: 1.05; margin: 4px 0 0; }
@@ -957,6 +964,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <h1>Office Vehicle Manager</h1>
     <p class="hint" style="margin:0" id="lHint">Log in with your email and password.</p>
     <div class="info" id="lInfo" hidden></div>
+    <div class="fp-box" id="fpBox" hidden>
+      <button class="fp-btn" type="button" id="fpBtn"><svg viewBox="0 0 24 24"><path d="M12 11v4.5c0 2 .8 3.6 2 4.8"/><path d="M8.6 9.5A3.6 3.6 0 0 1 15.6 11v3.2c0 1.8.4 3.3 1.2 4.6"/><path d="M8.4 13v2.5c0 2.4.8 4.4 2.1 5.9"/><path d="M5.2 15.6c.3-1 .4-2 .4-3.1V11a6.4 6.4 0 0 1 12.8 0v2.2c0 1.2.2 2.3.5 3.3"/><path d="M6.3 5.6A8.8 8.8 0 0 1 20.8 11"/></svg><span>Log in with fingerprint</span></button>
+      <span class="hint" id="fpWho"></span>
+      <div class="fp-or">or use your password</div>
+    </div>
     <div class="field" id="lNameWrap" hidden><label for="lName">Your name</label><input id="lName" autocomplete="name" maxlength="60"></div>
     <div class="field" id="lEmailWrap"><label for="lEmail" id="lEmailLabel">Email or mobile number</label><input id="lEmail" type="text" autocomplete="username" autocapitalize="off" spellcheck="false"></div>
     <div class="field" id="lPhoneWrap" hidden><label for="lPhone">Mobile number</label><input id="lPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="e.g. 9123 4567" maxlength="20"></div>
@@ -2079,6 +2091,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     $("#lCodeWrap").hidden = m !== "code";
     $("#lForgot").hidden = m !== "login";
     $("#lOtp").hidden = m !== "login";
+    renderFp();
     $("#lResend").hidden = m !== "code";
     $("#lSwitch").textContent = m === "login" ? "Create account" : "Back to log in";
     $("#lBtn").textContent = m === "signup" ? "Create account" : m === "forgot" ? "Ask admin to reset" : m === "otp" ? "Send code" : m === "code" ? "Verify" : "Log in";
@@ -2088,7 +2101,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       : m === "code" ? "" : "Log in with your email or mobile number and your password.";
     $("#lPass").autocomplete = m === "signup" ? "new-password" : "current-password";
     $("#lErr").textContent = "";
-    setTimeout(() => (m === "signup" ? $("#lName") : m === "code" ? $("#lCode") : $("#lEmail").value && m === "login" ? $("#lPass") : $("#lEmail")).focus(), 50);
+    if (!(m === "login" && fpSavedId())) setTimeout(() => (m === "signup" ? $("#lName") : m === "code" ? $("#lCode") : $("#lEmail").value && m === "login" ? $("#lPass") : $("#lEmail")).focus(), 50);
   }
   $("#lOtp").addEventListener("click", () => { $("#lInfo").hidden = true; setMode("otp"); });
   // ---- email code login (needs the Supabase email template to include {{ .Token }} and working email delivery) ----
@@ -2167,6 +2180,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   $("#waitLogout").addEventListener("click", () => doLogout());
   async function doLogout() {
     loggingOut = true;
+    try { sessionStorage.setItem("ovm_loggedout", "1"); } catch {}
     if (gps.tracking()) gps.stop();
     try { window.Android && window.Android.clearTrackingAuth && window.Android.clearTrackingAuth(); } catch {}
     await sb.auth.signOut({ scope: "local" }).catch(() => {});
@@ -2334,7 +2348,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     const ub = $("#userBtn"); ub.hidden = false; ub.textContent = initials(me.email); ub.title = me.email;
     if (!booted) {
       booted = true; boot(); startTeam(); renderPhoneHint();
-      if (lockOn()) lockNow();
+      setTimeout(offerFingerprint, 900);
       ensureDeviceKey().then(() => {
         try {
           if (member && member.role === "admin" && window.Android && window.Android.setNotifications && LS.get("ovm_notify_set") !== "1" && window.Android.hasTrackingToken()) {
@@ -2416,36 +2430,108 @@ svg.leaflet-image-layer.leaflet-interactive path {
     }
 
     btn.disabled = true; btn.textContent = "Logging in…";
-    if (isPhone) {
-      const r = await sb.functions.invoke("ovm-phone-login", { body: { phone: email, password } }).catch(err => ({ error: err }));
+    const r = await passwordLogin(email, password);
+    done();
+    if (!r.session) { $("#lErr").textContent = r.msg; return; }
+    LS.set("ovm_email", email); $("#lPass").value = "";
+    if (canFp() && fpSavedId() !== email) fpOffer = { id: email, pw: password };
+    signedIn(r.session);
+  });
+
+  // Email or mobile + password → { session } or { msg, wrong }
+  async function passwordLogin(id, password) {
+    if (!id.includes("@")) {
+      const r = await sb.functions.invoke("ovm-phone-login", { body: { phone: id, password } }).catch(err => ({ error: err }));
       let code = (r.data && r.data.error) || "";
       try { if (!code && r.error && r.error.context && r.error.context.json) code = (await r.error.context.json()).error; } catch {}
       if (r.data && r.data.access_token) {
         const set = await sb.auth.setSession({ access_token: r.data.access_token, refresh_token: r.data.refresh_token }).catch(err => ({ error: err }));
-        done();
-        if (set.error || !set.data || !set.data.session) { $("#lErr").textContent = "Couldn't log in. Try again."; return; }
-        LS.set("ovm_email", email); $("#lPass").value = "";
-        signedIn(set.data.session);
-        return;
+        if (set.error || !set.data || !set.data.session) return { msg: "Couldn't log in. Try again." };
+        return { session: set.data.session };
       }
-      done();
-      $("#lErr").textContent = code === "rate" ? "Too many attempts. Wait a few minutes and try again."
+      return { wrong: code === "invalid", msg: code === "rate" ? "Too many attempts. Wait a few minutes and try again."
         : code === "not_confirmed" ? "This account isn't confirmed yet. Ask your admin to set a password for you."
         : code === "invalid" ? "Wrong mobile number or password. If you haven't added your mobile number yet, log in with your email."
-        : "Couldn't log in. Check the internet connection and try again.";
+        : "Couldn't log in. Check the internet connection and try again." };
+    }
+    const { data, error } = await sb.auth.signInWithPassword({ email: id, password }).catch(err => ({ error: err }));
+    if (error || !data || !data.session) { const m = String((error && error.message) || ""); return { wrong: /invalid login|invalid_credentials|invalid grant/i.test(m), msg: authErr(m) }; }
+    return { session: data.session };
+  }
+
+  /* ---------- fingerprint login (fingerprint / face / phone PIN unlock the saved login) ---------- */
+  const canFp = () => !!(window.Android && window.Android.fpLogin && window.Android.lockStatus);
+  const fpSavedId = () => { try { return canFp() ? String(window.Android.fpLoginId() || "") : ""; } catch { return ""; } };
+  const phoneLock = () => { try { return window.Android.lockStatus(); } catch { return "none"; } };
+  let fpOffer = null, fpBusy = false;
+  const fpCalls = {};
+  window.__credResult = (id, r) => { const f = fpCalls[id]; delete fpCalls[id]; if (f) f(String(r)); };
+  const fpCall = (fn, ...args) => new Promise(res => { const id = "f" + Date.now() + Math.random().toString(36).slice(2, 6); fpCalls[id] = res; try { window.Android[fn](id, ...args); } catch (e) { delete fpCalls[id]; res("error:" + e.message); } });
+  const showId = id => id.includes("@") ? id : showPhone(normPhone(id) || id);
+  function renderFp() {
+    const id = fpSavedId();
+    $("#fpBox").hidden = !(id && authMode === "login");
+    if (id) $("#fpWho").innerHTML = `as <b>${esc(showId(id))}</b>`;
+  }
+  async function fingerprintLogin() {
+    if (fpBusy || !sb) return;
+    const id = fpSavedId(); if (!id) { renderFp(); return; }
+    fpBusy = true; const btn = $("#fpBtn"); btn.disabled = true; $("#lErr").textContent = ""; $("#lInfo").hidden = true;
+    const out = await fpCall("fpLogin");
+    let cred = null; try { cred = out.startsWith("{") ? JSON.parse(out) : null; } catch {}
+    if (!cred) {
+      fpBusy = false; btn.disabled = false;
+      if (out === "gone") { renderFp(); $("#lErr").textContent = "Fingerprint login was reset because the phone's fingerprints or screen lock changed. Log in with your password and turn it on again."; }
+      else if (out.startsWith("error")) $("#lErr").textContent = "Fingerprint didn't work (" + out.slice(6) + "). Log in with your password.";
       return;
     }
-    const { data, error } = await sb.auth.signInWithPassword({ email, password }).catch(err => ({ error: err }));
-    done();
-    if (error || !data || !data.session) { $("#lErr").textContent = authErr(String((error && error.message) || "")); return; }
-    LS.set("ovm_email", email);
-    $("#lPass").value = "";
-    signedIn(data.session);
-  });
+    btn.querySelector("span").textContent = "Logging in…";
+    const r = await passwordLogin(cred.id, cred.pw);
+    fpBusy = false; btn.disabled = false; btn.querySelector("span").textContent = "Log in with fingerprint";
+    if (!r.session) {
+      if (r.wrong) { try { window.Android.fpClear(); } catch {} renderFp(); $("#lEmail").value = cred.id; $("#lErr").textContent = "Your password has changed. Log in with the new password, then turn fingerprint login on again."; }
+      else $("#lErr").textContent = r.msg;
+      return;
+    }
+    LS.set("ovm_email", cred.id);
+    signedIn(r.session);
+  }
+  $("#fpBtn").addEventListener("click", fingerprintLogin);
+  async function fpTurnOn(id, pw) {
+    if (phoneLock() === "none") { toast("First set a fingerprint or screen lock in your phone's Settings."); return false; }
+    const r = await fpCall("fpSave", id, JSON.stringify({ id, pw }));
+    if (r === "ok") { toast("Fingerprint login on"); return true; }
+    if (r !== "cancel") toast("Couldn't turn on fingerprint login (" + r.replace(/^error:/, "") + ")");
+    return false;
+  }
+  function offerFingerprint() {
+    const o = fpOffer; fpOffer = null;
+    if (!o || !canFp() || phoneLock() === "none" || LS.get("ovm_fp_no_" + o.id) === "1") return;
+    open("Log in with fingerprint?", `<div style="text-align:center;color:var(--accent)"><svg viewBox="0 0 24 24" style="width:56px;height:56px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round"><path d="M12 11v4.5c0 2 .8 3.6 2 4.8"/><path d="M8.6 9.5A3.6 3.6 0 0 1 15.6 11v3.2c0 1.8.4 3.3 1.2 4.6"/><path d="M8.4 13v2.5c0 2.4.8 4.4 2.1 5.9"/><path d="M5.2 15.6c.3-1 .4-2 .4-3.1V11a6.4 6.4 0 0 1 12.8 0v2.2c0 1.2.2 2.3.5 3.3"/><path d="M6.3 5.6A8.8 8.8 0 0 1 20.8 11"/></svg></div>
+      <p style="margin:0">Next time, log in with your <b>fingerprint</b> (or face / phone PIN) instead of typing your password.</p><p class="hint" style="margin:0">Your login is locked inside this phone's secure chip. Only this phone's fingerprint or screen lock can open it.</p>`,
+      `<button class="btn ghost" type="button" id="fpNo">Not now</button><button class="btn" value="save">Turn on</button>`,
+      async () => { await fpTurnOn(o.id, o.pw); return true; });
+    $("#fpNo").addEventListener("click", () => { LS.set("ovm_fp_no_" + o.id, "1"); dlg.close(); });
+  }
+  function fingerprintDialog(box) {
+    const id = LS.get("ovm_email") || me.email;
+    open("Turn on fingerprint login", `<p style="margin:0">Enter your password once. After that you can log in as <b>${esc(showId(id))}</b> with your fingerprint, face or phone PIN.</p>
+      ${field("fpPw", "Password", inp("fpPw", `type="password" autocomplete="current-password"`))}`,
+      `<button class="btn ghost" type="button" data-dlgclose>Cancel</button><button class="btn" value="save">Continue</button>`,
+      async () => {
+        const pw = $("#fpPw").value;
+        if (!pw) return err("Enter your password."), false;
+        const r = await passwordLogin(id, pw);
+        if (!r.session) return err(r.wrong ? "That password is wrong." : r.msg), false;
+        await fpTurnOn(id, pw);
+        return true;
+      });
+    dlg.addEventListener("close", () => { if (box) box.checked = !!fpSavedId(); }, { once: true });
+  }
 
   /* ---------- app lock (fingerprint / face / phone PIN) ---------- */
   const canLock = () => !!(window.Android && window.Android.unlock && window.Android.lockStatus);
-  const lockOn = () => canLock() && LS.get("ovm_lock") === "1";
+  const lockOn = () => false; // v3.2: replaced by fingerprint login on the login screen
   let unlocking = false, hiddenAt = 0;
   function askUnlock(onOk) {
     if (unlocking) return;
@@ -2517,6 +2603,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
         const { error } = await sb.auth.updateUser({ password: a }).catch(e => ({ error: e }));
         if (error) { err(/different|same/i.test(String(error.message)) ? "Choose a password different from the old one." : authErr(String(error.message || ""))); return false; }
         toast("Password changed");
+        const fid = fpSavedId();
+        if (fid) setTimeout(() => fpTurnOn(fid, a), 300);
         return true;
       });
   }
@@ -2567,13 +2655,17 @@ svg.leaflet-image-layer.leaflet-interactive path {
     const notifyBox = canNotify ? `<div class="td-card" style="padding:12px 14px"><label class="check" for="nOn" style="background:none;padding:0"><input type="checkbox" id="nOn" ${nOn ? "checked" : ""}><span><b>Trip notifications on this phone</b><br><span class="hint">Vehicle left, came back, or is out too long. Checked about every 15 minutes.</span></span></label>
       <div class="field"><label for="nHours">Warn when a vehicle is out longer than</label>${sel("nHours", [2, 3, 4, 6, 8, 12].map(h => [String(h), h + " hours"]), String(nHours))}</div></div>` : "";
     const ver = ai ? `<div class="row" style="padding:10px 12px"><div class="main"><div class="t">App version ${esc(ai.versionName)}</div><div class="s">Update ${esc(String(ai.web))}</div></div><button class="btn ghost small" type="button" id="checkUpd">Check for updates</button></div>` : "";
-    open("Account", `<p style="margin:0">Logged in as<br><b>${esc(myName())}</b><br><span class="hint">${esc(me.email)}${member && member.role === "admin" ? " · Admin" : ""}</span></p>${team}${canLock() ? `<div class="td-card" style="padding:12px 14px"><label class="check" for="lockOn" style="background:none;padding:0"><input type="checkbox" id="lockOn" ${lockOn() ? "checked" : ""}><span><b>Lock app with fingerprint</b><br><span class="hint">Asks for your fingerprint, face or phone PIN when you open the app or come back after a minute.</span></span></label></div>` : ""}<button class="btn ghost" type="button" id="goPhone">${member && member.phone ? "Mobile " + esc(showPhone(member.phone)) + " · Change" : "Add mobile number for login"}</button><button class="btn ghost" type="button" id="goChangePw">Change password</button>${notifyBox}${ver}${tracking ? `<p class="hint" style="margin:0">Live tracking is running on this phone. Logging out stops it.</p>` : ""}`,
+    open("Account", `<p style="margin:0">Logged in as<br><b>${esc(myName())}</b><br><span class="hint">${esc(me.email)}${member && member.role === "admin" ? " · Admin" : ""}</span></p>${team}${canFp() ? `<div class="td-card" style="padding:12px 14px"><label class="check" for="fpOn" style="background:none;padding:0"><input type="checkbox" id="fpOn" ${fpSavedId() ? "checked" : ""}><span><b>Log in with fingerprint</b><br><span class="hint">On the login screen, use your fingerprint, face or phone PIN instead of typing your password.</span></span></label></div>` : ""}<button class="btn ghost" type="button" id="goPhone">${member && member.phone ? "Mobile " + esc(showPhone(member.phone)) + " · Change" : "Add mobile number for login"}</button><button class="btn ghost" type="button" id="goChangePw">Change password</button>${notifyBox}${ver}${tracking ? `<p class="hint" style="margin:0">Live tracking is running on this phone. Logging out stops it.</p>` : ""}`,
       `<button class="btn ghost" type="button" data-dlgclose>Cancel</button><button class="btn danger" value="save">Log out</button>`,
       async () => { await doLogout(); return true; });
     const g = $("#goTeam"); if (g) g.addEventListener("click", () => dlg.close());
     $("#goChangePw").addEventListener("click", () => { dlg.close(); setTimeout(changePasswordDialog, 50); });
     $("#goPhone").addEventListener("click", () => { dlg.close(); setTimeout(phoneDialog, 50); });
-    if ($("#lockOn")) $("#lockOn").addEventListener("change", e => setLock(e.target.checked, e.target));
+    if ($("#fpOn")) $("#fpOn").addEventListener("change", e => {
+      if (!e.target.checked) { try { window.Android.fpClear(); } catch {} toast("Fingerprint login off"); return; }
+      if (phoneLock() === "none") { e.target.checked = false; toast("First set a fingerprint or screen lock in your phone's Settings."); return; }
+      dlg.close(); setTimeout(() => fingerprintDialog(null), 50);
+    });
     if ($("#nOn")) {
       $("#nOn").addEventListener("change", async e => {
         await ensureDeviceKey();
@@ -2597,7 +2689,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
     });
     let session = null;
     try { const r = await sb.auth.getSession(); session = r.data && r.data.session; } catch {}
-    if (session) signedIn(session); else showLogin();
+    if (session) signedIn(session);
+    else {
+      showLogin();
+      let lo = null; try { lo = sessionStorage.getItem("ovm_loggedout"); sessionStorage.removeItem("ovm_loggedout"); } catch {}
+      if (!lo && fpSavedId()) setTimeout(fingerprintLogin, 400);
+    }
   }
 
   async function boot() {

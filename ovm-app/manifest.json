@@ -1,13 +1,13 @@
 {
   "app": "Office Vehicle Manager",
   "web": {
-    "version": 20,
-    "notes": "Small improvements.",
+    "version": 21,
+    "notes": "Log in with your fingerprint, face or phone PIN",
     "files": [
       {
         "name": "index.html",
-        "sha256": "92ecfdad447818324ebe74c485529269d2c5a6b4c10bf211bcaeec45cf35c1b0",
-        "size": 235188
+        "sha256": "c8e613ee8de2fdcce18078fd4a88ed784ec1db54d9481c046c6f766db20cb7dc",
+        "size": 242785
       },
       {
         "name": "art.js",
@@ -38,10 +38,10 @@
     "minNative": 15
   },
   "apk": {
-    "versionCode": 19,
-    "versionName": "3.1",
-    "notes": "Lock the app with your fingerprint, face or phone PIN.",
+    "versionCode": 20,
+    "versionName": "3.2",
+    "notes": "Fingerprint login on the login screen. Install this update to use it.",
     "file": "apk/OfficeVehicleManager.apk",
-    "sha256": "174f2df309f0b340dc7492231360dd24f36f8aa5034eb8cf9c2ea74e58ad2428"
+    "sha256": "ce81c17cf11af0b86d5e5b8501772f03aae3c116cb50c726e4149dfe6a4debd0"
   }
 }
