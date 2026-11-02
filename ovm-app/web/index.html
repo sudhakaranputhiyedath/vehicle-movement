@@ -1,0 +1,1965 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Office Vehicle Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: phone-first app shell — sticky header, one tab panel at a time, fixed bottom tab bar; widens to a centered 760px column on desktop */
+:root {
+  --bg: #F1F4F3; --surface: #FFFFFF; --ink: #15211D; --muted: #5B6A64; --line: #D8E0DC;
+  --accent: #0D6A5B; --accent-ink: #FFFFFF; --accent-soft: #DCEEEA;
+  --ok: #2B7A3B; --ok-soft: #E1F2E3; --warn: #A65F00; --warn-soft: #FBEBD3; --bad: #B3261E; --bad-soft: #F9E1DF;
+  --plate: #FFFFFF; --plate-ink: #111111;
+  --f-ui: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-num: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 12px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0E1412; --surface: #17201D; --ink: #E5ECE9; --muted: #95A49E; --line: #2A3632;
+  --accent: #4CC2A6; --accent-ink: #06231D; --accent-soft: #173A33;
+  --ok: #72C982; --ok-soft: #1B3322; --warn: #F0A63C; --warn-soft: #3A2A12; --bad: #F2847B; --bad-soft: #3D1D1B;
+  --plate: #EDEDED; --plate-ink: #111111; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0E1412; --surface: #17201D; --ink: #E5ECE9; --muted: #95A49E; --line: #2A3632;
+  --accent: #4CC2A6; --accent-ink: #06231D; --accent-soft: #173A33;
+  --ok: #72C982; --ok-soft: #1B3322; --warn: #F0A63C; --warn-soft: #3A2A12; --bad: #F2847B; --bad-soft: #3D1D1B;
+  --plate: #EDEDED; --plate-ink: #111111; color-scheme: dark }
+
+html, body { background: var(--bg); color: var(--ink); }
+body { font-family: var(--f-ui); font-size: 15px; line-height: 1.45; }
+* { box-sizing: border-box; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line);
+  padding-block: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.top-in { max-width: 760px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.brand { font-family: var(--f-display); font-weight: 700; font-size: 22px; letter-spacing: .02em; text-transform: uppercase; line-height: 1.1; }
+.brand small { display: block; font-family: var(--f-ui); font-weight: 500; font-size: 12px; letter-spacing: .04em; color: var(--muted); text-transform: none; }
+.sync { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 99px; background: var(--bg); color: var(--muted); white-space: nowrap; }
+.sync i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.sync.live { color: var(--ok); background: var(--ok-soft); } .sync.live i { background: var(--ok); }
+.sync.off { color: var(--bad); background: var(--bad-soft); } .sync.off i { background: var(--bad); }
+
+main { max-width: 760px; margin: 0 auto; padding-block: 16px 110px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.notice { background: var(--warn-soft); color: var(--ink); border-radius: var(--r); padding: 10px 14px; margin-bottom: 14px; font-size: 14px; }
+.head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 4px 0 12px; flex-wrap: wrap; }
+h2 { font-family: var(--f-display); font-weight: 700; font-size: 24px; text-transform: uppercase; letter-spacing: .02em; margin: 0; text-wrap: balance; }
+h3 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 22px 0 8px; }
+
+.btn { border: 0; border-radius: 10px; padding: 10px 16px; font-weight: 600; cursor: pointer; background: var(--accent); color: var(--accent-ink); display: inline-flex; align-items: center; gap: 6px; }
+.btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+.btn.danger { background: var(--bad-soft); color: var(--bad); }
+.btn.small { padding: 6px 12px; font-size: 14px; }
+.btn:disabled { opacity: .5; cursor: default; }
+
+.kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (min-width: 620px) { .kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; }
+.kpi b { display: block; font-family: var(--f-num); font-size: 26px; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.kpi span { font-size: 13px; color: var(--muted); font-weight: 500; }
+
+.list { display: flex; flex-direction: column; gap: 8px; }
+.row { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; display: flex; gap: 12px; align-items: center; min-width: 0; }
+.row.tap { cursor: pointer; text-align: left; width: 100%; }
+.row .main { flex: 1; min-width: 0; }
+.row .t { font-weight: 600; overflow-wrap: anywhere; }
+.row .s { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.thumb { width: 52px; height: 52px; border-radius: 10px; object-fit: cover; background: var(--bg); flex: none; display: grid; place-items: center; color: var(--muted); font-size: 11px; }
+
+.plate { display: inline-block; font-family: var(--f-display); font-weight: 700; font-size: 17px; letter-spacing: .06em; text-transform: uppercase;
+  background: var(--plate); color: var(--plate-ink); border: 2px solid #1A1A1A; border-radius: 6px; padding: 0 8px; line-height: 1.5; }
+.odo { font-family: var(--f-num); font-variant-numeric: tabular-nums; font-size: 13px; }
+
+.chip { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 99px; white-space: nowrap; }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+.chip.warn { background: var(--warn-soft); color: var(--warn); }
+.chip.bad { background: var(--bad-soft); color: var(--bad); }
+.chip.mute { background: var(--bg); color: var(--muted); }
+
+.trip { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; display: grid; gap: 6px; }
+.trip.open { border-left: 4px solid var(--warn); }
+.trip .line1 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: space-between; }
+.trip .meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 12px; font-size: 13px; }
+.trip .meta div { min-width: 0; overflow-wrap: anywhere; }
+.trip .meta em { font-style: normal; color: var(--muted); }
+
+.filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.seg button { border: 0; background: transparent; padding: 7px 12px; font-weight: 600; font-size: 14px; cursor: pointer; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+.search { flex: 1; min-width: 160px; border: 1px solid var(--line); border-radius: 10px; padding: 7px 12px; background: var(--surface); }
+
+.empty { border: 1px dashed var(--line); border-radius: var(--r); padding: 22px 16px; text-align: center; color: var(--muted); font-size: 14px; }
+
+.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--surface); border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+.tabs-in { max-width: 760px; margin: 0 auto; display: grid; grid-template-columns: repeat(6, 1fr); }
+.tabs a { text-decoration: none; color: var(--muted); display: grid; justify-items: center; gap: 2px; padding: 8px 2px 9px; font-size: 11px; font-weight: 600; }
+.tabs a svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.tabs a[aria-current="page"] { color: var(--accent); }
+
+dialog { border: 0; border-radius: 16px; padding: 0; width: min(520px, calc(100vw - 24px)); max-height: calc(100dvh - 40px); background: var(--surface); color: var(--ink); }
+dialog::backdrop { background: rgba(0,0,0,.45); }
+.dlg { display: flex; flex-direction: column; max-height: calc(100dvh - 40px); }
+.dlg header { padding: 16px 18px 8px; font-family: var(--f-display); font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: .02em; }
+.dlg .body { padding: 4px 18px 8px; overflow-y: auto; display: grid; gap: 12px; }
+.dlg footer { padding: 12px 18px 16px; display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; border-top: 1px solid var(--line); }
+.dlg footer .spacer { flex: 1; }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.field input, .field select, .field textarea { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; background: var(--bg); }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.err { color: var(--bad); font-size: 14px; font-weight: 600; min-height: 1em; }
+.hint { font-size: 13px; color: var(--muted); }
+
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(76px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 9px 16px; border-radius: 10px; font-weight: 600; font-size: 14px; z-index: 20; max-width: calc(100vw - 32px); }
+@media (prefers-reduced-motion: no-preference) { .toast { animation: up .2s ease-out; } @keyframes up { from { opacity: 0; transform: translate(-50%, 8px); } } }
+body.signed-out .top, body.signed-out main, body.signed-out .tabs { display: none; }
+.login { min-height: 100vh; display: grid; place-items: center; padding-block: 24px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.login-card { width: 100%; max-width: 380px; display: grid; gap: 14px; }
+.login-mark { width: 64px; height: 64px; border-radius: 16px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; }
+.login-mark svg { width: 38px; height: 38px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.login h1 { font-family: var(--f-display); font-weight: 700; font-size: 30px; text-transform: uppercase; letter-spacing: .02em; line-height: 1.05; margin: 4px 0 0; }
+.login .btn { justify-content: center; padding: 12px 16px; font-size: 16px; }
+.top-right { display: flex; align-items: center; gap: 8px; }
+.userbtn { position: relative; width: 34px; height: 34px; border-radius: 50%; border: 0; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 13px; cursor: pointer; flex: none; }
+.userbtn[data-badge]::after { content: attr(data-badge); position: absolute; top: -4px; right: -4px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--bad); color: #fff; font-size: 10px; line-height: 17px; text-align: center; }
+.info { background: var(--ok-soft); color: var(--ink); border-radius: 10px; padding: 10px 12px; font-size: 14px; }
+.wait-icon { width: 64px; height: 64px; border-radius: 50%; background: var(--warn-soft); color: var(--warn); display: grid; place-items: center; }
+.wait-icon svg { width: 34px; height: 34px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.thumb.art { background: var(--bg); padding: 4px; display: grid; place-items: center; }
+.thumb.art svg { width: 100%; height: auto; }
+.empty svg { display: block; width: 130px; height: 76px; margin: 0 auto 10px; }
+.login-hero { border-radius: 18px; overflow: hidden; height: 170px; box-shadow: 0 8px 24px rgba(13,106,91,.18); }
+.login-hero svg { width: 100%; height: 100%; display: block; }
+.hello { position: relative; overflow: hidden; border-radius: 16px; padding: 16px 16px 18px; margin-bottom: 12px; color: #fff;
+  background: linear-gradient(135deg, #0B5C4F 0%, #0D6A5B 45%, #1A8E77 100%); min-height: 112px; }
+.hello .txt { position: relative; z-index: 1; max-width: 62%; display: grid; gap: 2px; }
+.hello .hi { font-family: var(--f-display); font-weight: 700; font-size: 24px; letter-spacing: .02em; text-transform: uppercase; line-height: 1.1; text-wrap: balance; }
+.hello .date { font-size: 13px; opacity: .85; }
+.hello .sum { margin-top: 8px; display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.hello .sum span { background: rgba(255,255,255,.16); border-radius: 99px; padding: 3px 10px; font-size: 12px; font-weight: 600; }
+.hello .pic { position: absolute; right: -6px; bottom: 0; width: 46%; max-width: 210px; }
+.hello .pic svg { width: 100%; height: auto; display: block; }
+.kpi { display: grid; grid-template-columns: auto 1fr; column-gap: 10px; align-items: center; }
+.kpi .ic { grid-row: span 2; width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; }
+.kpi .ic svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.kpi .ic.ok { background: var(--ok-soft); color: var(--ok); } .kpi .ic.warn { background: var(--warn-soft); color: var(--warn); }
+.kpi .ic.acc { background: var(--accent-soft); color: var(--accent); } .kpi .ic.info { background: var(--bg); color: var(--muted); }
+.avatar { width: 42px; height: 42px; border-radius: 50%; flex: none; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 15px; letter-spacing: .02em; }
+.mini { display: inline-block; width: 46px; vertical-align: middle; margin-right: 6px; }
+.mini svg { width: 100%; height: auto; display: block; }
+.plate-wrap { display: inline-flex; align-items: center; }
+button.kpi { font: inherit; color: inherit; text-align: left; width: 100%; cursor: pointer; position: relative; }
+button.kpi::after { content: "›"; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 20px; }
+button.kpi:active, .trip[data-open-trip]:active { transform: scale(.985); }
+.trip[data-open-trip] { cursor: pointer; }
+.hello .sum a { background: rgba(255,255,255,.16); border-radius: 99px; padding: 3px 10px; font-size: 12px; font-weight: 600; color: #fff; text-decoration: none; }
+.sheet { position: fixed; inset: 0; z-index: 8; background: var(--bg); overflow-y: auto; overscroll-behavior: contain; }
+@media (prefers-reduced-motion: no-preference) { .sheet:not([hidden]) { animation: sheetIn .22s ease-out; } @keyframes sheetIn { from { transform: translateX(28px); opacity: 0; } } }
+.sheet-top { position: sticky; top: 0; z-index: 2; background: var(--surface); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 8px); padding-bottom: 8px; padding-left: max(8px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.sheet-back { width: 42px; height: 42px; border: 0; border-radius: 50%; background: transparent; color: var(--ink); display: grid; place-items: center; cursor: pointer; flex: none; }
+.sheet-back:active { background: var(--bg); }
+.sheet-back svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.sheet-title { font-family: var(--f-display); font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: .02em; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sheet-body { max-width: 760px; margin: 0 auto; padding-block: 16px calc(32px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 12px; }
+.big-stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; display: grid; gap: 2px; }
+.big-stat b { font-family: var(--f-num); font-size: 36px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.big-stat span { color: var(--muted); font-size: 14px; }
+.stat-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.stat-row div { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.stat-row b { display: block; font-family: var(--f-num); font-size: 22px; font-variant-numeric: tabular-nums; }
+.stat-row span { font-size: 12px; color: var(--muted); }
+.td-hero { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; display: grid; grid-template-columns: 120px 1fr; gap: 14px; align-items: center; }
+.td-hero .pic svg { width: 100%; height: auto; display: block; }
+.td-hero .meta { display: grid; gap: 6px; justify-items: start; min-width: 0; }
+.td-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; display: grid; gap: 10px; }
+.td-card h4 { margin: 0; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.tl { display: grid; gap: 0; }
+.tl-item { display: grid; grid-template-columns: 22px 1fr; gap: 10px; position: relative; padding-bottom: 14px; }
+.tl-item:last-child { padding-bottom: 0; }
+.tl-item:not(:last-child)::before { content: ""; position: absolute; left: 10px; top: 18px; bottom: 0; width: 2px; background: var(--line); }
+.tl-dot { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #fff; }
+.tl-dot.out { background: var(--warn); } .tl-dot.in { background: var(--ok); } .tl-dot.wait { background: var(--line); color: var(--muted); }
+.tl-item .when { font-weight: 600; } .tl-item .sub { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.kv { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; }
+.kv div { min-width: 0; overflow-wrap: anywhere; } .kv em { display: block; font-style: normal; font-size: 12px; color: var(--muted); }
+.kv .full { grid-column: 1 / -1; }
+.person { display: flex; align-items: center; gap: 12px; }
+.person .main { flex: 1; min-width: 0; }
+.callbtn { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+.callbtn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.km-row { display: flex; align-items: center; gap: 10px; }
+.km-row .bar { flex: 1; height: 8px; border-radius: 4px; background: var(--bg); overflow: hidden; min-width: 40px; }
+.km-row .bar i { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+.km-row .odo { width: 74px; text-align: right; }
+.update-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--accent-soft); border: 1px solid var(--accent); border-radius: var(--r); padding: 12px 14px; margin-bottom: 14px; }
+.update-bar .ub-ic { width: 38px; height: 38px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; flex: none; }
+.update-bar .ub-ic svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.update-bar .ub-txt { flex: 1; min-width: 160px; }
+.update-bar .ub-txt b { display: block; }
+.update-bar .ub-txt span { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+#map { height: 52vh; min-height: 280px; border-radius: var(--r); border: 1px solid var(--line); background: var(--bg); z-index: 0; }
+.gps-row { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--accent); font-weight: 600; cursor: pointer; text-decoration: underline; font-size: 13px; }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; background: var(--accent-soft); border-radius: 10px; padding: 10px 12px; }
+.check input { width: 20px; height: 20px; margin: 1px 0 0; flex: none; accent-color: var(--accent); }
+.leaflet-div-icon.pinwrap { background: none; border: 0; }
+.pin { display: inline-block; transform: translate(-50%, -50%); background: var(--plate); color: var(--plate-ink); border: 2px solid #1A1A1A; border-radius: 6px; font: 700 13px/1.4 var(--f-display); letter-spacing: .05em; padding: 0 6px; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
+.pin.stale { opacity: .55; }
+.leaflet-container { font-family: var(--f-ui); }
+.maplibregl-map{font:12px/20px Helvetica Neue,Arial,Helvetica,sans-serif;overflow:hidden;position:relative;-webkit-tap-highlight-color:rgb(0 0 0/0)}.maplibregl-canvas{left:0;position:absolute;top:0}.maplibregl-map:fullscreen{height:100%;width:100%}.maplibregl-ctrl-group button.maplibregl-ctrl-compass{touch-action:none}.maplibregl-canvas-container.maplibregl-interactive,.maplibregl-ctrl-group button.maplibregl-ctrl-compass{cursor:grab;-webkit-user-select:none;-moz-user-select:none;user-select:none}.maplibregl-canvas-container.maplibregl-interactive.maplibregl-track-pointer{cursor:pointer}.maplibregl-canvas-container.maplibregl-interactive:active,.maplibregl-ctrl-group button.maplibregl-ctrl-compass:active{cursor:grabbing}.maplibregl-canvas-container.maplibregl-touch-zoom-rotate,.maplibregl-canvas-container.maplibregl-touch-zoom-rotate .maplibregl-canvas{touch-action:pan-x pan-y}.maplibregl-canvas-container.maplibregl-touch-drag-pan,.maplibregl-canvas-container.maplibregl-touch-drag-pan .maplibregl-canvas{touch-action:pinch-zoom}.maplibregl-canvas-container.maplibregl-touch-zoom-rotate.maplibregl-touch-drag-pan,.maplibregl-canvas-container.maplibregl-touch-zoom-rotate.maplibregl-touch-drag-pan .maplibregl-canvas{touch-action:none}.maplibregl-canvas-container.maplibregl-touch-drag-pan.maplibregl-cooperative-gestures,.maplibregl-canvas-container.maplibregl-touch-drag-pan.maplibregl-cooperative-gestures .maplibregl-canvas{touch-action:pan-x pan-y}.maplibregl-ctrl-bottom-left,.maplibregl-ctrl-bottom-right,.maplibregl-ctrl-top-left,.maplibregl-ctrl-top-right{pointer-events:none;position:absolute;z-index:2}.maplibregl-ctrl-top-left{left:0;top:0}.maplibregl-ctrl-top-right{right:0;top:0}.maplibregl-ctrl-bottom-left{bottom:0;left:0}.maplibregl-ctrl-bottom-right{bottom:0;right:0}.maplibregl-ctrl{clear:both;pointer-events:auto;transform:translate(0)}.maplibregl-ctrl-top-left .maplibregl-ctrl{float:left;margin:10px 0 0 10px}.maplibregl-ctrl-top-right .maplibregl-ctrl{float:right;margin:10px 10px 0 0}.maplibregl-ctrl-bottom-left .maplibregl-ctrl{float:left;margin:0 0 10px 10px}.maplibregl-ctrl-bottom-right .maplibregl-ctrl{float:right;margin:0 10px 10px 0}.maplibregl-ctrl-group{background:#fff;border-radius:4px}.maplibregl-ctrl-group:not(:empty){box-shadow:0 0 0 2px rgba(0,0,0,.1)}@media (forced-colors:active){.maplibregl-ctrl-group:not(:empty){box-shadow:0 0 0 2px ButtonText}}.maplibregl-ctrl-group button{background-color:transparent;border:0;box-sizing:border-box;cursor:pointer;display:block;height:29px;outline:none;padding:0;width:29px}.maplibregl-ctrl-group button+button{border-top:1px solid #ddd}.maplibregl-ctrl button .maplibregl-ctrl-icon{background-position:50%;background-repeat:no-repeat;display:block;height:100%;width:100%}@media (forced-colors:active){.maplibregl-ctrl-icon{background-color:transparent}.maplibregl-ctrl-group button+button{border-top:1px solid ButtonText}}.maplibregl-ctrl button::-moz-focus-inner{border:0;padding:0}.maplibregl-ctrl-attrib-button:focus,.maplibregl-ctrl-group button:focus{box-shadow:0 0 2px 2px #0096ff}.maplibregl-ctrl button:disabled{cursor:not-allowed}.maplibregl-ctrl button:disabled .maplibregl-ctrl-icon{opacity:.25}.maplibregl-ctrl button:not(:disabled):hover{background-color:rgb(0 0 0/5%)}.maplibregl-ctrl-group button:focus:focus-visible{box-shadow:0 0 2px 2px #0096ff}.maplibregl-ctrl-group button:focus:not(:focus-visible){box-shadow:none}.maplibregl-ctrl-group button:focus:first-child{border-radius:4px 4px 0 0}.maplibregl-ctrl-group button:focus:last-child{border-radius:0 0 4px 4px}.maplibregl-ctrl-group button:focus:only-child{border-radius:inherit}.maplibregl-ctrl button.maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23333' viewBox='0 0 29 29'%3E%3Cpath d='M10 13c-.75 0-1.5.75-1.5 1.5S9.25 16 10 16h9c.75 0 1.5-.75 1.5-1.5S19.75 13 19 13z'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23333' viewBox='0 0 29 29'%3E%3Cpath d='M14.5 8.5c-.75 0-1.5.75-1.5 1.5v3h-3c-.75 0-1.5.75-1.5 1.5S9.25 16 10 16h3v3c0 .75.75 1.5 1.5 1.5S16 19.75 16 19v-3h3c.75 0 1.5-.75 1.5-1.5S19.75 13 19 13h-3v-3c0-.75-.75-1.5-1.5-1.5'/%3E%3C/svg%3E")}@media (forced-colors:active){.maplibregl-ctrl button.maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23fff' viewBox='0 0 29 29'%3E%3Cpath d='M10 13c-.75 0-1.5.75-1.5 1.5S9.25 16 10 16h9c.75 0 1.5-.75 1.5-1.5S19.75 13 19 13z'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23fff' viewBox='0 0 29 29'%3E%3Cpath d='M14.5 8.5c-.75 0-1.5.75-1.5 1.5v3h-3c-.75 0-1.5.75-1.5 1.5S9.25 16 10 16h3v3c0 .75.75 1.5 1.5 1.5S16 19.75 16 19v-3h3c.75 0 1.5-.75 1.5-1.5S19.75 13 19 13h-3v-3c0-.75-.75-1.5-1.5-1.5'/%3E%3C/svg%3E")}}@media (forced-colors:active) and (prefers-color-scheme:light){.maplibregl-ctrl button.maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' viewBox='0 0 29 29'%3E%3Cpath d='M10 13c-.75 0-1.5.75-1.5 1.5S9.25 16 10 16h9c.75 0 1.5-.75 1.5-1.5S19.75 13 19 13z'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' viewBox='0 0 29 29'%3E%3Cpath d='M14.5 8.5c-.75 0-1.5.75-1.5 1.5v3h-3c-.75 0-1.5.75-1.5 1.5S9.25 16 10 16h3v3c0 .75.75 1.5 1.5 1.5S16 19.75 16 19v-3h3c.75 0 1.5-.75 1.5-1.5S19.75 13 19 13h-3v-3c0-.75-.75-1.5-1.5-1.5'/%3E%3C/svg%3E")}}.maplibregl-ctrl button.maplibregl-ctrl-fullscreen .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23333' viewBox='0 0 29 29'%3E%3Cpath d='M24 16v5.5c0 1.75-.75 2.5-2.5 2.5H16v-1l3-1.5-4-5.5 1-1 5.5 4 1.5-3zM6 16l1.5 3 5.5-4 1 1-4 5.5 3 1.5v1H7.5C5.75 24 5 23.25 5 21.5V16zm7-11v1l-3 1.5 4 5.5-1 1-5.5-4L6 13H5V7.5C5 5.75 5.75 5 7.5 5zm11 2.5c0-1.75-.75-2.5-2.5-2.5H16v1l3 1.5-4 5.5 1 1 5.5-4 1.5 3h1z'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-shrink .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' viewBox='0 0 29 29'%3E%3Cpath d='M18.5 16c-1.75 0-2.5.75-2.5 2.5V24h1l1.5-3 5.5 4 1-1-4-5.5 3-1.5v-1zM13 18.5c0-1.75-.75-2.5-2.5-2.5H5v1l3 1.5L4 24l1 1 5.5-4 1.5 3h1zm3-8c0 1.75.75 2.5 2.5 2.5H24v-1l-3-1.5L25 5l-1-1-5.5 4L17 5h-1zM10.5 13c1.75 0 2.5-.75 2.5-2.5V5h-1l-1.5 3L5 4 4 5l4 5.5L5 12v1z'/%3E%3C/svg%3E")}@media (forced-colors:active){.maplibregl-ctrl button.maplibregl-ctrl-fullscreen .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23fff' viewBox='0 0 29 29'%3E%3Cpath d='M24 16v5.5c0 1.75-.75 2.5-2.5 2.5H16v-1l3-1.5-4-5.5 1-1 5.5 4 1.5-3zM6 16l1.5 3 5.5-4 1 1-4 5.5 3 1.5v1H7.5C5.75 24 5 23.25 5 21.5V16zm7-11v1l-3 1.5 4 5.5-1 1-5.5-4L6 13H5V7.5C5 5.75 5.75 5 7.5 5zm11 2.5c0-1.75-.75-2.5-2.5-2.5H16v1l3 1.5-4 5.5 1 1 5.5-4 1.5 3h1z'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-shrink .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23fff' viewBox='0 0 29 29'%3E%3Cpath d='M18.5 16c-1.75 0-2.5.75-2.5 2.5V24h1l1.5-3 5.5 4 1-1-4-5.5 3-1.5v-1zM13 18.5c0-1.75-.75-2.5-2.5-2.5H5v1l3 1.5L4 24l1 1 5.5-4 1.5 3h1zm3-8c0 1.75.75 2.5 2.5 2.5H24v-1l-3-1.5L25 5l-1-1-5.5 4L17 5h-1zM10.5 13c1.75 0 2.5-.75 2.5-2.5V5h-1l-1.5 3L5 4 4 5l4 5.5L5 12v1z'/%3E%3C/svg%3E")}}@media (forced-colors:active) and (prefers-color-scheme:light){.maplibregl-ctrl button.maplibregl-ctrl-fullscreen .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' viewBox='0 0 29 29'%3E%3Cpath d='M24 16v5.5c0 1.75-.75 2.5-2.5 2.5H16v-1l3-1.5-4-5.5 1-1 5.5 4 1.5-3zM6 16l1.5 3 5.5-4 1 1-4 5.5 3 1.5v1H7.5C5.75 24 5 23.25 5 21.5V16zm7-11v1l-3 1.5 4 5.5-1 1-5.5-4L6 13H5V7.5C5 5.75 5.75 5 7.5 5zm11 2.5c0-1.75-.75-2.5-2.5-2.5H16v1l3 1.5-4 5.5 1 1 5.5-4 1.5 3h1z'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-shrink .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' viewBox='0 0 29 29'%3E%3Cpath d='M18.5 16c-1.75 0-2.5.75-2.5 2.5V24h1l1.5-3 5.5 4 1-1-4-5.5 3-1.5v-1zM13 18.5c0-1.75-.75-2.5-2.5-2.5H5v1l3 1.5L4 24l1 1 5.5-4 1.5 3h1zm3-8c0 1.75.75 2.5 2.5 2.5H24v-1l-3-1.5L25 5l-1-1-5.5 4L17 5h-1zM10.5 13c1.75 0 2.5-.75 2.5-2.5V5h-1l-1.5 3L5 4 4 5l4 5.5L5 12v1z'/%3E%3C/svg%3E")}}.maplibregl-ctrl button.maplibregl-ctrl-compass .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23333' viewBox='0 0 29 29'%3E%3Cpath d='m10.5 14 4-8 4 8z'/%3E%3Cpath fill='%23ccc' d='m10.5 16 4 8 4-8z'/%3E%3C/svg%3E")}@media (forced-colors:active){.maplibregl-ctrl button.maplibregl-ctrl-compass .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23fff' viewBox='0 0 29 29'%3E%3Cpath d='m10.5 14 4-8 4 8z'/%3E%3Cpath fill='%23ccc' d='m10.5 16 4 8 4-8z'/%3E%3C/svg%3E")}}@media (forced-colors:active) and (prefers-color-scheme:light){.maplibregl-ctrl button.maplibregl-ctrl-compass .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' viewBox='0 0 29 29'%3E%3Cpath d='m10.5 14 4-8 4 8z'/%3E%3Cpath fill='%23ccc' d='m10.5 16 4 8 4-8z'/%3E%3C/svg%3E")}}.maplibregl-ctrl button.maplibregl-ctrl-terrain .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' fill='%23333' viewBox='0 0 22 22'%3E%3Cpath d='m1.754 13.406 4.453-4.851 3.09 3.09 3.281 3.277.969-.969-3.309-3.312 3.844-4.121 6.148 6.886h1.082v-.855l-7.207-8.07-4.84 5.187L6.169 6.57l-5.48 5.965v.871ZM.688 16.844h20.625v1.375H.688Zm0 0'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-terrain-enabled .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' fill='%2333b5e5' viewBox='0 0 22 22'%3E%3Cpath d='m1.754 13.406 4.453-4.851 3.09 3.09 3.281 3.277.969-.969-3.309-3.312 3.844-4.121 6.148 6.886h1.082v-.855l-7.207-8.07-4.84 5.187L6.169 6.57l-5.48 5.965v.871ZM.688 16.844h20.625v1.375H.688Zm0 0'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-geolocate .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23333' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-geolocate:disabled .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23aaa' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3Cpath fill='red' d='m14 5 1 1-9 9-1-1z'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-geolocate.maplibregl-ctrl-geolocate-active .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%2333b5e5' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-geolocate.maplibregl-ctrl-geolocate-active-error .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23e58978' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-geolocate.maplibregl-ctrl-geolocate-background .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%2333b5e5' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-geolocate.maplibregl-ctrl-geolocate-background-error .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23e54e33' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-geolocate.maplibregl-ctrl-geolocate-waiting .maplibregl-ctrl-icon{animation:maplibregl-spin 2s linear infinite}@media (forced-colors:active){.maplibregl-ctrl button.maplibregl-ctrl-geolocate .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23fff' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-geolocate:disabled .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23999' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3Cpath fill='red' d='m14 5 1 1-9 9-1-1z'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-geolocate.maplibregl-ctrl-geolocate-active .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%2333b5e5' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-geolocate.maplibregl-ctrl-geolocate-active-error .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23e58978' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-geolocate.maplibregl-ctrl-geolocate-background .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%2333b5e5' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-geolocate.maplibregl-ctrl-geolocate-background-error .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23e54e33' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3C/svg%3E")}}@media (forced-colors:active) and (prefers-color-scheme:light){.maplibregl-ctrl button.maplibregl-ctrl-geolocate .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3C/svg%3E")}.maplibregl-ctrl button.maplibregl-ctrl-geolocate:disabled .maplibregl-ctrl-icon{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='29' height='29' fill='%23666' viewBox='0 0 20 20'%3E%3Cpath d='M10 4C9 4 9 5 9 5v.1A5 5 0 0 0 5.1 9H5s-1 0-1 1 1 1 1 1h.1A5 5 0 0 0 9 14.9v.1s0 1 1 1 1-1 1-1v-.1a5 5 0 0 0 3.9-3.9h.1s1 0 1-1-1-1-1-1h-.1A5 5 0 0 0 11 5.1V5s0-1-1-1m0 2.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 1 1 0-7'/%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3Cpath fill='red' d='m14 5 1 1-9 9-1-1z'/%3E%3C/svg%3E")}}@keyframes maplibregl-spin{0%{transform:rotate(0deg)}to{transform:rotate(1turn)}}a.maplibregl-ctrl-logo{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='23' fill='none'%3E%3Cpath fill='%23000' fill-opacity='.4' fill-rule='evenodd' d='M17.408 16.796h-1.827l2.501-12.095h.198l3.324 6.533.988 2.19.988-2.19 3.258-6.533h.181l2.6 12.095h-1.81l-1.218-5.644-.362-1.71-.658 1.71-2.929 5.644h-.098l-2.914-5.644-.757-1.71-.345 1.71zm1.958-3.42-.726 3.663a1.255 1.255 0 0 1-1.232 1.011h-1.827a1.255 1.255 0 0 1-1.229-1.509l2.501-12.095a1.255 1.255 0 0 1 1.23-1.001h.197a1.25 1.25 0 0 1 1.12.685l3.19 6.273 3.125-6.263a1.25 1.25 0 0 1 1.123-.695h.181a1.255 1.255 0 0 1 1.227.991l1.443 6.71a5 5 0 0 1 .314-.787l.009-.016a4.6 4.6 0 0 1 1.777-1.887c.782-.46 1.668-.667 2.611-.667a4.6 4.6 0 0 1 1.7.32l.306.134c.21-.16.474-.256.759-.256h1.694a1.255 1.255 0 0 1 1.212.925 1.255 1.255 0 0 1 1.212-.925h1.711c.284 0 .545.094.755.252.613-.3 1.312-.45 2.075-.45 1.356 0 2.557.445 3.482 1.4q.47.48.763 1.064V4.701a1.255 1.255 0 0 1 1.255-1.255h1.86A1.255 1.255 0 0 1 54.44 4.7v9.194h2.217c.19 0 .37.043.532.118v-4.77c0-.356.147-.678.385-.906a2.42 2.42 0 0 1-.682-1.71c0-.665.267-1.253.735-1.7a2.45 2.45 0 0 1 1.722-.674 2.43 2.43 0 0 1 1.705.675q.318.302.504.683V4.7a1.255 1.255 0 0 1 1.255-1.255h1.744A1.255 1.255 0 0 1 65.812 4.7v3.335a4.8 4.8 0 0 1 1.526-.246c.938 0 1.817.214 2.59.69a4.47 4.47 0 0 1 1.67 1.743v-.98a1.255 1.255 0 0 1 1.256-1.256h1.777c.233 0 .451.064.639.174a3.4 3.4 0 0 1 1.567-.372c.346 0 .861.02 1.285.232a1.25 1.25 0 0 1 .689 1.004 4.7 4.7 0 0 1 .853-.588c.795-.44 1.675-.647 2.61-.647 1.385 0 2.65.39 3.525 1.396.836.938 1.168 2.173 1.168 3.528q-.001.515-.056 1.051a1.255 1.255 0 0 1-.947 1.09l.408.952a1.255 1.255 0 0 1-.477 1.552c-.418.268-.92.463-1.458.612-.613.171-1.304.244-2.049.244-1.06 0-2.043-.207-2.886-.698l-.015-.008c-.798-.48-1.419-1.135-1.818-1.963l-.004-.008a5.8 5.8 0 0 1-.548-2.512q0-.429.053-.843a1.3 1.3 0 0 1-.333-.086l-.166-.004c-.223 0-.426.062-.643.228-.03.024-.142.139-.142.59v3.883a1.255 1.255 0 0 1-1.256 1.256h-1.777a1.255 1.255 0 0 1-1.256-1.256V15.69l-.032.057a4.8 4.8 0 0 1-1.86 1.833 5.04 5.04 0 0 1-2.484.634 4.5 4.5 0 0 1-1.935-.424 1.25 1.25 0 0 1-.764.258h-1.71a1.255 1.255 0 0 1-1.256-1.255V7.687a2.4 2.4 0 0 1-.428.625c.253.23.412.561.412.93v7.553a1.255 1.255 0 0 1-1.256 1.255h-1.843a1.25 1.25 0 0 1-.894-.373c-.228.23-.544.373-.894.373H51.32a1.255 1.255 0 0 1-1.256-1.255v-1.251l-.061.117a4.7 4.7 0 0 1-1.782 1.884 4.77 4.77 0 0 1-2.485.67 5.6 5.6 0 0 1-1.485-.188l.009 2.764a1.255 1.255 0 0 1-1.255 1.259h-1.729a1.255 1.255 0 0 1-1.255-1.255v-3.537a1.255 1.255 0 0 1-1.167.793h-1.679a1.25 1.25 0 0 1-.77-.263 4.5 4.5 0 0 1-1.945.429c-.885 0-1.724-.21-2.495-.632l-.017-.01a5 5 0 0 1-1.081-.836 1.255 1.255 0 0 1-1.254 1.312h-1.81a1.255 1.255 0 0 1-1.228-.99l-.782-3.625-2.044 3.939a1.25 1.25 0 0 1-1.115.676h-.098a1.25 1.25 0 0 1-1.116-.68l-2.061-3.994zM35.92 16.63l.207-.114.223-.15q.493-.356.735-.785l.061-.118.033 1.332h1.678V9.242h-1.694l-.033 1.267q-.133-.329-.526-.658l-.032-.028a3.2 3.2 0 0 0-.668-.428l-.27-.12a3.3 3.3 0 0 0-1.235-.23q-1.136-.001-1.974.493a3.36 3.36 0 0 0-1.3 1.382q-.445.89-.444 2.074 0 1.2.51 2.107a3.8 3.8 0 0 0 1.382 1.381 3.9 3.9 0 0 0 1.893.477q.795 0 1.455-.33zm-2.789-5.38q-.576.675-.575 1.762 0 1.102.559 1.794.576.675 1.645.675a2.25 2.25 0 0 0 .934-.19 2.2 2.2 0 0 0 .468-.29l.178-.161a2.2 2.2 0 0 0 .397-.561q.244-.5.244-1.15v-.115q0-.708-.296-1.267l-.043-.077a2.2 2.2 0 0 0-.633-.709l-.13-.086-.047-.028a2.1 2.1 0 0 0-1.073-.285q-1.052 0-1.629.692zm2.316 2.706c.163-.17.28-.407.28-.83v-.114c0-.292-.06-.508-.15-.68a.96.96 0 0 0-.353-.389.85.85 0 0 0-.464-.127c-.4 0-.56.114-.664.239l-.01.012c-.148.174-.275.45-.275.945 0 .506.122.801.27.99.097.11.266.224.68.224.303 0 .504-.09.687-.269zm7.545 1.705a2.6 2.6 0 0 0 .331.423q.319.33.755.548l.173.074q.65.255 1.49.255 1.02 0 1.844-.493a3.45 3.45 0 0 0 1.316-1.4q.493-.904.493-2.089 0-1.909-.988-2.913-.988-1.02-2.584-1.02-.898 0-1.575.347a3 3 0 0 0-.415.262l-.199.166a3.4 3.4 0 0 0-.64.82V9.242h-1.712v11.553h1.729l-.017-5.134zm.53-1.138q.206.29.48.5l.155.11.053.034q.51.296 1.119.297 1.07 0 1.645-.675.577-.69.576-1.762 0-1.119-.576-1.777-.558-.675-1.645-.675-.435 0-.835.16a2 2 0 0 0-.284.136 2 2 0 0 0-.363.254 2.2 2.2 0 0 0-.46.569l-.082.162a2.6 2.6 0 0 0-.213 1.072v.115q0 .707.296 1.267l.135.211zm.964-.818a1.1 1.1 0 0 0 .367.385.94.94 0 0 0 .476.118c.423 0 .59-.117.687-.23.159-.194.28-.478.28-.95 0-.53-.133-.8-.266-.952l-.021-.025c-.078-.094-.231-.221-.68-.221a1 1 0 0 0-.503.135l-.012.007a.86.86 0 0 0-.335.343c-.073.133-.132.324-.132.614v.115a1.4 1.4 0 0 0 .14.66zm15.7-6.222q.347-.346.346-.856a1.05 1.05 0 0 0-.345-.79 1.18 1.18 0 0 0-.84-.329q-.51 0-.855.33a1.05 1.05 0 0 0-.346.79q0 .51.346.855.345.346.856.346.51 0 .839-.346zm4.337 9.314.033-1.332q.191.403.59.747l.098.081a4 4 0 0 0 .316.224l.223.122a3.2 3.2 0 0 0 1.44.322 3.8 3.8 0 0 0 1.875-.477 3.5 3.5 0 0 0 1.382-1.366q.527-.89.526-2.09 0-1.184-.444-2.073a3.24 3.24 0 0 0-1.283-1.399q-.823-.51-1.942-.51a3.5 3.5 0 0 0-1.527.344l-.086.043-.165.09a3 3 0 0 0-.33.214q-.432.315-.656.707a2 2 0 0 0-.099.198l.082-1.283V4.701h-1.744v12.095zm.473-2.509a2.5 2.5 0 0 0 .566.7q.117.098.245.18l.144.08a2.1 2.1 0 0 0 .975.232q1.07 0 1.645-.675.576-.69.576-1.778 0-1.102-.576-1.777-.56-.691-1.645-.692a2.2 2.2 0 0 0-1.015.235q-.22.113-.415.282l-.15.142a2.1 2.1 0 0 0-.42.594q-.223.479-.223 1.1v.115q0 .705.293 1.26zm2.616-.293c.157-.191.28-.479.28-.967 0-.51-.13-.79-.276-.961l-.021-.026c-.082-.1-.232-.225-.67-.225a.87.87 0 0 0-.681.279l-.012.011c-.154.155-.274.38-.274.807v.115c0 .285.057.499.144.669a1.1 1.1 0 0 0 .367.405c.137.082.28.123.455.123.423 0 .59-.118.686-.23zm8.266-3.013q.345-.13.724-.14l.069-.002q.493 0 .642.099l.247-1.794q-.196-.099-.717-.099a2.3 2.3 0 0 0-.545.063 2 2 0 0 0-.411.148 2.2 2.2 0 0 0-.4.249 2.5 2.5 0 0 0-.485.499 2.7 2.7 0 0 0-.32.581l-.05.137v-1.48h-1.778v7.553h1.777v-3.884q0-.546.159-.943a1.5 1.5 0 0 1 .466-.636 2.5 2.5 0 0 1 .399-.253 2 2 0 0 1 .224-.099zm9.784 2.656.05-.922q0-1.743-.856-2.698-.838-.97-2.584-.97-1.119-.001-2.007.493a3.46 3.46 0 0 0-1.4 1.382q-.493.906-.493 2.106 0 1.07.428 1.975.428.89 1.332 1.432.906.526 2.255.526.973 0 1.668-.185l.044-.012.135-.04q.613-.184.984-.421l-.542-1.267q-.3.162-.642.274l-.297.087q-.51.131-1.3.131-.954 0-1.497-.444a1.6 1.6 0 0 1-.192-.193q-.366-.44-.512-1.234l-.004-.021zm-5.427-1.256-.003.022h3.752v-.138q-.011-.727-.288-1.118a1 1 0 0 0-.156-.176q-.46-.428-1.316-.428-.986 0-1.494.604-.379.45-.494 1.234zm-27.053 2.77V4.7h-1.86v12.095h5.333V15.15zm7.103-5.908v7.553h-1.843V9.242h1.843z'/%3E%3Cpath fill='%23fff' d='m19.63 11.151-.757-1.71-.345 1.71-1.12 5.644h-1.827L18.083 4.7h.197l3.325 6.533.988 2.19.988-2.19L26.839 4.7h.181l2.6 12.095h-1.81l-1.218-5.644-.362-1.71-.658 1.71-2.93 5.644h-.098l-2.913-5.644zm14.836 5.81q-1.02 0-1.893-.478a3.8 3.8 0 0 1-1.381-1.382q-.51-.906-.51-2.106 0-1.185.444-2.074a3.36 3.36 0 0 1 1.3-1.382q.839-.494 1.974-.494a3.3 3.3 0 0 1 1.234.231 3.3 3.3 0 0 1 .97.575q.396.33.527.659l.033-1.267h1.694v7.553H37.18l-.033-1.332q-.279.593-1.02 1.053a3.17 3.17 0 0 1-1.662.444zm.296-1.482q.938 0 1.58-.642.642-.66.642-1.711v-.115q0-.708-.296-1.267a2.2 2.2 0 0 0-.807-.872 2.1 2.1 0 0 0-1.119-.313q-1.053 0-1.629.692-.575.675-.575 1.76 0 1.103.559 1.795.577.675 1.645.675zm6.521-6.237h1.711v1.4q.906-1.597 2.83-1.597 1.596 0 2.584 1.02.988 1.005.988 2.914 0 1.185-.493 2.09a3.46 3.46 0 0 1-1.316 1.399 3.5 3.5 0 0 1-1.844.493q-.954 0-1.662-.329a2.67 2.67 0 0 1-1.086-.97l.017 5.134h-1.728zm4.048 6.22q1.07 0 1.645-.674.577-.69.576-1.762 0-1.119-.576-1.777-.558-.675-1.645-.675-.592 0-1.12.296-.51.28-.822.823-.296.527-.296 1.234v.115q0 .708.296 1.267.313.543.823.855.51.296 1.119.297z'/%3E%3Cpath fill='%23e1e3e9' d='M51.325 4.7h1.86v10.45h3.473v1.646h-5.333zm7.12 4.542h1.843v7.553h-1.843zm.905-1.415a1.16 1.16 0 0 1-.856-.346 1.17 1.17 0 0 1-.346-.856 1.05 1.05 0 0 1 .346-.79q.346-.329.856-.329.494 0 .839.33a1.05 1.05 0 0 1 .345.79 1.16 1.16 0 0 1-.345.855q-.33.346-.84.346zm7.875 9.133a3.17 3.17 0 0 1-1.662-.444q-.723-.46-1.004-1.053l-.033 1.332h-1.71V4.701h1.743v4.657l-.082 1.283q.279-.658 1.086-1.119a3.5 3.5 0 0 1 1.778-.477q1.119 0 1.942.51a3.24 3.24 0 0 1 1.283 1.4q.445.888.444 2.072 0 1.201-.526 2.09a3.5 3.5 0 0 1-1.382 1.366 3.8 3.8 0 0 1-1.876.477zm-.296-1.481q1.069 0 1.645-.675.577-.69.577-1.778 0-1.102-.577-1.776-.56-.691-1.645-.692a2.12 2.12 0 0 0-1.58.659q-.642.641-.642 1.694v.115q0 .71.296 1.267a2.4 2.4 0 0 0 .807.872 2.1 2.1 0 0 0 1.119.313zm5.927-6.237h1.777v1.481q.263-.757.856-1.217a2.14 2.14 0 0 1 1.349-.46q.527 0 .724.098l-.247 1.794q-.149-.099-.642-.099-.774 0-1.416.494-.626.493-.626 1.58v3.883h-1.777V9.242zm9.534 7.718q-1.35 0-2.255-.526-.904-.543-1.332-1.432a4.6 4.6 0 0 1-.428-1.975q0-1.2.493-2.106a3.46 3.46 0 0 1 1.4-1.382q.889-.495 2.007-.494 1.744 0 2.584.97.855.956.856 2.7 0 .444-.05.92h-5.43q.18 1.005.708 1.45.542.443 1.497.443.79 0 1.3-.131a4 4 0 0 0 .938-.362l.542 1.267q-.411.263-1.119.46-.708.198-1.711.197zm1.596-4.558q.016-1.02-.444-1.432-.46-.428-1.316-.428-1.728 0-1.991 1.86z'/%3E%3Cpath d='M5.074 15.948a.484.657 0 0 0-.486.659v1.84a.484.657 0 0 0 .486.659h4.101a.484.657 0 0 0 .486-.659v-1.84a.484.657 0 0 0-.486-.659zm3.56 1.16H5.617v.838h3.017z' style='fill:%23fff;fill-rule:evenodd;stroke-width:1.03600001'/%3E%3Cg style='stroke-width:1.12603545'%3E%3Cpath d='M-9.408-1.416c-3.833-.025-7.056 2.912-7.08 6.615-.02 3.08 1.653 4.832 3.107 6.268.903.892 1.721 1.74 2.32 2.902l-.525-.004c-.543-.003-.992.304-1.24.639a1.87 1.87 0 0 0-.362 1.121l-.011 1.877c-.003.402.104.787.347 1.125.244.338.688.653 1.23.656l4.142.028c.542.003.99-.306 1.238-.641a1.87 1.87 0 0 0 .363-1.121l.012-1.875a1.87 1.87 0 0 0-.348-1.127c-.243-.338-.688-.653-1.23-.656l-.518-.004c.597-1.145 1.425-1.983 2.348-2.87 1.473-1.414 3.18-3.149 3.2-6.226-.016-3.59-2.923-6.684-6.993-6.707m-.006 1.1v.002c3.274.02 5.92 2.532 5.9 5.6-.017 2.706-1.39 4.026-2.863 5.44-1.034.994-2.118 2.033-2.814 3.633-.018.041-.052.055-.075.065q-.013.004-.02.01a.34.34 0 0 1-.226.084.34.34 0 0 1-.224-.086l-.092-.077c-.699-1.615-1.768-2.669-2.781-3.67-1.454-1.435-2.797-2.762-2.78-5.478.02-3.067 2.7-5.545 5.975-5.523m-.02 2.826c-1.62-.01-2.944 1.315-2.955 2.96-.01 1.646 1.295 2.988 2.916 2.999h.002c1.621.01 2.943-1.316 2.953-2.961.011-1.646-1.294-2.988-2.916-2.998m-.005 1.1c1.017.006 1.829.83 1.822 1.89s-.83 1.874-1.848 1.867c-1.018-.006-1.829-.83-1.822-1.89s.83-1.874 1.848-1.868m-2.155 11.857 4.14.025c.271.002.49.305.487.676l-.013 1.875c-.003.37-.224.67-.495.668l-4.14-.025c-.27-.002-.487-.306-.485-.676l.012-1.875c.003-.37.224-.67.494-.668' style='color:%23000;font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:%23000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:evenodd;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:%23000;solid-opacity:1;vector-effect:none;fill:%23000;fill-opacity:.4;fill-rule:evenodd;stroke:none;stroke-width:2.47727823;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto' transform='translate(15.553 2.85)scale(.88807)'/%3E%3Cpath d='M-9.415-.316C-12.69-.338-15.37 2.14-15.39 5.207c-.017 2.716 1.326 4.041 2.78 5.477 1.013 1 2.081 2.055 2.78 3.67l.092.076a.34.34 0 0 0 .225.086.34.34 0 0 0 .227-.083l.019-.01c.022-.009.057-.024.074-.064.697-1.6 1.78-2.64 2.814-3.634 1.473-1.414 2.847-2.733 2.864-5.44.02-3.067-2.627-5.58-5.901-5.601m-.057 8.784c1.621.011 2.944-1.315 2.955-2.96.01-1.646-1.295-2.988-2.916-2.999-1.622-.01-2.945 1.315-2.955 2.96s1.295 2.989 2.916 3' style='clip-rule:evenodd;fill:%23e1e3e9;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2.47727823;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:.4' transform='translate(15.553 2.85)scale(.88807)'/%3E%3Cpath d='M-11.594 15.465c-.27-.002-.492.297-.494.668l-.012 1.876c-.003.371.214.673.485.675l4.14.027c.271.002.492-.298.495-.668l.012-1.877c.003-.37-.215-.672-.485-.674z' style='clip-rule:evenodd;fill:%23fff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2.47727823;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:.4' transform='translate(15.553 2.85)scale(.88807)'/%3E%3C/g%3E%3C/svg%3E");background-repeat:no-repeat;cursor:pointer;display:block;height:23px;margin:0 0 -4px -4px;overflow:hidden;width:88px}a.maplibregl-ctrl-logo.maplibregl-compact{width:14px}@media (forced-colors:active){a.maplibregl-ctrl-logo{background-color:transparent;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='23' fill='none'%3E%3Cpath fill='%23000' fill-opacity='.4' fill-rule='evenodd' d='M17.408 16.796h-1.827l2.501-12.095h.198l3.324 6.533.988 2.19.988-2.19 3.258-6.533h.181l2.6 12.095h-1.81l-1.218-5.644-.362-1.71-.658 1.71-2.929 5.644h-.098l-2.914-5.644-.757-1.71-.345 1.71zm1.958-3.42-.726 3.663a1.255 1.255 0 0 1-1.232 1.011h-1.827a1.255 1.255 0 0 1-1.229-1.509l2.501-12.095a1.255 1.255 0 0 1 1.23-1.001h.197a1.25 1.25 0 0 1 1.12.685l3.19 6.273 3.125-6.263a1.25 1.25 0 0 1 1.123-.695h.181a1.255 1.255 0 0 1 1.227.991l1.443 6.71a5 5 0 0 1 .314-.787l.009-.016a4.6 4.6 0 0 1 1.777-1.887c.782-.46 1.668-.667 2.611-.667a4.6 4.6 0 0 1 1.7.32l.306.134c.21-.16.474-.256.759-.256h1.694a1.255 1.255 0 0 1 1.212.925 1.255 1.255 0 0 1 1.212-.925h1.711c.284 0 .545.094.755.252.613-.3 1.312-.45 2.075-.45 1.356 0 2.557.445 3.482 1.4q.47.48.763 1.064V4.701a1.255 1.255 0 0 1 1.255-1.255h1.86A1.255 1.255 0 0 1 54.44 4.7v9.194h2.217c.19 0 .37.043.532.118v-4.77c0-.356.147-.678.385-.906a2.42 2.42 0 0 1-.682-1.71c0-.665.267-1.253.735-1.7a2.45 2.45 0 0 1 1.722-.674 2.43 2.43 0 0 1 1.705.675q.318.302.504.683V4.7a1.255 1.255 0 0 1 1.255-1.255h1.744A1.255 1.255 0 0 1 65.812 4.7v3.335a4.8 4.8 0 0 1 1.526-.246c.938 0 1.817.214 2.59.69a4.47 4.47 0 0 1 1.67 1.743v-.98a1.255 1.255 0 0 1 1.256-1.256h1.777c.233 0 .451.064.639.174a3.4 3.4 0 0 1 1.567-.372c.346 0 .861.02 1.285.232a1.25 1.25 0 0 1 .689 1.004 4.7 4.7 0 0 1 .853-.588c.795-.44 1.675-.647 2.61-.647 1.385 0 2.65.39 3.525 1.396.836.938 1.168 2.173 1.168 3.528q-.001.515-.056 1.051a1.255 1.255 0 0 1-.947 1.09l.408.952a1.255 1.255 0 0 1-.477 1.552c-.418.268-.92.463-1.458.612-.613.171-1.304.244-2.049.244-1.06 0-2.043-.207-2.886-.698l-.015-.008c-.798-.48-1.419-1.135-1.818-1.963l-.004-.008a5.8 5.8 0 0 1-.548-2.512q0-.429.053-.843a1.3 1.3 0 0 1-.333-.086l-.166-.004c-.223 0-.426.062-.643.228-.03.024-.142.139-.142.59v3.883a1.255 1.255 0 0 1-1.256 1.256h-1.777a1.255 1.255 0 0 1-1.256-1.256V15.69l-.032.057a4.8 4.8 0 0 1-1.86 1.833 5.04 5.04 0 0 1-2.484.634 4.5 4.5 0 0 1-1.935-.424 1.25 1.25 0 0 1-.764.258h-1.71a1.255 1.255 0 0 1-1.256-1.255V7.687a2.4 2.4 0 0 1-.428.625c.253.23.412.561.412.93v7.553a1.255 1.255 0 0 1-1.256 1.255h-1.843a1.25 1.25 0 0 1-.894-.373c-.228.23-.544.373-.894.373H51.32a1.255 1.255 0 0 1-1.256-1.255v-1.251l-.061.117a4.7 4.7 0 0 1-1.782 1.884 4.77 4.77 0 0 1-2.485.67 5.6 5.6 0 0 1-1.485-.188l.009 2.764a1.255 1.255 0 0 1-1.255 1.259h-1.729a1.255 1.255 0 0 1-1.255-1.255v-3.537a1.255 1.255 0 0 1-1.167.793h-1.679a1.25 1.25 0 0 1-.77-.263 4.5 4.5 0 0 1-1.945.429c-.885 0-1.724-.21-2.495-.632l-.017-.01a5 5 0 0 1-1.081-.836 1.255 1.255 0 0 1-1.254 1.312h-1.81a1.255 1.255 0 0 1-1.228-.99l-.782-3.625-2.044 3.939a1.25 1.25 0 0 1-1.115.676h-.098a1.25 1.25 0 0 1-1.116-.68l-2.061-3.994zM35.92 16.63l.207-.114.223-.15q.493-.356.735-.785l.061-.118.033 1.332h1.678V9.242h-1.694l-.033 1.267q-.133-.329-.526-.658l-.032-.028a3.2 3.2 0 0 0-.668-.428l-.27-.12a3.3 3.3 0 0 0-1.235-.23q-1.136-.001-1.974.493a3.36 3.36 0 0 0-1.3 1.382q-.445.89-.444 2.074 0 1.2.51 2.107a3.8 3.8 0 0 0 1.382 1.381 3.9 3.9 0 0 0 1.893.477q.795 0 1.455-.33zm-2.789-5.38q-.576.675-.575 1.762 0 1.102.559 1.794.576.675 1.645.675a2.25 2.25 0 0 0 .934-.19 2.2 2.2 0 0 0 .468-.29l.178-.161a2.2 2.2 0 0 0 .397-.561q.244-.5.244-1.15v-.115q0-.708-.296-1.267l-.043-.077a2.2 2.2 0 0 0-.633-.709l-.13-.086-.047-.028a2.1 2.1 0 0 0-1.073-.285q-1.052 0-1.629.692zm2.316 2.706c.163-.17.28-.407.28-.83v-.114c0-.292-.06-.508-.15-.68a.96.96 0 0 0-.353-.389.85.85 0 0 0-.464-.127c-.4 0-.56.114-.664.239l-.01.012c-.148.174-.275.45-.275.945 0 .506.122.801.27.99.097.11.266.224.68.224.303 0 .504-.09.687-.269zm7.545 1.705a2.6 2.6 0 0 0 .331.423q.319.33.755.548l.173.074q.65.255 1.49.255 1.02 0 1.844-.493a3.45 3.45 0 0 0 1.316-1.4q.493-.904.493-2.089 0-1.909-.988-2.913-.988-1.02-2.584-1.02-.898 0-1.575.347a3 3 0 0 0-.415.262l-.199.166a3.4 3.4 0 0 0-.64.82V9.242h-1.712v11.553h1.729l-.017-5.134zm.53-1.138q.206.29.48.5l.155.11.053.034q.51.296 1.119.297 1.07 0 1.645-.675.577-.69.576-1.762 0-1.119-.576-1.777-.558-.675-1.645-.675-.435 0-.835.16a2 2 0 0 0-.284.136 2 2 0 0 0-.363.254 2.2 2.2 0 0 0-.46.569l-.082.162a2.6 2.6 0 0 0-.213 1.072v.115q0 .707.296 1.267l.135.211zm.964-.818a1.1 1.1 0 0 0 .367.385.94.94 0 0 0 .476.118c.423 0 .59-.117.687-.23.159-.194.28-.478.28-.95 0-.53-.133-.8-.266-.952l-.021-.025c-.078-.094-.231-.221-.68-.221a1 1 0 0 0-.503.135l-.012.007a.86.86 0 0 0-.335.343c-.073.133-.132.324-.132.614v.115a1.4 1.4 0 0 0 .14.66zm15.7-6.222q.347-.346.346-.856a1.05 1.05 0 0 0-.345-.79 1.18 1.18 0 0 0-.84-.329q-.51 0-.855.33a1.05 1.05 0 0 0-.346.79q0 .51.346.855.345.346.856.346.51 0 .839-.346zm4.337 9.314.033-1.332q.191.403.59.747l.098.081a4 4 0 0 0 .316.224l.223.122a3.2 3.2 0 0 0 1.44.322 3.8 3.8 0 0 0 1.875-.477 3.5 3.5 0 0 0 1.382-1.366q.527-.89.526-2.09 0-1.184-.444-2.073a3.24 3.24 0 0 0-1.283-1.399q-.823-.51-1.942-.51a3.5 3.5 0 0 0-1.527.344l-.086.043-.165.09a3 3 0 0 0-.33.214q-.432.315-.656.707a2 2 0 0 0-.099.198l.082-1.283V4.701h-1.744v12.095zm.473-2.509a2.5 2.5 0 0 0 .566.7q.117.098.245.18l.144.08a2.1 2.1 0 0 0 .975.232q1.07 0 1.645-.675.576-.69.576-1.778 0-1.102-.576-1.777-.56-.691-1.645-.692a2.2 2.2 0 0 0-1.015.235q-.22.113-.415.282l-.15.142a2.1 2.1 0 0 0-.42.594q-.223.479-.223 1.1v.115q0 .705.293 1.26zm2.616-.293c.157-.191.28-.479.28-.967 0-.51-.13-.79-.276-.961l-.021-.026c-.082-.1-.232-.225-.67-.225a.87.87 0 0 0-.681.279l-.012.011c-.154.155-.274.38-.274.807v.115c0 .285.057.499.144.669a1.1 1.1 0 0 0 .367.405c.137.082.28.123.455.123.423 0 .59-.118.686-.23zm8.266-3.013q.345-.13.724-.14l.069-.002q.493 0 .642.099l.247-1.794q-.196-.099-.717-.099a2.3 2.3 0 0 0-.545.063 2 2 0 0 0-.411.148 2.2 2.2 0 0 0-.4.249 2.5 2.5 0 0 0-.485.499 2.7 2.7 0 0 0-.32.581l-.05.137v-1.48h-1.778v7.553h1.777v-3.884q0-.546.159-.943a1.5 1.5 0 0 1 .466-.636 2.5 2.5 0 0 1 .399-.253 2 2 0 0 1 .224-.099zm9.784 2.656.05-.922q0-1.743-.856-2.698-.838-.97-2.584-.97-1.119-.001-2.007.493a3.46 3.46 0 0 0-1.4 1.382q-.493.906-.493 2.106 0 1.07.428 1.975.428.89 1.332 1.432.906.526 2.255.526.973 0 1.668-.185l.044-.012.135-.04q.613-.184.984-.421l-.542-1.267q-.3.162-.642.274l-.297.087q-.51.131-1.3.131-.954 0-1.497-.444a1.6 1.6 0 0 1-.192-.193q-.366-.44-.512-1.234l-.004-.021zm-5.427-1.256-.003.022h3.752v-.138q-.011-.727-.288-1.118a1 1 0 0 0-.156-.176q-.46-.428-1.316-.428-.986 0-1.494.604-.379.45-.494 1.234zm-27.053 2.77V4.7h-1.86v12.095h5.333V15.15zm7.103-5.908v7.553h-1.843V9.242h1.843z'/%3E%3Cpath fill='%23fff' d='m19.63 11.151-.757-1.71-.345 1.71-1.12 5.644h-1.827L18.083 4.7h.197l3.325 6.533.988 2.19.988-2.19L26.839 4.7h.181l2.6 12.095h-1.81l-1.218-5.644-.362-1.71-.658 1.71-2.93 5.644h-.098l-2.913-5.644zm14.836 5.81q-1.02 0-1.893-.478a3.8 3.8 0 0 1-1.381-1.382q-.51-.906-.51-2.106 0-1.185.444-2.074a3.36 3.36 0 0 1 1.3-1.382q.839-.494 1.974-.494a3.3 3.3 0 0 1 1.234.231 3.3 3.3 0 0 1 .97.575q.396.33.527.659l.033-1.267h1.694v7.553H37.18l-.033-1.332q-.279.593-1.02 1.053a3.17 3.17 0 0 1-1.662.444zm.296-1.482q.938 0 1.58-.642.642-.66.642-1.711v-.115q0-.708-.296-1.267a2.2 2.2 0 0 0-.807-.872 2.1 2.1 0 0 0-1.119-.313q-1.053 0-1.629.692-.575.675-.575 1.76 0 1.103.559 1.795.577.675 1.645.675zm6.521-6.237h1.711v1.4q.906-1.597 2.83-1.597 1.596 0 2.584 1.02.988 1.005.988 2.914 0 1.185-.493 2.09a3.46 3.46 0 0 1-1.316 1.399 3.5 3.5 0 0 1-1.844.493q-.954 0-1.662-.329a2.67 2.67 0 0 1-1.086-.97l.017 5.134h-1.728zm4.048 6.22q1.07 0 1.645-.674.577-.69.576-1.762 0-1.119-.576-1.777-.558-.675-1.645-.675-.592 0-1.12.296-.51.28-.822.823-.296.527-.296 1.234v.115q0 .708.296 1.267.313.543.823.855.51.296 1.119.297z'/%3E%3Cpath fill='%23e1e3e9' d='M51.325 4.7h1.86v10.45h3.473v1.646h-5.333zm7.12 4.542h1.843v7.553h-1.843zm.905-1.415a1.16 1.16 0 0 1-.856-.346 1.17 1.17 0 0 1-.346-.856 1.05 1.05 0 0 1 .346-.79q.346-.329.856-.329.494 0 .839.33a1.05 1.05 0 0 1 .345.79 1.16 1.16 0 0 1-.345.855q-.33.346-.84.346zm7.875 9.133a3.17 3.17 0 0 1-1.662-.444q-.723-.46-1.004-1.053l-.033 1.332h-1.71V4.701h1.743v4.657l-.082 1.283q.279-.658 1.086-1.119a3.5 3.5 0 0 1 1.778-.477q1.119 0 1.942.51a3.24 3.24 0 0 1 1.283 1.4q.445.888.444 2.072 0 1.201-.526 2.09a3.5 3.5 0 0 1-1.382 1.366 3.8 3.8 0 0 1-1.876.477zm-.296-1.481q1.069 0 1.645-.675.577-.69.577-1.778 0-1.102-.577-1.776-.56-.691-1.645-.692a2.12 2.12 0 0 0-1.58.659q-.642.641-.642 1.694v.115q0 .71.296 1.267a2.4 2.4 0 0 0 .807.872 2.1 2.1 0 0 0 1.119.313zm5.927-6.237h1.777v1.481q.263-.757.856-1.217a2.14 2.14 0 0 1 1.349-.46q.527 0 .724.098l-.247 1.794q-.149-.099-.642-.099-.774 0-1.416.494-.626.493-.626 1.58v3.883h-1.777V9.242zm9.534 7.718q-1.35 0-2.255-.526-.904-.543-1.332-1.432a4.6 4.6 0 0 1-.428-1.975q0-1.2.493-2.106a3.46 3.46 0 0 1 1.4-1.382q.889-.495 2.007-.494 1.744 0 2.584.97.855.956.856 2.7 0 .444-.05.92h-5.43q.18 1.005.708 1.45.542.443 1.497.443.79 0 1.3-.131a4 4 0 0 0 .938-.362l.542 1.267q-.411.263-1.119.46-.708.198-1.711.197zm1.596-4.558q.016-1.02-.444-1.432-.46-.428-1.316-.428-1.728 0-1.991 1.86z'/%3E%3Cpath d='M5.074 15.948a.484.657 0 0 0-.486.659v1.84a.484.657 0 0 0 .486.659h4.101a.484.657 0 0 0 .486-.659v-1.84a.484.657 0 0 0-.486-.659zm3.56 1.16H5.617v.838h3.017z' style='fill:%23fff;fill-rule:evenodd;stroke-width:1.03600001'/%3E%3Cg style='stroke-width:1.12603545'%3E%3Cpath d='M-9.408-1.416c-3.833-.025-7.056 2.912-7.08 6.615-.02 3.08 1.653 4.832 3.107 6.268.903.892 1.721 1.74 2.32 2.902l-.525-.004c-.543-.003-.992.304-1.24.639a1.87 1.87 0 0 0-.362 1.121l-.011 1.877c-.003.402.104.787.347 1.125.244.338.688.653 1.23.656l4.142.028c.542.003.99-.306 1.238-.641a1.87 1.87 0 0 0 .363-1.121l.012-1.875a1.87 1.87 0 0 0-.348-1.127c-.243-.338-.688-.653-1.23-.656l-.518-.004c.597-1.145 1.425-1.983 2.348-2.87 1.473-1.414 3.18-3.149 3.2-6.226-.016-3.59-2.923-6.684-6.993-6.707m-.006 1.1v.002c3.274.02 5.92 2.532 5.9 5.6-.017 2.706-1.39 4.026-2.863 5.44-1.034.994-2.118 2.033-2.814 3.633-.018.041-.052.055-.075.065q-.013.004-.02.01a.34.34 0 0 1-.226.084.34.34 0 0 1-.224-.086l-.092-.077c-.699-1.615-1.768-2.669-2.781-3.67-1.454-1.435-2.797-2.762-2.78-5.478.02-3.067 2.7-5.545 5.975-5.523m-.02 2.826c-1.62-.01-2.944 1.315-2.955 2.96-.01 1.646 1.295 2.988 2.916 2.999h.002c1.621.01 2.943-1.316 2.953-2.961.011-1.646-1.294-2.988-2.916-2.998m-.005 1.1c1.017.006 1.829.83 1.822 1.89s-.83 1.874-1.848 1.867c-1.018-.006-1.829-.83-1.822-1.89s.83-1.874 1.848-1.868m-2.155 11.857 4.14.025c.271.002.49.305.487.676l-.013 1.875c-.003.37-.224.67-.495.668l-4.14-.025c-.27-.002-.487-.306-.485-.676l.012-1.875c.003-.37.224-.67.494-.668' style='color:%23000;font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:%23000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:evenodd;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:%23000;solid-opacity:1;vector-effect:none;fill:%23000;fill-opacity:.4;fill-rule:evenodd;stroke:none;stroke-width:2.47727823;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto' transform='translate(15.553 2.85)scale(.88807)'/%3E%3Cpath d='M-9.415-.316C-12.69-.338-15.37 2.14-15.39 5.207c-.017 2.716 1.326 4.041 2.78 5.477 1.013 1 2.081 2.055 2.78 3.67l.092.076a.34.34 0 0 0 .225.086.34.34 0 0 0 .227-.083l.019-.01c.022-.009.057-.024.074-.064.697-1.6 1.78-2.64 2.814-3.634 1.473-1.414 2.847-2.733 2.864-5.44.02-3.067-2.627-5.58-5.901-5.601m-.057 8.784c1.621.011 2.944-1.315 2.955-2.96.01-1.646-1.295-2.988-2.916-2.999-1.622-.01-2.945 1.315-2.955 2.96s1.295 2.989 2.916 3' style='clip-rule:evenodd;fill:%23e1e3e9;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2.47727823;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:.4' transform='translate(15.553 2.85)scale(.88807)'/%3E%3Cpath d='M-11.594 15.465c-.27-.002-.492.297-.494.668l-.012 1.876c-.003.371.214.673.485.675l4.14.027c.271.002.492-.298.495-.668l.012-1.877c.003-.37-.215-.672-.485-.674z' style='clip-rule:evenodd;fill:%23fff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2.47727823;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:.4' transform='translate(15.553 2.85)scale(.88807)'/%3E%3C/g%3E%3C/svg%3E")}}@media (forced-colors:active) and (prefers-color-scheme:light){a.maplibregl-ctrl-logo{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='23' fill='none'%3E%3Cpath fill='%23000' fill-opacity='.4' fill-rule='evenodd' d='M17.408 16.796h-1.827l2.501-12.095h.198l3.324 6.533.988 2.19.988-2.19 3.258-6.533h.181l2.6 12.095h-1.81l-1.218-5.644-.362-1.71-.658 1.71-2.929 5.644h-.098l-2.914-5.644-.757-1.71-.345 1.71zm1.958-3.42-.726 3.663a1.255 1.255 0 0 1-1.232 1.011h-1.827a1.255 1.255 0 0 1-1.229-1.509l2.501-12.095a1.255 1.255 0 0 1 1.23-1.001h.197a1.25 1.25 0 0 1 1.12.685l3.19 6.273 3.125-6.263a1.25 1.25 0 0 1 1.123-.695h.181a1.255 1.255 0 0 1 1.227.991l1.443 6.71a5 5 0 0 1 .314-.787l.009-.016a4.6 4.6 0 0 1 1.777-1.887c.782-.46 1.668-.667 2.611-.667a4.6 4.6 0 0 1 1.7.32l.306.134c.21-.16.474-.256.759-.256h1.694a1.255 1.255 0 0 1 1.212.925 1.255 1.255 0 0 1 1.212-.925h1.711c.284 0 .545.094.755.252.613-.3 1.312-.45 2.075-.45 1.356 0 2.557.445 3.482 1.4q.47.48.763 1.064V4.701a1.255 1.255 0 0 1 1.255-1.255h1.86A1.255 1.255 0 0 1 54.44 4.7v9.194h2.217c.19 0 .37.043.532.118v-4.77c0-.356.147-.678.385-.906a2.42 2.42 0 0 1-.682-1.71c0-.665.267-1.253.735-1.7a2.45 2.45 0 0 1 1.722-.674 2.43 2.43 0 0 1 1.705.675q.318.302.504.683V4.7a1.255 1.255 0 0 1 1.255-1.255h1.744A1.255 1.255 0 0 1 65.812 4.7v3.335a4.8 4.8 0 0 1 1.526-.246c.938 0 1.817.214 2.59.69a4.47 4.47 0 0 1 1.67 1.743v-.98a1.255 1.255 0 0 1 1.256-1.256h1.777c.233 0 .451.064.639.174a3.4 3.4 0 0 1 1.567-.372c.346 0 .861.02 1.285.232a1.25 1.25 0 0 1 .689 1.004 4.7 4.7 0 0 1 .853-.588c.795-.44 1.675-.647 2.61-.647 1.385 0 2.65.39 3.525 1.396.836.938 1.168 2.173 1.168 3.528q-.001.515-.056 1.051a1.255 1.255 0 0 1-.947 1.09l.408.952a1.255 1.255 0 0 1-.477 1.552c-.418.268-.92.463-1.458.612-.613.171-1.304.244-2.049.244-1.06 0-2.043-.207-2.886-.698l-.015-.008c-.798-.48-1.419-1.135-1.818-1.963l-.004-.008a5.8 5.8 0 0 1-.548-2.512q0-.429.053-.843a1.3 1.3 0 0 1-.333-.086l-.166-.004c-.223 0-.426.062-.643.228-.03.024-.142.139-.142.59v3.883a1.255 1.255 0 0 1-1.256 1.256h-1.777a1.255 1.255 0 0 1-1.256-1.256V15.69l-.032.057a4.8 4.8 0 0 1-1.86 1.833 5.04 5.04 0 0 1-2.484.634 4.5 4.5 0 0 1-1.935-.424 1.25 1.25 0 0 1-.764.258h-1.71a1.255 1.255 0 0 1-1.256-1.255V7.687a2.4 2.4 0 0 1-.428.625c.253.23.412.561.412.93v7.553a1.255 1.255 0 0 1-1.256 1.255h-1.843a1.25 1.25 0 0 1-.894-.373c-.228.23-.544.373-.894.373H51.32a1.255 1.255 0 0 1-1.256-1.255v-1.251l-.061.117a4.7 4.7 0 0 1-1.782 1.884 4.77 4.77 0 0 1-2.485.67 5.6 5.6 0 0 1-1.485-.188l.009 2.764a1.255 1.255 0 0 1-1.255 1.259h-1.729a1.255 1.255 0 0 1-1.255-1.255v-3.537a1.255 1.255 0 0 1-1.167.793h-1.679a1.25 1.25 0 0 1-.77-.263 4.5 4.5 0 0 1-1.945.429c-.885 0-1.724-.21-2.495-.632l-.017-.01a5 5 0 0 1-1.081-.836 1.255 1.255 0 0 1-1.254 1.312h-1.81a1.255 1.255 0 0 1-1.228-.99l-.782-3.625-2.044 3.939a1.25 1.25 0 0 1-1.115.676h-.098a1.25 1.25 0 0 1-1.116-.68l-2.061-3.994zM35.92 16.63l.207-.114.223-.15q.493-.356.735-.785l.061-.118.033 1.332h1.678V9.242h-1.694l-.033 1.267q-.133-.329-.526-.658l-.032-.028a3.2 3.2 0 0 0-.668-.428l-.27-.12a3.3 3.3 0 0 0-1.235-.23q-1.136-.001-1.974.493a3.36 3.36 0 0 0-1.3 1.382q-.445.89-.444 2.074 0 1.2.51 2.107a3.8 3.8 0 0 0 1.382 1.381 3.9 3.9 0 0 0 1.893.477q.795 0 1.455-.33zm-2.789-5.38q-.576.675-.575 1.762 0 1.102.559 1.794.576.675 1.645.675a2.25 2.25 0 0 0 .934-.19 2.2 2.2 0 0 0 .468-.29l.178-.161a2.2 2.2 0 0 0 .397-.561q.244-.5.244-1.15v-.115q0-.708-.296-1.267l-.043-.077a2.2 2.2 0 0 0-.633-.709l-.13-.086-.047-.028a2.1 2.1 0 0 0-1.073-.285q-1.052 0-1.629.692zm2.316 2.706c.163-.17.28-.407.28-.83v-.114c0-.292-.06-.508-.15-.68a.96.96 0 0 0-.353-.389.85.85 0 0 0-.464-.127c-.4 0-.56.114-.664.239l-.01.012c-.148.174-.275.45-.275.945 0 .506.122.801.27.99.097.11.266.224.68.224.303 0 .504-.09.687-.269zm7.545 1.705a2.6 2.6 0 0 0 .331.423q.319.33.755.548l.173.074q.65.255 1.49.255 1.02 0 1.844-.493a3.45 3.45 0 0 0 1.316-1.4q.493-.904.493-2.089 0-1.909-.988-2.913-.988-1.02-2.584-1.02-.898 0-1.575.347a3 3 0 0 0-.415.262l-.199.166a3.4 3.4 0 0 0-.64.82V9.242h-1.712v11.553h1.729l-.017-5.134zm.53-1.138q.206.29.48.5l.155.11.053.034q.51.296 1.119.297 1.07 0 1.645-.675.577-.69.576-1.762 0-1.119-.576-1.777-.558-.675-1.645-.675-.435 0-.835.16a2 2 0 0 0-.284.136 2 2 0 0 0-.363.254 2.2 2.2 0 0 0-.46.569l-.082.162a2.6 2.6 0 0 0-.213 1.072v.115q0 .707.296 1.267l.135.211zm.964-.818a1.1 1.1 0 0 0 .367.385.94.94 0 0 0 .476.118c.423 0 .59-.117.687-.23.159-.194.28-.478.28-.95 0-.53-.133-.8-.266-.952l-.021-.025c-.078-.094-.231-.221-.68-.221a1 1 0 0 0-.503.135l-.012.007a.86.86 0 0 0-.335.343c-.073.133-.132.324-.132.614v.115a1.4 1.4 0 0 0 .14.66zm15.7-6.222q.347-.346.346-.856a1.05 1.05 0 0 0-.345-.79 1.18 1.18 0 0 0-.84-.329q-.51 0-.855.33a1.05 1.05 0 0 0-.346.79q0 .51.346.855.345.346.856.346.51 0 .839-.346zm4.337 9.314.033-1.332q.191.403.59.747l.098.081a4 4 0 0 0 .316.224l.223.122a3.2 3.2 0 0 0 1.44.322 3.8 3.8 0 0 0 1.875-.477 3.5 3.5 0 0 0 1.382-1.366q.527-.89.526-2.09 0-1.184-.444-2.073a3.24 3.24 0 0 0-1.283-1.399q-.823-.51-1.942-.51a3.5 3.5 0 0 0-1.527.344l-.086.043-.165.09a3 3 0 0 0-.33.214q-.432.315-.656.707a2 2 0 0 0-.099.198l.082-1.283V4.701h-1.744v12.095zm.473-2.509a2.5 2.5 0 0 0 .566.7q.117.098.245.18l.144.08a2.1 2.1 0 0 0 .975.232q1.07 0 1.645-.675.576-.69.576-1.778 0-1.102-.576-1.777-.56-.691-1.645-.692a2.2 2.2 0 0 0-1.015.235q-.22.113-.415.282l-.15.142a2.1 2.1 0 0 0-.42.594q-.223.479-.223 1.1v.115q0 .705.293 1.26zm2.616-.293c.157-.191.28-.479.28-.967 0-.51-.13-.79-.276-.961l-.021-.026c-.082-.1-.232-.225-.67-.225a.87.87 0 0 0-.681.279l-.012.011c-.154.155-.274.38-.274.807v.115c0 .285.057.499.144.669a1.1 1.1 0 0 0 .367.405c.137.082.28.123.455.123.423 0 .59-.118.686-.23zm8.266-3.013q.345-.13.724-.14l.069-.002q.493 0 .642.099l.247-1.794q-.196-.099-.717-.099a2.3 2.3 0 0 0-.545.063 2 2 0 0 0-.411.148 2.2 2.2 0 0 0-.4.249 2.5 2.5 0 0 0-.485.499 2.7 2.7 0 0 0-.32.581l-.05.137v-1.48h-1.778v7.553h1.777v-3.884q0-.546.159-.943a1.5 1.5 0 0 1 .466-.636 2.5 2.5 0 0 1 .399-.253 2 2 0 0 1 .224-.099zm9.784 2.656.05-.922q0-1.743-.856-2.698-.838-.97-2.584-.97-1.119-.001-2.007.493a3.46 3.46 0 0 0-1.4 1.382q-.493.906-.493 2.106 0 1.07.428 1.975.428.89 1.332 1.432.906.526 2.255.526.973 0 1.668-.185l.044-.012.135-.04q.613-.184.984-.421l-.542-1.267q-.3.162-.642.274l-.297.087q-.51.131-1.3.131-.954 0-1.497-.444a1.6 1.6 0 0 1-.192-.193q-.366-.44-.512-1.234l-.004-.021zm-5.427-1.256-.003.022h3.752v-.138q-.011-.727-.288-1.118a1 1 0 0 0-.156-.176q-.46-.428-1.316-.428-.986 0-1.494.604-.379.45-.494 1.234zm-27.053 2.77V4.7h-1.86v12.095h5.333V15.15zm7.103-5.908v7.553h-1.843V9.242h1.843z'/%3E%3Cpath fill='%23fff' d='m19.63 11.151-.757-1.71-.345 1.71-1.12 5.644h-1.827L18.083 4.7h.197l3.325 6.533.988 2.19.988-2.19L26.839 4.7h.181l2.6 12.095h-1.81l-1.218-5.644-.362-1.71-.658 1.71-2.93 5.644h-.098l-2.913-5.644zm14.836 5.81q-1.02 0-1.893-.478a3.8 3.8 0 0 1-1.381-1.382q-.51-.906-.51-2.106 0-1.185.444-2.074a3.36 3.36 0 0 1 1.3-1.382q.839-.494 1.974-.494a3.3 3.3 0 0 1 1.234.231 3.3 3.3 0 0 1 .97.575q.396.33.527.659l.033-1.267h1.694v7.553H37.18l-.033-1.332q-.279.593-1.02 1.053a3.17 3.17 0 0 1-1.662.444zm.296-1.482q.938 0 1.58-.642.642-.66.642-1.711v-.115q0-.708-.296-1.267a2.2 2.2 0 0 0-.807-.872 2.1 2.1 0 0 0-1.119-.313q-1.053 0-1.629.692-.575.675-.575 1.76 0 1.103.559 1.795.577.675 1.645.675zm6.521-6.237h1.711v1.4q.906-1.597 2.83-1.597 1.596 0 2.584 1.02.988 1.005.988 2.914 0 1.185-.493 2.09a3.46 3.46 0 0 1-1.316 1.399 3.5 3.5 0 0 1-1.844.493q-.954 0-1.662-.329a2.67 2.67 0 0 1-1.086-.97l.017 5.134h-1.728zm4.048 6.22q1.07 0 1.645-.674.577-.69.576-1.762 0-1.119-.576-1.777-.558-.675-1.645-.675-.592 0-1.12.296-.51.28-.822.823-.296.527-.296 1.234v.115q0 .708.296 1.267.313.543.823.855.51.296 1.119.297z'/%3E%3Cpath fill='%23e1e3e9' d='M51.325 4.7h1.86v10.45h3.473v1.646h-5.333zm7.12 4.542h1.843v7.553h-1.843zm.905-1.415a1.16 1.16 0 0 1-.856-.346 1.17 1.17 0 0 1-.346-.856 1.05 1.05 0 0 1 .346-.79q.346-.329.856-.329.494 0 .839.33a1.05 1.05 0 0 1 .345.79 1.16 1.16 0 0 1-.345.855q-.33.346-.84.346zm7.875 9.133a3.17 3.17 0 0 1-1.662-.444q-.723-.46-1.004-1.053l-.033 1.332h-1.71V4.701h1.743v4.657l-.082 1.283q.279-.658 1.086-1.119a3.5 3.5 0 0 1 1.778-.477q1.119 0 1.942.51a3.24 3.24 0 0 1 1.283 1.4q.445.888.444 2.072 0 1.201-.526 2.09a3.5 3.5 0 0 1-1.382 1.366 3.8 3.8 0 0 1-1.876.477zm-.296-1.481q1.069 0 1.645-.675.577-.69.577-1.778 0-1.102-.577-1.776-.56-.691-1.645-.692a2.12 2.12 0 0 0-1.58.659q-.642.641-.642 1.694v.115q0 .71.296 1.267a2.4 2.4 0 0 0 .807.872 2.1 2.1 0 0 0 1.119.313zm5.927-6.237h1.777v1.481q.263-.757.856-1.217a2.14 2.14 0 0 1 1.349-.46q.527 0 .724.098l-.247 1.794q-.149-.099-.642-.099-.774 0-1.416.494-.626.493-.626 1.58v3.883h-1.777V9.242zm9.534 7.718q-1.35 0-2.255-.526-.904-.543-1.332-1.432a4.6 4.6 0 0 1-.428-1.975q0-1.2.493-2.106a3.46 3.46 0 0 1 1.4-1.382q.889-.495 2.007-.494 1.744 0 2.584.97.855.956.856 2.7 0 .444-.05.92h-5.43q.18 1.005.708 1.45.542.443 1.497.443.79 0 1.3-.131a4 4 0 0 0 .938-.362l.542 1.267q-.411.263-1.119.46-.708.198-1.711.197zm1.596-4.558q.016-1.02-.444-1.432-.46-.428-1.316-.428-1.728 0-1.991 1.86z'/%3E%3Cpath d='M5.074 15.948a.484.657 0 0 0-.486.659v1.84a.484.657 0 0 0 .486.659h4.101a.484.657 0 0 0 .486-.659v-1.84a.484.657 0 0 0-.486-.659zm3.56 1.16H5.617v.838h3.017z' style='fill:%23fff;fill-rule:evenodd;stroke-width:1.03600001'/%3E%3Cg style='stroke-width:1.12603545'%3E%3Cpath d='M-9.408-1.416c-3.833-.025-7.056 2.912-7.08 6.615-.02 3.08 1.653 4.832 3.107 6.268.903.892 1.721 1.74 2.32 2.902l-.525-.004c-.543-.003-.992.304-1.24.639a1.87 1.87 0 0 0-.362 1.121l-.011 1.877c-.003.402.104.787.347 1.125.244.338.688.653 1.23.656l4.142.028c.542.003.99-.306 1.238-.641a1.87 1.87 0 0 0 .363-1.121l.012-1.875a1.87 1.87 0 0 0-.348-1.127c-.243-.338-.688-.653-1.23-.656l-.518-.004c.597-1.145 1.425-1.983 2.348-2.87 1.473-1.414 3.18-3.149 3.2-6.226-.016-3.59-2.923-6.684-6.993-6.707m-.006 1.1v.002c3.274.02 5.92 2.532 5.9 5.6-.017 2.706-1.39 4.026-2.863 5.44-1.034.994-2.118 2.033-2.814 3.633-.018.041-.052.055-.075.065q-.013.004-.02.01a.34.34 0 0 1-.226.084.34.34 0 0 1-.224-.086l-.092-.077c-.699-1.615-1.768-2.669-2.781-3.67-1.454-1.435-2.797-2.762-2.78-5.478.02-3.067 2.7-5.545 5.975-5.523m-.02 2.826c-1.62-.01-2.944 1.315-2.955 2.96-.01 1.646 1.295 2.988 2.916 2.999h.002c1.621.01 2.943-1.316 2.953-2.961.011-1.646-1.294-2.988-2.916-2.998m-.005 1.1c1.017.006 1.829.83 1.822 1.89s-.83 1.874-1.848 1.867c-1.018-.006-1.829-.83-1.822-1.89s.83-1.874 1.848-1.868m-2.155 11.857 4.14.025c.271.002.49.305.487.676l-.013 1.875c-.003.37-.224.67-.495.668l-4.14-.025c-.27-.002-.487-.306-.485-.676l.012-1.875c.003-.37.224-.67.494-.668' style='color:%23000;font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:%23000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:evenodd;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:%23000;solid-opacity:1;vector-effect:none;fill:%23000;fill-opacity:.4;fill-rule:evenodd;stroke:none;stroke-width:2.47727823;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto' transform='translate(15.553 2.85)scale(.88807)'/%3E%3Cpath d='M-9.415-.316C-12.69-.338-15.37 2.14-15.39 5.207c-.017 2.716 1.326 4.041 2.78 5.477 1.013 1 2.081 2.055 2.78 3.67l.092.076a.34.34 0 0 0 .225.086.34.34 0 0 0 .227-.083l.019-.01c.022-.009.057-.024.074-.064.697-1.6 1.78-2.64 2.814-3.634 1.473-1.414 2.847-2.733 2.864-5.44.02-3.067-2.627-5.58-5.901-5.601m-.057 8.784c1.621.011 2.944-1.315 2.955-2.96.01-1.646-1.295-2.988-2.916-2.999-1.622-.01-2.945 1.315-2.955 2.96s1.295 2.989 2.916 3' style='clip-rule:evenodd;fill:%23e1e3e9;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2.47727823;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:.4' transform='translate(15.553 2.85)scale(.88807)'/%3E%3Cpath d='M-11.594 15.465c-.27-.002-.492.297-.494.668l-.012 1.876c-.003.371.214.673.485.675l4.14.027c.271.002.492-.298.495-.668l.012-1.877c.003-.37-.215-.672-.485-.674z' style='clip-rule:evenodd;fill:%23fff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2.47727823;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:.4' transform='translate(15.553 2.85)scale(.88807)'/%3E%3C/g%3E%3C/svg%3E")}}.maplibregl-ctrl.maplibregl-ctrl-attrib{background-color:hsla(0,0%,100%,.5);margin:0;padding:0 5px}@media screen{.maplibregl-ctrl-attrib.maplibregl-compact{background-color:#fff;border-radius:12px;box-sizing:content-box;color:#000;margin:10px;min-height:20px;padding:2px 24px 2px 0;position:relative}.maplibregl-ctrl-attrib.maplibregl-compact-show{padding:2px 28px 2px 8px;visibility:visible}.maplibregl-ctrl-bottom-left>.maplibregl-ctrl-attrib.maplibregl-compact-show,.maplibregl-ctrl-top-left>.maplibregl-ctrl-attrib.maplibregl-compact-show{border-radius:12px;padding:2px 8px 2px 28px}.maplibregl-ctrl-attrib.maplibregl-compact .maplibregl-ctrl-attrib-inner{display:none}.maplibregl-ctrl-attrib-button{background-color:hsla(0,0%,100%,.5);background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill-rule='evenodd' viewBox='0 0 20 20'%3E%3Cpath d='M4 10a6 6 0 1 0 12 0 6 6 0 1 0-12 0m5-3a1 1 0 1 0 2 0 1 1 0 1 0-2 0m0 3a1 1 0 1 1 2 0v3a1 1 0 1 1-2 0'/%3E%3C/svg%3E");border:0;border-radius:12px;box-sizing:border-box;cursor:pointer;display:none;height:24px;outline:none;position:absolute;right:0;top:0;width:24px}.maplibregl-ctrl-attrib summary.maplibregl-ctrl-attrib-button{-webkit-appearance:none;-moz-appearance:none;appearance:none;list-style:none}.maplibregl-ctrl-attrib summary.maplibregl-ctrl-attrib-button::-webkit-details-marker{display:none}.maplibregl-ctrl-bottom-left .maplibregl-ctrl-attrib-button,.maplibregl-ctrl-top-left .maplibregl-ctrl-attrib-button{left:0}.maplibregl-ctrl-attrib.maplibregl-compact .maplibregl-ctrl-attrib-button,.maplibregl-ctrl-attrib.maplibregl-compact-show .maplibregl-ctrl-attrib-inner{display:block}.maplibregl-ctrl-attrib.maplibregl-compact-show .maplibregl-ctrl-attrib-button{background-color:rgb(0 0 0/5%)}.maplibregl-ctrl-bottom-right>.maplibregl-ctrl-attrib.maplibregl-compact:after{bottom:0;right:0}.maplibregl-ctrl-top-right>.maplibregl-ctrl-attrib.maplibregl-compact:after{right:0;top:0}.maplibregl-ctrl-top-left>.maplibregl-ctrl-attrib.maplibregl-compact:after{left:0;top:0}.maplibregl-ctrl-bottom-left>.maplibregl-ctrl-attrib.maplibregl-compact:after{bottom:0;left:0}}@media screen and (forced-colors:active){.maplibregl-ctrl-attrib.maplibregl-compact:after{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='%23fff' fill-rule='evenodd' viewBox='0 0 20 20'%3E%3Cpath d='M4 10a6 6 0 1 0 12 0 6 6 0 1 0-12 0m5-3a1 1 0 1 0 2 0 1 1 0 1 0-2 0m0 3a1 1 0 1 1 2 0v3a1 1 0 1 1-2 0'/%3E%3C/svg%3E")}}@media screen and (forced-colors:active) and (prefers-color-scheme:light){.maplibregl-ctrl-attrib.maplibregl-compact:after{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill-rule='evenodd' viewBox='0 0 20 20'%3E%3Cpath d='M4 10a6 6 0 1 0 12 0 6 6 0 1 0-12 0m5-3a1 1 0 1 0 2 0 1 1 0 1 0-2 0m0 3a1 1 0 1 1 2 0v3a1 1 0 1 1-2 0'/%3E%3C/svg%3E")}}.maplibregl-ctrl-attrib a{color:rgba(0,0,0,.75);text-decoration:none}.maplibregl-ctrl-attrib a:hover{color:inherit;text-decoration:underline}.maplibregl-attrib-empty{display:none}.maplibregl-ctrl-scale{background-color:hsla(0,0%,100%,.75);border:2px solid #333;border-top:#333;box-sizing:border-box;color:#333;font-size:10px;padding:0 5px}.maplibregl-popup{display:flex;left:0;pointer-events:none;position:absolute;top:0;will-change:transform}.maplibregl-popup-anchor-top,.maplibregl-popup-anchor-top-left,.maplibregl-popup-anchor-top-right{flex-direction:column}.maplibregl-popup-anchor-bottom,.maplibregl-popup-anchor-bottom-left,.maplibregl-popup-anchor-bottom-right{flex-direction:column-reverse}.maplibregl-popup-anchor-left{flex-direction:row}.maplibregl-popup-anchor-right{flex-direction:row-reverse}.maplibregl-popup-tip{border:10px solid transparent;height:0;width:0;z-index:1}.maplibregl-popup-anchor-top .maplibregl-popup-tip{align-self:center;border-bottom-color:#fff;border-top:none}.maplibregl-popup-anchor-top-left .maplibregl-popup-tip{align-self:flex-start;border-bottom-color:#fff;border-left:none;border-top:none}.maplibregl-popup-anchor-top-right .maplibregl-popup-tip{align-self:flex-end;border-bottom-color:#fff;border-right:none;border-top:none}.maplibregl-popup-anchor-bottom .maplibregl-popup-tip{align-self:center;border-bottom:none;border-top-color:#fff}.maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip{align-self:flex-start;border-bottom:none;border-left:none;border-top-color:#fff}.maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip{align-self:flex-end;border-bottom:none;border-right:none;border-top-color:#fff}.maplibregl-popup-anchor-left .maplibregl-popup-tip{align-self:center;border-left:none;border-right-color:#fff}.maplibregl-popup-anchor-right .maplibregl-popup-tip{align-self:center;border-left-color:#fff;border-right:none}.maplibregl-popup-close-button{background-color:transparent;border:0;border-radius:0 3px 0 0;cursor:pointer;position:absolute;right:0;top:0}.maplibregl-popup-close-button:hover{background-color:rgb(0 0 0/5%)}.maplibregl-popup-content{background:#fff;border-radius:3px;box-shadow:0 1px 2px rgba(0,0,0,.1);padding:15px 10px;pointer-events:auto;position:relative}.maplibregl-popup-anchor-top-left .maplibregl-popup-content{border-top-left-radius:0}.maplibregl-popup-anchor-top-right .maplibregl-popup-content{border-top-right-radius:0}.maplibregl-popup-anchor-bottom-left .maplibregl-popup-content{border-bottom-left-radius:0}.maplibregl-popup-anchor-bottom-right .maplibregl-popup-content{border-bottom-right-radius:0}.maplibregl-popup-track-pointer{display:none}.maplibregl-popup-track-pointer *{pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.maplibregl-map:hover .maplibregl-popup-track-pointer{display:flex}.maplibregl-map:active .maplibregl-popup-track-pointer{display:none}.maplibregl-marker{left:0;position:absolute;top:0;transition:opacity .2s;will-change:transform}.maplibregl-user-location-dot,.maplibregl-user-location-dot:before{background-color:#1da1f2;border-radius:50%;height:15px;width:15px}.maplibregl-user-location-dot:before{animation:maplibregl-user-location-dot-pulse 2s infinite;content:"";position:absolute}.maplibregl-user-location-dot:after{border:2px solid #fff;border-radius:50%;box-shadow:0 0 3px rgba(0,0,0,.35);box-sizing:border-box;content:"";height:19px;left:-2px;position:absolute;top:-2px;width:19px}@keyframes maplibregl-user-location-dot-pulse{0%{opacity:1;transform:scale(1)}70%{opacity:0;transform:scale(3)}to{opacity:0;transform:scale(1)}}.maplibregl-user-location-dot-stale{background-color:#aaa}.maplibregl-user-location-dot-stale:after{display:none}.maplibregl-user-location-accuracy-circle{background-color:#1da1f233;border-radius:100%;height:1px;width:1px}.maplibregl-crosshair,.maplibregl-crosshair .maplibregl-interactive,.maplibregl-crosshair .maplibregl-interactive:active{cursor:crosshair}.maplibregl-boxzoom{background:#fff;border:2px dotted #202020;height:0;left:0;opacity:.5;position:absolute;top:0;width:0}.maplibregl-cooperative-gesture-screen{align-items:center;background:rgba(0,0,0,.4);color:#fff;display:flex;font-size:1.4em;inset:0;justify-content:center;line-height:1.2;opacity:0;padding:1rem;pointer-events:none;position:absolute;transition:opacity 1s ease 1s;z-index:99999}.maplibregl-cooperative-gesture-screen.maplibregl-show{opacity:1;transition:opacity .05s}.maplibregl-cooperative-gesture-screen .maplibregl-mobile-message{display:none}@media (hover:none),(width <= 480px){.maplibregl-cooperative-gesture-screen .maplibregl-desktop-message{display:none}.maplibregl-cooperative-gesture-screen .maplibregl-mobile-message{display:block}}.maplibregl-pseudo-fullscreen{height:100%!important;left:0!important;position:fixed!important;top:0!important;width:100%!important;z-index:99999}
+/* required styles */
+
+.leaflet-pane,
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-tile-container,
+.leaflet-pane > svg,
+.leaflet-pane > canvas,
+.leaflet-zoom-box,
+.leaflet-image-layer,
+.leaflet-layer {
+	position: absolute;
+	left: 0;
+	top: 0;
+	}
+.leaflet-container {
+	overflow: hidden;
+	}
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+	-webkit-user-select: none;
+	   -moz-user-select: none;
+	        user-select: none;
+	  -webkit-user-drag: none;
+	}
+/* Prevents IE11 from highlighting tiles in blue */
+.leaflet-tile::selection {
+	background: transparent;
+}
+/* Safari renders non-retina tile on retina better with this, but Chrome is worse */
+.leaflet-safari .leaflet-tile {
+	image-rendering: -webkit-optimize-contrast;
+	}
+/* hack that prevents hw layers "stretching" when loading new tiles */
+.leaflet-safari .leaflet-tile-container {
+	width: 1600px;
+	height: 1600px;
+	-webkit-transform-origin: 0 0;
+	}
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+	display: block;
+	}
+/* .leaflet-container svg: reset svg max-width decleration shipped in Joomla! (joomla.org) 3.x */
+/* .leaflet-container img: map is broken in FF if you have max-width: 100% on tiles */
+.leaflet-container .leaflet-overlay-pane svg {
+	max-width: none !important;
+	max-height: none !important;
+	}
+.leaflet-container .leaflet-marker-pane img,
+.leaflet-container .leaflet-shadow-pane img,
+.leaflet-container .leaflet-tile-pane img,
+.leaflet-container img.leaflet-image-layer,
+.leaflet-container .leaflet-tile {
+	max-width: none !important;
+	max-height: none !important;
+	width: auto;
+	padding: 0;
+	}
+
+.leaflet-container img.leaflet-tile {
+	/* See: https://bugs.chromium.org/p/chromium/issues/detail?id=600120 */
+	mix-blend-mode: plus-lighter;
+}
+
+.leaflet-container.leaflet-touch-zoom {
+	-ms-touch-action: pan-x pan-y;
+	touch-action: pan-x pan-y;
+	}
+.leaflet-container.leaflet-touch-drag {
+	-ms-touch-action: pinch-zoom;
+	/* Fallback for FF which doesn't support pinch-zoom */
+	touch-action: none;
+	touch-action: pinch-zoom;
+}
+.leaflet-container.leaflet-touch-drag.leaflet-touch-zoom {
+	-ms-touch-action: none;
+	touch-action: none;
+}
+.leaflet-container {
+	-webkit-tap-highlight-color: transparent;
+}
+.leaflet-container a {
+	-webkit-tap-highlight-color: rgba(51, 181, 229, 0.4);
+}
+.leaflet-tile {
+	filter: inherit;
+	visibility: hidden;
+	}
+.leaflet-tile-loaded {
+	visibility: inherit;
+	}
+.leaflet-zoom-box {
+	width: 0;
+	height: 0;
+	-moz-box-sizing: border-box;
+	     box-sizing: border-box;
+	z-index: 800;
+	}
+/* workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=888319 */
+.leaflet-overlay-pane svg {
+	-moz-user-select: none;
+	}
+
+.leaflet-pane         { z-index: 400; }
+
+.leaflet-tile-pane    { z-index: 200; }
+.leaflet-overlay-pane { z-index: 400; }
+.leaflet-shadow-pane  { z-index: 500; }
+.leaflet-marker-pane  { z-index: 600; }
+.leaflet-tooltip-pane   { z-index: 650; }
+.leaflet-popup-pane   { z-index: 700; }
+
+.leaflet-map-pane canvas { z-index: 100; }
+.leaflet-map-pane svg    { z-index: 200; }
+
+.leaflet-vml-shape {
+	width: 1px;
+	height: 1px;
+	}
+.lvml {
+	behavior: url(#default#VML);
+	display: inline-block;
+	position: absolute;
+	}
+
+
+/* control positioning */
+
+.leaflet-control {
+	position: relative;
+	z-index: 800;
+	pointer-events: visiblePainted; /* IE 9-10 doesn't have auto */
+	pointer-events: auto;
+	}
+.leaflet-top,
+.leaflet-bottom {
+	position: absolute;
+	z-index: 1000;
+	pointer-events: none;
+	}
+.leaflet-top {
+	top: 0;
+	}
+.leaflet-right {
+	right: 0;
+	}
+.leaflet-bottom {
+	bottom: 0;
+	}
+.leaflet-left {
+	left: 0;
+	}
+.leaflet-control {
+	float: left;
+	clear: both;
+	}
+.leaflet-right .leaflet-control {
+	float: right;
+	}
+.leaflet-top .leaflet-control {
+	margin-top: 10px;
+	}
+.leaflet-bottom .leaflet-control {
+	margin-bottom: 10px;
+	}
+.leaflet-left .leaflet-control {
+	margin-left: 10px;
+	}
+.leaflet-right .leaflet-control {
+	margin-right: 10px;
+	}
+
+
+/* zoom and fade animations */
+
+.leaflet-fade-anim .leaflet-popup {
+	opacity: 0;
+	-webkit-transition: opacity 0.2s linear;
+	   -moz-transition: opacity 0.2s linear;
+	        transition: opacity 0.2s linear;
+	}
+.leaflet-fade-anim .leaflet-map-pane .leaflet-popup {
+	opacity: 1;
+	}
+.leaflet-zoom-animated {
+	-webkit-transform-origin: 0 0;
+	    -ms-transform-origin: 0 0;
+	        transform-origin: 0 0;
+	}
+svg.leaflet-zoom-animated {
+	will-change: transform;
+}
+
+.leaflet-zoom-anim .leaflet-zoom-animated {
+	-webkit-transition: -webkit-transform 0.25s cubic-bezier(0,0,0.25,1);
+	   -moz-transition:    -moz-transform 0.25s cubic-bezier(0,0,0.25,1);
+	        transition:         transform 0.25s cubic-bezier(0,0,0.25,1);
+	}
+.leaflet-zoom-anim .leaflet-tile,
+.leaflet-pan-anim .leaflet-tile {
+	-webkit-transition: none;
+	   -moz-transition: none;
+	        transition: none;
+	}
+
+.leaflet-zoom-anim .leaflet-zoom-hide {
+	visibility: hidden;
+	}
+
+
+/* cursors */
+
+.leaflet-interactive {
+	cursor: pointer;
+	}
+.leaflet-grab {
+	cursor: -webkit-grab;
+	cursor:    -moz-grab;
+	cursor:         grab;
+	}
+.leaflet-crosshair,
+.leaflet-crosshair .leaflet-interactive {
+	cursor: crosshair;
+	}
+.leaflet-popup-pane,
+.leaflet-control {
+	cursor: auto;
+	}
+.leaflet-dragging .leaflet-grab,
+.leaflet-dragging .leaflet-grab .leaflet-interactive,
+.leaflet-dragging .leaflet-marker-draggable {
+	cursor: move;
+	cursor: -webkit-grabbing;
+	cursor:    -moz-grabbing;
+	cursor:         grabbing;
+	}
+
+/* marker & overlays interactivity */
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-image-layer,
+.leaflet-pane > svg path,
+.leaflet-tile-container {
+	pointer-events: none;
+	}
+
+.leaflet-marker-icon.leaflet-interactive,
+.leaflet-image-layer.leaflet-interactive,
+.leaflet-pane > svg path.leaflet-interactive,
+svg.leaflet-image-layer.leaflet-interactive path {
+	pointer-events: visiblePainted; /* IE 9-10 doesn't have auto */
+	pointer-events: auto;
+	}
+
+/* visual tweaks */
+
+.leaflet-container {
+	background: #ddd;
+	outline-offset: 1px;
+	}
+.leaflet-container a {
+	color: #0078A8;
+	}
+.leaflet-zoom-box {
+	border: 2px dotted #38f;
+	background: rgba(255,255,255,0.5);
+	}
+
+
+/* general typography */
+.leaflet-container {
+	font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-size: 0.75rem;
+	line-height: 1.5;
+	}
+
+
+/* general toolbar styles */
+
+.leaflet-bar {
+	box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+	border-radius: 4px;
+	}
+.leaflet-bar a {
+	background-color: #fff;
+	border-bottom: 1px solid #ccc;
+	width: 26px;
+	height: 26px;
+	line-height: 26px;
+	display: block;
+	text-align: center;
+	text-decoration: none;
+	color: black;
+	}
+.leaflet-bar a,
+.leaflet-control-layers-toggle {
+	background-position: 50% 50%;
+	background-repeat: no-repeat;
+	display: block;
+	}
+.leaflet-bar a:hover,
+.leaflet-bar a:focus {
+	background-color: #f4f4f4;
+	}
+.leaflet-bar a:first-child {
+	border-top-left-radius: 4px;
+	border-top-right-radius: 4px;
+	}
+.leaflet-bar a:last-child {
+	border-bottom-left-radius: 4px;
+	border-bottom-right-radius: 4px;
+	border-bottom: none;
+	}
+.leaflet-bar a.leaflet-disabled {
+	cursor: default;
+	background-color: #f4f4f4;
+	color: #bbb;
+	}
+
+.leaflet-touch .leaflet-bar a {
+	width: 30px;
+	height: 30px;
+	line-height: 30px;
+	}
+.leaflet-touch .leaflet-bar a:first-child {
+	border-top-left-radius: 2px;
+	border-top-right-radius: 2px;
+	}
+.leaflet-touch .leaflet-bar a:last-child {
+	border-bottom-left-radius: 2px;
+	border-bottom-right-radius: 2px;
+	}
+
+/* zoom control */
+
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+	font: bold 18px 'Lucida Console', Monaco, monospace;
+	text-indent: 1px;
+	}
+
+.leaflet-touch .leaflet-control-zoom-in, .leaflet-touch .leaflet-control-zoom-out  {
+	font-size: 22px;
+	}
+
+
+/* layers control */
+
+.leaflet-control-layers {
+	box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+	background: #fff;
+	border-radius: 5px;
+	}
+.leaflet-control-layers-toggle {
+	background-image: url(images/layers.png);
+	width: 36px;
+	height: 36px;
+	}
+.leaflet-retina .leaflet-control-layers-toggle {
+	background-image: url(images/layers-2x.png);
+	background-size: 26px 26px;
+	}
+.leaflet-touch .leaflet-control-layers-toggle {
+	width: 44px;
+	height: 44px;
+	}
+.leaflet-control-layers .leaflet-control-layers-list,
+.leaflet-control-layers-expanded .leaflet-control-layers-toggle {
+	display: none;
+	}
+.leaflet-control-layers-expanded .leaflet-control-layers-list {
+	display: block;
+	position: relative;
+	}
+.leaflet-control-layers-expanded {
+	padding: 6px 10px 6px 6px;
+	color: #333;
+	background: #fff;
+	}
+.leaflet-control-layers-scrollbar {
+	overflow-y: scroll;
+	overflow-x: hidden;
+	padding-right: 5px;
+	}
+.leaflet-control-layers-selector {
+	margin-top: 2px;
+	position: relative;
+	top: 1px;
+	}
+.leaflet-control-layers label {
+	display: block;
+	font-size: 13px;
+	font-size: 1.08333em;
+	}
+.leaflet-control-layers-separator {
+	height: 0;
+	border-top: 1px solid #ddd;
+	margin: 5px -10px 5px -6px;
+	}
+
+/* Default icon URLs */
+.leaflet-default-icon-path { /* used only in path-guessing heuristic, see L.Icon.Default */
+	background-image: url(images/marker-icon.png);
+	}
+
+
+/* attribution and scale controls */
+
+.leaflet-container .leaflet-control-attribution {
+	background: #fff;
+	background: rgba(255, 255, 255, 0.8);
+	margin: 0;
+	}
+.leaflet-control-attribution,
+.leaflet-control-scale-line {
+	padding: 0 5px;
+	color: #333;
+	line-height: 1.4;
+	}
+.leaflet-control-attribution a {
+	text-decoration: none;
+	}
+.leaflet-control-attribution a:hover,
+.leaflet-control-attribution a:focus {
+	text-decoration: underline;
+	}
+.leaflet-attribution-flag {
+	display: inline !important;
+	vertical-align: baseline !important;
+	width: 1em;
+	height: 0.6669em;
+	}
+.leaflet-left .leaflet-control-scale {
+	margin-left: 5px;
+	}
+.leaflet-bottom .leaflet-control-scale {
+	margin-bottom: 5px;
+	}
+.leaflet-control-scale-line {
+	border: 2px solid #777;
+	border-top: none;
+	line-height: 1.1;
+	padding: 2px 5px 1px;
+	white-space: nowrap;
+	-moz-box-sizing: border-box;
+	     box-sizing: border-box;
+	background: rgba(255, 255, 255, 0.8);
+	text-shadow: 1px 1px #fff;
+	}
+.leaflet-control-scale-line:not(:first-child) {
+	border-top: 2px solid #777;
+	border-bottom: none;
+	margin-top: -2px;
+	}
+.leaflet-control-scale-line:not(:first-child):not(:last-child) {
+	border-bottom: 2px solid #777;
+	}
+
+.leaflet-touch .leaflet-control-attribution,
+.leaflet-touch .leaflet-control-layers,
+.leaflet-touch .leaflet-bar {
+	box-shadow: none;
+	}
+.leaflet-touch .leaflet-control-layers,
+.leaflet-touch .leaflet-bar {
+	border: 2px solid rgba(0,0,0,0.2);
+	background-clip: padding-box;
+	}
+
+
+/* popup */
+
+.leaflet-popup {
+	position: absolute;
+	text-align: center;
+	margin-bottom: 20px;
+	}
+.leaflet-popup-content-wrapper {
+	padding: 1px;
+	text-align: left;
+	border-radius: 12px;
+	}
+.leaflet-popup-content {
+	margin: 13px 24px 13px 20px;
+	line-height: 1.3;
+	font-size: 13px;
+	font-size: 1.08333em;
+	min-height: 1px;
+	}
+.leaflet-popup-content p {
+	margin: 17px 0;
+	margin: 1.3em 0;
+	}
+.leaflet-popup-tip-container {
+	width: 40px;
+	height: 20px;
+	position: absolute;
+	left: 50%;
+	margin-top: -1px;
+	margin-left: -20px;
+	overflow: hidden;
+	pointer-events: none;
+	}
+.leaflet-popup-tip {
+	width: 17px;
+	height: 17px;
+	padding: 1px;
+
+	margin: -10px auto 0;
+	pointer-events: auto;
+
+	-webkit-transform: rotate(45deg);
+	   -moz-transform: rotate(45deg);
+	    -ms-transform: rotate(45deg);
+	        transform: rotate(45deg);
+	}
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+	background: white;
+	color: #333;
+	box-shadow: 0 3px 14px rgba(0,0,0,0.4);
+	}
+.leaflet-container a.leaflet-popup-close-button {
+	position: absolute;
+	top: 0;
+	right: 0;
+	border: none;
+	text-align: center;
+	width: 24px;
+	height: 24px;
+	font: 16px/24px Tahoma, Verdana, sans-serif;
+	color: #757575;
+	text-decoration: none;
+	background: transparent;
+	}
+.leaflet-container a.leaflet-popup-close-button:hover,
+.leaflet-container a.leaflet-popup-close-button:focus {
+	color: #585858;
+	}
+.leaflet-popup-scrolled {
+	overflow: auto;
+	}
+
+.leaflet-oldie .leaflet-popup-content-wrapper {
+	-ms-zoom: 1;
+	}
+.leaflet-oldie .leaflet-popup-tip {
+	width: 24px;
+	margin: 0 auto;
+
+	-ms-filter: "progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678)";
+	filter: progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678);
+	}
+
+.leaflet-oldie .leaflet-control-zoom,
+.leaflet-oldie .leaflet-control-layers,
+.leaflet-oldie .leaflet-popup-content-wrapper,
+.leaflet-oldie .leaflet-popup-tip {
+	border: 1px solid #999;
+	}
+
+
+/* div icon */
+
+.leaflet-div-icon {
+	background: #fff;
+	border: 1px solid #666;
+	}
+
+
+/* Tooltip */
+/* Base styles for the element that has a tooltip */
+.leaflet-tooltip {
+	position: absolute;
+	padding: 6px;
+	background-color: #fff;
+	border: 1px solid #fff;
+	border-radius: 3px;
+	color: #222;
+	white-space: nowrap;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	pointer-events: none;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+	}
+.leaflet-tooltip.leaflet-interactive {
+	cursor: pointer;
+	pointer-events: auto;
+	}
+.leaflet-tooltip-top:before,
+.leaflet-tooltip-bottom:before,
+.leaflet-tooltip-left:before,
+.leaflet-tooltip-right:before {
+	position: absolute;
+	pointer-events: none;
+	border: 6px solid transparent;
+	background: transparent;
+	content: "";
+	}
+
+/* Directions */
+
+.leaflet-tooltip-bottom {
+	margin-top: 6px;
+}
+.leaflet-tooltip-top {
+	margin-top: -6px;
+}
+.leaflet-tooltip-bottom:before,
+.leaflet-tooltip-top:before {
+	left: 50%;
+	margin-left: -6px;
+	}
+.leaflet-tooltip-top:before {
+	bottom: 0;
+	margin-bottom: -12px;
+	border-top-color: #fff;
+	}
+.leaflet-tooltip-bottom:before {
+	top: 0;
+	margin-top: -12px;
+	margin-left: -6px;
+	border-bottom-color: #fff;
+	}
+.leaflet-tooltip-left {
+	margin-left: -6px;
+}
+.leaflet-tooltip-right {
+	margin-left: 6px;
+}
+.leaflet-tooltip-left:before,
+.leaflet-tooltip-right:before {
+	top: 50%;
+	margin-top: -6px;
+	}
+.leaflet-tooltip-left:before {
+	right: 0;
+	margin-right: -12px;
+	border-left-color: #fff;
+	}
+.leaflet-tooltip-right:before {
+	left: 0;
+	margin-left: -12px;
+	border-right-color: #fff;
+	}
+
+/* Printing */
+
+@media print {
+	/* Prevent printers from removing background-images of controls. */
+	.leaflet-control {
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
+		}
+	}
+
+</style>
+</head><body>
+
+
+<div class="top"><div class="top-in">
+  <div class="brand">Office Vehicle Manager<small>Shared fleet register · all phones update live</small></div>
+  <div class="top-right"><span class="sync" id="sync"><i></i><span>Connecting…</span></span><button class="userbtn" id="userBtn" type="button" aria-label="Account" hidden></button></div>
+</div></div>
+
+<div class="login" id="login" hidden>
+  <form class="login-card" id="loginForm" novalidate>
+    <div class="login-hero" id="loginHero"></div>
+    <h1>Office Vehicle Manager</h1>
+    <p class="hint" style="margin:0" id="lHint">Log in with your email and password.</p>
+    <div class="seg" id="authSeg" style="width:100%"><button type="button" data-mode="login" aria-pressed="true" style="flex:1">Log in</button><button type="button" data-mode="signup" aria-pressed="false" style="flex:1">Create account</button></div>
+    <div class="info" id="lInfo" hidden></div>
+    <div class="field" id="lNameWrap" hidden><label for="lName">Your name</label><input id="lName" autocomplete="name" maxlength="60"></div>
+    <div class="field"><label for="lEmail">Email</label><input id="lEmail" type="email" autocomplete="username" inputmode="email" autocapitalize="off"></div>
+    <div class="field"><label for="lPass">Password</label><input id="lPass" type="password" autocomplete="current-password"></div>
+    <div class="field" id="lPass2Wrap" hidden><label for="lPass2">Confirm password</label><input id="lPass2" type="password" autocomplete="new-password"></div>
+    <label class="check" for="lShow" style="background:none;padding:0"><input type="checkbox" id="lShow"><span>Show password</span></label>
+    <div class="err" id="lErr"></div>
+    <button class="btn" type="submit" id="lBtn">Log in</button>
+  </form>
+</div>
+
+<div class="login" id="waiting" hidden>
+  <div class="login-card">
+    <div class="wait-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+    <h1 id="waitTitle">Waiting for approval</h1>
+    <p style="margin:0" id="waitMsg"></p>
+    <div class="actions"><button class="btn" type="button" id="waitCheck">Check again</button><button class="btn ghost" type="button" id="waitLogout">Log out</button></div>
+  </div>
+</div>
+
+<main>
+  <div class="update-bar" id="updateBar" hidden></div>
+  <div class="notice" id="notice" hidden></div>
+
+  <section id="v-dashboard" data-view>
+    <div class="head"><h2>Dashboard</h2><button class="btn" data-act="dispatch" data-w>+ Dispatch out</button></div>
+    <div class="hello" id="hello"></div>
+    <div class="notice" id="teamNotice" hidden></div>
+    <div class="kpis" id="kpis"></div>
+    <h3>Vehicles out now</h3>
+    <div class="list" id="openTrips"></div>
+  </section>
+
+  <section id="v-vehicles" data-view hidden>
+    <div class="head"><h2>Vehicles</h2><button class="btn" data-act="addVehicle" data-w>+ Add vehicle</button></div>
+    <div class="list" id="vehicleList"></div>
+  </section>
+
+  <section id="v-drivers" data-view hidden>
+    <div class="head"><h2>Drivers</h2><button class="btn" data-act="addDriver" data-w>+ Add driver</button></div>
+    <div class="list" id="driverList"></div>
+  </section>
+
+  <section id="v-places" data-view hidden>
+    <div class="head"><h2>Places</h2></div>
+    <form id="placeForm" class="filters" data-w>
+      <input class="search" id="placeName" placeholder="New place, e.g. Ruwi Head Office" maxlength="80" autocomplete="off">
+      <button class="btn" type="submit">Add</button>
+    </form>
+    <div class="list" id="placeList"></div>
+  </section>
+
+  <section id="v-team" data-view hidden>
+    <div class="head"><h2>Team</h2><a class="btn ghost small" href="#dashboard">Done</a></div>
+    <p class="hint" style="margin-top:0">People who create an account in the app appear here. Approve them before they can see or change the register.</p>
+    <h3>Waiting for approval</h3>
+    <div class="list" id="teamPending"></div>
+    <h3>Members</h3>
+    <div class="list" id="teamMembers"></div>
+  </section>
+
+  <section id="v-map" data-view hidden>
+    <div class="head"><h2>Live map</h2><div class="actions"><div class="seg" id="langSeg" aria-label="Map labels"><button type="button" data-lang="en" aria-pressed="true">English</button><button type="button" data-lang="local" aria-pressed="false">Arabic</button></div><button class="btn ghost small" type="button" id="fitBtn">Show all</button></div></div>
+    <div class="notice" id="routeNote" hidden></div>
+    <div class="notice" id="mapNote" hidden></div>
+    <div id="map"></div>
+    <p class="hint" id="mapStatus" style="margin:6px 0 0;font-size:12px;overflow-wrap:anywhere"></p>
+    <h3>Vehicles being tracked</h3>
+    <div class="list" id="liveList"></div>
+  </section>
+
+  <section id="v-trips" data-view hidden>
+    <div class="head"><h2>Trip register</h2><button class="btn ghost" id="exportBtn" hidden>Share CSV</button></div>
+    <div class="filters">
+      <div class="seg" id="tripSeg">
+        <button type="button" data-f="all" aria-pressed="true">All</button>
+        <button type="button" data-f="Out" aria-pressed="false">Out</button>
+        <button type="button" data-f="Returned" aria-pressed="false">Returned</button>
+      </div>
+      <input class="search" id="tripSearch" type="search" placeholder="Search vehicle, driver, employee, place">
+    </div>
+    <div class="list" id="tripList"></div>
+  </section>
+</main>
+
+<nav class="tabs" aria-label="Sections"><div class="tabs-in">
+  <a href="#dashboard" data-tab="dashboard"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</a>
+  <a href="#vehicles" data-tab="vehicles"><svg viewBox="0 0 24 24"><path d="M5 16V11l2-5h10l2 5v5"/><path d="M3 16h18v3H3z"/><circle cx="7.5" cy="13" r=".8"/><circle cx="16.5" cy="13" r=".8"/></svg>Vehicles</a>
+  <a href="#drivers" data-tab="drivers"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg>Drivers</a>
+  <a href="#places" data-tab="places"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Places</a>
+  <a href="#map" data-tab="map"><svg viewBox="0 0 24 24"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg>Map</a>
+  <a href="#trips" data-tab="trips"><svg viewBox="0 0 24 24"><path d="M7 3h10v18H7z"/><path d="M10 7h4M10 11h4M10 15h2"/></svg>Trips</a>
+</div></nav>
+
+<section class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="sheet-top"><button class="sheet-back" type="button" id="sheetBack" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><div class="sheet-title" id="sheetTitle"></div></div>
+  <div class="sheet-body" id="sheetBody"></div>
+</section>
+
+<dialog id="dlg"><form method="dialog" class="dlg" id="dlgForm" novalidate>
+  <header id="dlgTitle"></header>
+  <div class="body" id="dlgBody"></div>
+  <footer id="dlgFoot"></footer>
+</form></dialog>
+
+<script src="supabase.js"></script>
+<script src="art.js"></script>
+<script src="leaflet.js"></script>
+<script src="maplibre-gl.js"></script>
+<script src="leaflet-maplibre-gl.js"></script>
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  const S = { vehicles: [], drivers: [], places: [], trips: [], positions: [] };
+
+  /* ---------- GPS (native bridge) ---------- */
+  const gpsWait = {};
+  const gps = {
+    has: !!(window.Android && window.Android.getFix),
+    fix() {
+      return new Promise(res => {
+        if (!gps.has) return res(null);
+        const id = "f" + Math.random().toString(36).slice(2);
+        gpsWait[id] = res;
+        try { window.Android.getFix(id); } catch { delete gpsWait[id]; return res(null); }
+        setTimeout(() => { if (gpsWait[id]) { delete gpsWait[id]; res({ error: "timeout" }); } }, 30000);
+      });
+    },
+    tracking() { try { return (gps.has && window.Android.trackingTrip()) || ""; } catch { return ""; } },
+    start(t) { try { window.Android.startTracking(t._id, String(t.vehicleNumber || ""), String(t.driverName || "")); } catch {} },
+    stop() { try { window.Android.stopTracking(); } catch {} },
+  };
+  window.__fix = (id, r) => { const f = gpsWait[id]; if (f) { delete gpsWait[id]; f(r); } };
+  window.__gpsEvent = kind => {
+    const m = { started: "Live tracking started on this phone", stopped: "Tracking stopped on this phone", denied: "Location permission is off. Allow location for Vehicle Manager in phone settings.", off: "Turn on Location (GPS) on this phone", nologin: "Log out and log in again on this phone to turn on tracking." };
+    toast(m[kind] || kind); render();
+  };
+  const gpsMsg = e => ({ denied: "Location permission is off, so the location wasn't saved.", off: "Location (GPS) is off, so the location wasn't saved.", timeout: "Couldn't get a GPS fix, so the location wasn't saved." }[e] || "");
+  const ago = iso => { const m = Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000)); return m < 1 ? "just now" : m < 60 ? m + " min ago" : Math.floor(m / 60) + " h " + (m % 60) + " min ago"; };
+  const fresh = iso => Date.now() - new Date(iso) < 5 * 60000;
+  const mapLink = (l, label) => `<a class="linkbtn" href="https://www.google.com/maps?q=${Number(l.lat)},${Number(l.lng)}">${label}</a>`;
+  let routeTrip = null, map = null, mapLayer = null, fitted = false;
+  let db = null, assets = null, downloads = null, canWrite = true, tripFilter = "all";
+
+  const VEH_TYPES = ["Car","SUV","Van","Pickup","Bus","Truck","Motorbike"];
+  const FUELS = ["Petrol","Diesel","Hybrid","Electric","CNG"];
+
+  /* ---------- helpers ---------- */
+  const pad = n => String(n).padStart(2, "0");
+  const localInput = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const fmt = iso => { if (!iso) return "—"; const d = new Date(iso); if (isNaN(d)) return iso;
+    return d.toLocaleDateString(undefined, { day: "2-digit", month: "short" }) + " " + pad(d.getHours()) + ":" + pad(d.getMinutes()); };
+  const km = n => (n == null || n === "" ? "—" : Number(n).toLocaleString() + " km");
+  const isToday = iso => { const d = new Date(iso), n = new Date(); return d.toDateString() === n.toDateString(); };
+  const chipFor = st => { const m = { "Available":"ok", "On Trip":"warn", "Out":"warn", "Maintenance":"bad", "Off Duty":"mute", "Returned":"ok" }; return `<span class="chip ${m[st]||"mute"}">${esc(st)}</span>`; };
+  const photo = (id, type) => id ? `<img class="thumb" src="${esc(id)}" alt="">` : `<div class="thumb art" aria-hidden="true">${ART.vehicle(type)}</div>`;
+  function toast(msg) { const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2400); }
+  function setSync(cls, text) { const el = $("#sync"); el.className = "sync " + cls; el.lastElementChild.textContent = text; }
+  function notice(text) { const n = $("#notice"); n.textContent = text || ""; n.hidden = !text; }
+  async function write(fn, okMsg) {
+    try { await fn(); if (okMsg) toast(okMsg); return true; }
+    catch (e) {
+      if (e && e.code === "invalid_argument" && !canWrite) return false;
+      if (e && e.code === "invalid_argument") { canWrite = false; applyWrite(); notice("You can view this register but can't change it. Ask the owner for edit access."); }
+      else if (e && e.code === "quota_exceeded") notice("Storage is full. Delete old trips to add new ones.");
+      else toast("Couldn't save. Check the connection and try again.");
+      return false;
+    }
+  }
+
+  /* ---------- routing ---------- */
+  const VIEWS = ["dashboard","vehicles","drivers","places","map","trips","team"];
+  let lastView = null, sheetKey = null;
+  function route() {
+    const h = location.hash.slice(1);
+    if (/^(view-|trip-)/.test(h)) { openSheet(h); return; }
+    closeSheet();
+    let v = VIEWS.includes(h) ? h : "dashboard";
+    if (v === "team" && !(typeof member !== "undefined" && member && member.role === "admin")) v = "dashboard";
+    document.querySelectorAll("[data-view]").forEach(s => s.hidden = s.id !== "v-" + v);
+    document.querySelectorAll("[data-tab]").forEach(a => a.dataset.tab === v ? a.setAttribute("aria-current","page") : a.removeAttribute("aria-current"));
+    if (v !== lastView) window.scrollTo(0, 0);
+    lastView = v;
+    if (v === "map") setTimeout(() => { ensureMap(); if (map) map.invalidateSize(); renderMap(); }, 60);
+  }
+  addEventListener("hashchange", route);
+
+  function applyWrite() { document.querySelectorAll("[data-w]").forEach(el => el.hidden = !canWrite); }
+
+  let lastHello = "";
+  /* ---------- render ---------- */
+  function render() {
+    const v = S.vehicles, open = S.trips.filter(t => t.status === "Out");
+    const todays = S.trips.filter(t => isToday(t.outTime));
+    const kmToday = S.trips.filter(t => t.inTime && isToday(t.inTime)).reduce((a, t) => a + (Number(t.totalDistance) || 0), 0);
+    $("#kpis").innerHTML = [
+      [v.filter(x => x.status === "Available").length, "Available", "available", "ok"],
+      [v.filter(x => x.status === "On Trip").length, "On trip", "ontrip", "warn"],
+      [todays.length, "Trips today", "trips", "acc"],
+      [kmToday.toLocaleString(), "Km returned today", "km", "info"],
+    ].map(([n, l, ic, tone], i) => `<button class="kpi" type="button" data-go="${["view-available", "view-ontrip", "view-today", "view-km"][i]}"><span class="ic ${tone}">${ART.icon(ic)}</span><b>${n}</b><span>${l}</span></button>`).join("");
+    const hr = new Date().getHours(), first = String((typeof myName === "function" && myName()) || "").split(/[\s@]/)[0];
+    const greet = hr < 12 ? "Good morning" : hr < 17 ? "Good afternoon" : "Good evening";
+    const helloHtml = `<div class="txt"><div class="hi">${greet}${first ? ", " + esc(first) : ""}</div>
+      <div class="date">${new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}</div>
+      <div class="sum"><a href="#view-ontrip">${open.length} out now ›</a><a href="#view-available">${v.filter(x => x.status === "Available").length} available ›</a></div></div>
+      <div class="pic">${ART.banner()}</div>`;
+    if (lastHello !== helloHtml) { $("#hello").innerHTML = helloHtml; lastHello = helloHtml; }
+
+    $("#openTrips").innerHTML = open.length ? open.map(tripCard).join("")
+      : `<div class="empty">${ART.empty("trips")}No vehicle is out right now. Use <b>Dispatch out</b> when a vehicle leaves the office.</div>`;
+
+    $("#vehicleList").innerHTML = v.length ? v.map(x => `
+      <button class="row tap" type="button" data-edit-vehicle="${esc(x._id)}">
+        ${photo(x.photoId, x.vehicleType)}
+        <div class="main"><span class="plate">${esc(x.vehicleNumber)}</span>
+          <div class="s">${esc(x.model)} · ${esc(x.vehicleType)} · ${esc(x.fuelType)}</div>
+          <div class="s odo">Odometer ${km(x.currentOdometer)}</div></div>
+        ${chipFor(x.status)}
+      </button>`).join("")
+      : `<div class="empty">${ART.empty("vehicles")}No vehicles yet. Add the office vehicles with their number plate and current odometer.</div>`;
+
+    $("#driverList").innerHTML = S.drivers.length ? S.drivers.map(d => `
+      <button class="row tap" type="button" data-edit-driver="${esc(d._id)}">
+        ${(a => `<span class="avatar" style="background:${a.color}" aria-hidden="true">${esc(a.ini)}</span>`)(ART.avatar(d.name))}
+        <div class="main"><div class="t">${esc(d.name)}</div>
+          <div class="s">${esc(d.phone)}${d.licenseNumber ? " · Licence " + esc(d.licenseNumber) : ""}</div></div>
+        ${chipFor(d.status)}
+      </button>`).join("")
+      : `<div class="empty">${ART.empty("drivers")}No drivers yet. Add each driver once and pick them when dispatching.</div>`;
+
+    $("#placeList").innerHTML = S.places.length ? S.places.map(p => `
+      <div class="row"><div class="main"><div class="t">${esc(p.name)}</div></div>
+        ${canWrite ? `<button class="btn ghost small" type="button" data-del-place="${esc(p._id)}">Remove</button>` : ""}</div>`).join("")
+      : `<div class="empty">${ART.empty("places")}No saved places. Places you add here appear in the dispatch form.</div>`;
+
+    const q = $("#tripSearch").value.trim().toLowerCase();
+    const trips = S.trips.filter(t => (tripFilter === "all" || t.status === tripFilter) &&
+      (!q || [t.vehicleNumber, t.driverName, t.employeeName, t.department, t.place, t.purpose].join(" ").toLowerCase().includes(q)));
+    $("#tripList").innerHTML = trips.length ? trips.map(tripCard).join("")
+      : `<div class="empty">${ART.empty("trips")}${S.trips.length ? "No trips match this filter." : "No trips recorded yet. Every dispatch is logged here."}</div>`;
+    $("#exportBtn").hidden = !downloads || !S.trips.length;
+    if (sheetKey) renderSheet();
+    renderMap();
+  }
+
+  const who = e => String(e || "").split("@")[0];
+  /* ---------- detail windows ---------- */
+  const dur = ms => { const m = Math.max(0, Math.round(ms / 60000)); return m < 60 ? m + " min" : Math.floor(m / 60) + " h " + (m % 60) + " min"; };
+  const vehOf = t => S.vehicles.find(x => x._id === t.vehicleId) || {};
+  function openSheet(key) {
+    sheetKey = key;
+    const sh = $("#sheet"); const wasHidden = sh.hidden;
+    sh.hidden = false; document.body.style.overflow = "hidden";
+    renderSheet();
+    if (wasHidden) sh.scrollTop = 0;
+  }
+  function closeSheet() {
+    if (!sheetKey) return;
+    sheetKey = null; $("#sheet").hidden = true; document.body.style.overflow = "";
+  }
+  function sheetBack() {
+    if (history.length > 1 && sheetCameFromApp) history.back(); else location.hash = "#" + (lastView || "dashboard");
+  }
+  let sheetCameFromApp = false;
+  $("#sheetBack").addEventListener("click", sheetBack);
+  addEventListener("keydown", e => { if (e.key === "Escape" && sheetKey && !$("#dlg").open) sheetBack(); });
+  function goSheet(key) { sheetCameFromApp = true; location.hash = "#" + key; }
+
+  function renderSheet() {
+    const key = sheetKey; if (!key) return;
+    const v = S.vehicles, open = S.trips.filter(t => t.status === "Out");
+    let title = "", html = "";
+    const emptyBox = (art, text) => `<div class="empty">${ART.empty(art)}${text}</div>`;
+    if (key === "view-available") {
+      const list = v.filter(x => x.status === "Available");
+      title = "Available vehicles";
+      html = `<div class="big-stat"><b>${list.length}</b><span>of ${v.length} vehicles are ready to go</span></div>` +
+        (list.length ? `<div class="list">${list.map(x => `<div class="row">${photo(x.photoId, x.vehicleType)}
+          <div class="main"><span class="plate">${esc(x.vehicleNumber)}</span><div class="s">${esc(x.model)} · ${esc(x.vehicleType)} · ${esc(x.fuelType)}</div><div class="s odo">Odometer ${km(x.currentOdometer)}</div></div>
+          ${canWrite ? `<button class="btn small" type="button" data-dispatchv="${esc(x._id)}">Dispatch</button>` : ""}</div>`).join("")}</div>`
+          : emptyBox("vehicles", "No vehicle is available right now."));
+    } else if (key === "view-ontrip") {
+      title = "On trip now";
+      html = `<div class="big-stat"><b>${open.length}</b><span>${open.length === 1 ? "vehicle is" : "vehicles are"} out of the office</span></div>` +
+        (open.length ? `<div class="list">${open.map(tripCard).join("")}</div>` : emptyBox("trips", "Every vehicle is in the office."));
+    } else if (key === "view-today") {
+      const todays = S.trips.filter(t => isToday(t.outTime));
+      const back = todays.filter(t => t.status !== "Out");
+      const kmT = back.reduce((a, t) => a + (Number(t.totalDistance) || 0), 0);
+      title = "Trips today";
+      html = `<div class="stat-row"><div><b>${todays.length}</b><span>Trips</span></div><div><b>${todays.length - back.length}</b><span>Still out</span></div><div><b>${kmT.toLocaleString()}</b><span>Km done</span></div></div>` +
+        (todays.length ? `<div class="list">${todays.map(tripCard).join("")}</div>` : emptyBox("trips", "No trips yet today."));
+    } else if (key === "view-km") {
+      const back = S.trips.filter(t => t.inTime && isToday(t.inTime));
+      const total = back.reduce((a, t) => a + (Number(t.totalDistance) || 0), 0);
+      const per = {};
+      back.forEach(t => { const k = t.vehicleNumber; per[k] = per[k] || { km: 0, trips: 0, type: vehOf(t).vehicleType }; per[k].km += Number(t.totalDistance) || 0; per[k].trips++; });
+      const rows = Object.entries(per).sort((a, b) => b[1].km - a[1].km);
+      const max = Math.max(1, ...rows.map(r => r[1].km));
+      title = "Km returned today";
+      html = `<div class="big-stat"><b>${total.toLocaleString()} km</b><span>from ${back.length} ${back.length === 1 ? "trip" : "trips"} marked in today</span></div>` +
+        (rows.length ? `<div class="td-card"><h4>By vehicle</h4>${rows.map(([plate, r]) => `<div class="km-row"><span class="mini" aria-hidden="true">${ART.vehicle(r.type)}</span><span class="plate">${esc(plate)}</span><span class="bar"><i style="width:${Math.round(r.km / max * 100)}%"></i></span><span class="odo">${r.km.toLocaleString()} km</span></div>`).join("")}</div>
+          <h3 style="margin:8px 0 0">Trips</h3><div class="list">${back.map(tripCard).join("")}</div>`
+          : emptyBox("trips", "No vehicle has come back yet today."));
+    } else if (key.startsWith("trip-")) {
+      const t = S.trips.find(x => x._id === key.slice(5));
+      if (!t) { title = "Trip"; html = emptyBox("trips", S.trips.length ? "This trip was deleted." : "Loading…"); }
+      else { title = t.vehicleNumber; html = tripDetail(t); }
+    }
+    $("#sheetTitle").textContent = title;
+    $("#sheetBody").innerHTML = html;
+  }
+
+  function tripDetail(t) {
+    const veh = vehOf(t), drv = S.drivers.find(d => d._id === t.driverId) || {};
+    const isOut = t.status === "Out";
+    const av = ART.avatar(t.driverName);
+    const phone = drv.phone ? String(drv.phone) : "";
+    const pos = S.positions.find(p => p._id === t._id);
+    return `<div class="td-hero"><div class="pic" aria-hidden="true">${veh.photoId ? `<img src="${esc(veh.photoId)}" alt="" style="width:100%;border-radius:10px">` : ART.vehicle(veh.vehicleType)}</div>
+        <div class="meta"><span class="plate">${esc(t.vehicleNumber)}</span>${chipFor(t.status)}<div class="s">${esc(veh.model || "")}${veh.vehicleType ? " · " + esc(veh.vehicleType) : ""}</div></div></div>
+      <div class="td-card"><h4>Journey</h4><div class="tl">
+        <div class="tl-item"><span class="tl-dot out">↑</span><div><div class="when">Out · ${fmt(t.outTime)}</div><div class="sub">Start <span class="odo">${km(t.startOdometer)}</span>${t.outLoc ? " · " + mapLink(t.outLoc, "Out location") : ""}${t.dispatchedBy ? " · by " + esc(who(t.dispatchedBy)) : ""}</div></div></div>
+        <div class="tl-item"><span class="tl-dot ${isOut ? "wait" : "in"}">${isOut ? "…" : "↓"}</span><div>${isOut
+          ? `<div class="when">Still out · ${dur(Date.now() - new Date(t.outTime))}</div><div class="sub">Going to ${esc(t.place)}${pos ? " · last GPS " + ago(pos.at) : ""}</div>`
+          : `<div class="when">In · ${fmt(t.inTime)}</div><div class="sub">End <span class="odo">${km(t.endOdometer)}</span> · ${dur(new Date(t.inTime) - new Date(t.outTime))} trip${t.inLoc ? " · " + mapLink(t.inLoc, "In location") : ""}${t.markedInBy ? " · by " + esc(who(t.markedInBy)) : ""}</div>`}</div></div>
+      </div>${t.totalDistance != null ? `<div class="big-stat" style="border:0;padding:0"><b>${km(t.totalDistance)}</b><span>Distance</span></div>` : ""}</div>
+      <div class="td-card"><h4>Driver</h4><div class="person"><span class="avatar" style="background:${av.color}" aria-hidden="true">${esc(av.ini)}</span>
+        <div class="main"><div class="t">${esc(t.driverName)}</div><div class="s">${phone ? esc(phone) : "No phone saved"}${drv.licenseNumber ? " · Licence " + esc(drv.licenseNumber) : ""}</div></div>
+        ${phone ? `<a class="btn ghost small callbtn" href="tel:${esc(phone.replace(/[^0-9+]/g, ""))}"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Call</a>` : ""}</div></div>
+      <div class="td-card"><h4>Trip details</h4><div class="kv">
+        <div><em>Employee</em>${esc(t.employeeName)}</div><div><em>Department</em>${esc(t.department)}</div>
+        <div><em>Place</em>${esc(t.place)}</div><div><em>Status</em>${esc(t.status)}</div>
+        <div class="full"><em>Purpose</em>${esc(t.purpose)}</div>
+        ${t.remarks ? `<div class="full"><em>Remarks</em>${esc(t.remarks)}</div>` : ""}
+      </div></div>
+      ${gpsBlock(t) ? `<div class="td-card"><h4>Location</h4>${gpsBlock(t)}</div>` : ""}
+      ${isOut && canWrite ? `<button class="btn" type="button" data-markin="${esc(t._id)}" style="justify-content:center;padding:13px">Mark vehicle in</button>` : ""}`;
+  }
+
+  // Taps that open windows
+  document.addEventListener("click", e => {
+    const go = e.target.closest("[data-go]");
+    if (go) { goSheet(go.dataset.go); return; }
+    const dv = e.target.closest("[data-dispatchv]");
+    if (dv) { if (db) dispatchForm(dv.dataset.dispatchv); return; }
+    if (e.target.closest("button, a, input, select, label")) return;
+    const card = e.target.closest("[data-open-trip]");
+    if (card && sheetKey !== "trip-" + card.dataset.openTrip) goSheet("trip-" + card.dataset.openTrip);
+  });
+  document.addEventListener("click", e => {
+    const a = e.target.closest('a[href^="#view-"]'); if (a) sheetCameFromApp = true;
+  }, true);
+  document.addEventListener("keydown", e => {
+    if (e.key !== "Enter") return;
+    const card = e.target.closest && e.target.closest("[data-open-trip]");
+    if (card && e.target === card) goSheet("trip-" + card.dataset.openTrip);
+  });
+
+  function gpsBlock(t) {
+    const bits = [], open = t.status === "Out";
+    const pos = S.positions.find(p => p._id === t._id);
+    if (open && pos) bits.push(`<span class="chip ${fresh(pos.at) ? "ok" : "mute"}">${fresh(pos.at) ? "Live" : "Last seen"} · ${ago(pos.at)}</span><button class="linkbtn" type="button" data-maptrip="${esc(t._id)}">View on map</button>`);
+    if (t.outLoc) bits.push(mapLink(t.outLoc, "Out location"));
+    if (t.inLoc) bits.push(mapLink(t.inLoc, "In location"));
+    if (!open && t.tracked) bits.push(`<button class="linkbtn" type="button" data-route="${esc(t._id)}">View route</button>`);
+    if (open && gps.has && canWrite) bits.push(gps.tracking() === t._id
+      ? `<button class="btn ghost small" type="button" data-untrack="${esc(t._id)}">Stop tracking on this phone</button>`
+      : `<button class="btn ghost small" type="button" data-track="${esc(t._id)}">Track on this phone</button>`);
+    return bits.length ? `<div class="gps-row">${bits.join("")}</div>` : "";
+  }
+
+  const mapLang = () => { try { return localStorage.getItem("ovm_map_lang") || "en"; } catch { return "en"; } };
+  function syncLangSeg() { document.querySelectorAll("#langSeg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.lang === mapLang())); }
+  document.querySelectorAll("#langSeg button").forEach(b => b.addEventListener("click", () => {
+    if (b.dataset.lang === mapLang()) return;
+    try { localStorage.setItem("ovm_map_lang", b.dataset.lang); } catch {}
+    syncLangSeg();
+    if (map) { const c = map.getCenter(), z = map.getZoom(); map.remove(); map = null; ensureMap(); map.setView(c, z); renderMap(); }
+  }));
+  syncLangSeg();
+  function ensureMap() {
+    if (map || !window.L) return;
+    map = L.map("map").setView([23.588, 58.383], 11);
+    const thisMap = map;
+    const OSM = "&copy; OpenStreetMap contributors";
+    const ESRI = "Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors";
+    const english = mapLang() === "en";
+    const tried = [];
+    let mode = "starting", rasterStarted = false, gl = null, vectorOk = false;
+
+    // ---- raster backup (pictures from map servers; labels in the server's own language) ----
+    const sources = [];
+    if (window.Android && window.Android.getFix)
+      sources.push({ name: "app download", url: (location.protocol === "https:" ? location.origin : "https://appassets.androidplatform.net") + "/tiles/" + (english ? "en" : "local") + "/{z}/{x}/{y}.png", attr: english ? ESRI : OSM });
+    const osmSrc = { name: "OpenStreetMap", url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", attr: OSM };
+    const esriSrc = { name: "Esri", url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", attr: ESRI };
+    if (english) sources.push(esriSrc, osmSrc); else sources.push(osmSrc, esriSrc);
+    let layer = null, idx = 0, ok = 0, bad = 0;
+    const showStatus = () => {
+      const st = $("#mapStatus"); if (!st || map !== thisMap) return;
+      const sz = $("#map").getBoundingClientRect();
+      const area = ` · area ${Math.round(sz.width)}x${Math.round(sz.height)}`;
+      const n = $("#mapNote");
+      if (mode === "vector") { st.textContent = "Map source: OpenFreeMap (English labels)" + area; n.hidden = true; return; }
+      if (mode !== "raster") { st.textContent = "Map source: loading English map…" + area; return; }
+      let nat = ""; try { nat = window.Android && window.Android.tileInfo ? " · app: " + window.Android.tileInfo() : ""; } catch {}
+      st.textContent = `Map source: ${sources[idx].name} · loaded ${ok}, failed ${bad}` + (tried.length ? ` · tried: ${tried.join(", ")}` : "") + area + nat;
+      if (ok) n.hidden = true;
+      else if (idx === sources.length - 1 && bad >= 4) { n.hidden = false; n.textContent = "The map background couldn't load from any map server. Check the internet connection. Vehicle positions below still update."; }
+    };
+    const useSource = i => {
+      if (map !== thisMap) return;
+      if (layer) map.removeLayer(layer);
+      idx = i; ok = 0; bad = 0;
+      const src = sources[i];
+      layer = L.tileLayer(src.url, { subdomains: src.sub || "abc", maxZoom: 19, attribution: src.attr });
+      layer.on("tileload", () => { ok++; showStatus(); });
+      layer.on("tileerror", () => {
+        bad++;
+        if (!ok && bad >= 4 && idx < sources.length - 1) { tried.push(src.name + " failed"); useSource(idx + 1); return; }
+        showStatus();
+      });
+      layer.addTo(map);
+      showStatus();
+    };
+    const startRaster = why => {
+      if (map !== thisMap || rasterStarted || vectorOk) return;
+      rasterStarted = true; mode = "raster";
+      if (why) tried.push("English map " + why);
+      if (gl) { try { map.removeLayer(gl); } catch {} gl = null; }
+      useSource(0);
+      const iv = setInterval(() => { if (map !== thisMap) { clearInterval(iv); return; } if (!ok && !bad && idx < sources.length - 1) { tried.push(sources[idx].name + " no reply"); useSource(idx + 1); } else showStatus(); }, 12000);
+    };
+
+    // ---- English: vector map drawn on the phone, so we choose the label language ----
+    const webgl = (() => { try { const c = document.createElement("canvas"); return !!(c.getContext("webgl2") || c.getContext("webgl")); } catch { return false; } })();
+    if (english && webgl && window.maplibregl && L.maplibreGL) {
+      mode = "loading";
+      fetch("https://tiles.openfreemap.org/styles/liberty")
+        .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+        .then(style => {
+          if (map !== thisMap) return;
+          const EN = ["coalesce", ["get", "name:en"], ["get", "name_en"], ["get", "name:latin"], ["get", "name"]];
+          (style.layers || []).forEach(l => {
+            const tf = l.layout && l.layout["text-field"];
+            if (l.type === "symbol" && tf && JSON.stringify(tf).includes("name")) l.layout["text-field"] = EN;
+          });
+          gl = L.maplibreGL({ style, attribution: '<a href="https://openfreemap.org">OpenFreeMap</a> &copy; OpenMapTiles ' + OSM }).addTo(map);
+          const m = gl.getMaplibreMap();
+          window.__glmap = m;
+          m.on("load", () => { if (map !== thisMap || rasterStarted) return; vectorOk = true; mode = "vector"; showStatus(); });
+          m.on("error", e => { if (!vectorOk) startRaster("error (" + ((e && e.error && e.error.message) || "unknown") + ")"); });
+        })
+        .catch(e => startRaster("failed (" + e.message + ")"));
+      setTimeout(() => { if (!vectorOk) startRaster("no reply"); }, 15000);
+    } else {
+      startRaster(english ? (webgl ? "not available" : "not supported on this phone") : "");
+    }
+
+    // Make sure the map knows its real size once the tab is laid out
+    [150, 600, 1500].forEach(ms => setTimeout(() => { if (map === thisMap) { map.invalidateSize(); showStatus(); } }, ms));
+    addEventListener("resize", () => map && map.invalidateSize());
+    mapLayer = L.layerGroup().addTo(map);
+  }
+  function renderMap() {
+    const live = S.positions.filter(p => S.trips.some(t => t._id === p._id && t.status === "Out"));
+    $("#liveList").innerHTML = live.length ? live.map(p => {
+      const t = S.trips.find(x => x._id === p._id) || {};
+      return `<div class="row"><div class="main"><span class="plate">${esc(p.vehicleNumber)}</span>
+        <div class="s">${esc(p.driverName)} · ${esc(t.place || "")}${p.speed != null ? " · " + Math.round(p.speed) + " km/h" : ""}</div>
+        <div class="gps-row"><button class="linkbtn" type="button" data-maptrip="${esc(p._id)}">Show on map</button>${mapLink(p, "Open in Google Maps")}</div></div>
+        <span class="chip ${fresh(p.at) ? "ok" : "mute"}">${fresh(p.at) ? "Live" : "Last seen"} · ${ago(p.at)}</span></div>`;
+    }).join("") : `<div class="empty">${ART.empty("map")}No vehicle is being tracked. On the phone that goes with the vehicle, open the trip and tap <b>Track on this phone</b>.</div>`;
+    const note = $("#routeNote");
+    if (routeTrip) { note.hidden = false; note.innerHTML = `Showing route of <b>${esc(routeTrip.vehicleNumber)}</b> (${(routeTrip.path || []).length} GPS points). <button class="linkbtn" type="button" id="clearRoute">Clear</button>`; }
+    else note.hidden = true;
+    if (!map || $("#v-map").hidden) return;
+    mapLayer.clearLayers();
+    const pts = [];
+    if (routeTrip && routeTrip.path && routeTrip.path.length > 1) {
+      const line = routeTrip.path.map(x => [x[0], x[1]]);
+      const col = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#0D6A5B";
+      L.polyline(line, { color: col, weight: 5, opacity: .85 }).addTo(mapLayer);
+      L.circleMarker(line[0], { radius: 6, color: col, fillOpacity: 1 }).addTo(mapLayer).bindPopup("Start");
+      pts.push(...line);
+    }
+    live.forEach(p => {
+      L.marker([p.lat, p.lng], { icon: L.divIcon({ className: "pinwrap", html: `<span class="pin ${fresh(p.at) ? "" : "stale"}">${esc(p.vehicleNumber)}</span>`, iconSize: [0, 0] }) })
+        .addTo(mapLayer).bindPopup(`<b>${esc(p.vehicleNumber)}</b><br>${esc(p.driverName)}<br>${ago(p.at)}`);
+      if (!routeTrip) pts.push([p.lat, p.lng]);
+    });
+    if (routeTrip && routeTrip.lat != null && !pts.length) pts.push([routeTrip.lat, routeTrip.lng]);
+    if (!fitted && pts.length) { map.fitBounds(pts, { padding: [40, 40], maxZoom: 15 }); fitted = true; }
+  }
+
+  async function afterDispatch(id, v, d, track) {
+    if (track) { gps.start({ _id: id, vehicleNumber: v.vehicleNumber, driverName: d.name }); db.doc("trips/" + id).update({ tracked: true }).catch(() => {}); }
+    const f = await gps.fix();
+    if (f && f.lat != null) write(() => db.doc("trips/" + id).update({ outLoc: { lat: f.lat, lng: f.lng, acc: f.acc } }));
+    else if (f && f.error) toast(gpsMsg(f.error));
+  }
+  async function afterMarkIn(t) {
+    if (gps.tracking() === t._id) gps.stop();
+    if (S.positions.some(p => p._id === t._id)) db.doc("positions/" + t._id).update({ active: false }).catch(() => {});
+    const f = await gps.fix();
+    if (f && f.lat != null) write(() => db.doc("trips/" + t._id).update({ inLoc: { lat: f.lat, lng: f.lng, acc: f.acc } }));
+    else if (f && f.error) toast(gpsMsg(f.error));
+  }
+
+  function tripCard(t) {
+    const open = t.status === "Out";
+    return `<div class="trip ${open ? "open" : ""}" data-open-trip="${esc(t._id)}" role="button" tabindex="0" aria-label="Open trip ${esc(t.vehicleNumber)}">
+      <div class="line1"><span class="plate-wrap"><span class="mini" aria-hidden="true">${ART.vehicle((S.vehicles.find(x => x._id === t.vehicleId) || {}).vehicleType)}</span><span class="plate">${esc(t.vehicleNumber)}</span></span>${chipFor(t.status)}</div>
+      <div class="meta">
+        <div><em>Driver</em> ${esc(t.driverName)}</div><div><em>Employee</em> ${esc(t.employeeName)}</div>
+        <div><em>Dept</em> ${esc(t.department)}</div><div><em>Place</em> ${esc(t.place)}</div>
+        <div><em>Out</em> ${fmt(t.outTime)}</div><div><em>In</em> ${fmt(t.inTime)}</div>
+        <div class="odo"><em>Start</em> ${km(t.startOdometer)}</div><div class="odo"><em>End</em> ${km(t.endOdometer)}</div>
+        ${t.totalDistance != null ? `<div class="odo"><em>Distance</em> ${km(t.totalDistance)}</div>` : ""}
+        ${t.dispatchedBy ? `<div><em>Out by</em> ${esc(who(t.dispatchedBy))}</div>` : ""}${t.markedInBy ? `<div><em>In by</em> ${esc(who(t.markedInBy))}</div>` : ""}
+        <div style="grid-column:1/-1"><em>Purpose</em> ${esc(t.purpose)}${t.remarks ? " · " + esc(t.remarks) : ""}</div>
+      </div>
+      ${gpsBlock(t)}
+      ${open && canWrite ? `<div><button class="btn small" type="button" data-markin="${esc(t._id)}">Mark vehicle in</button></div>` : ""}
+    </div>`;
+  }
+
+  /* ---------- dialog ---------- */
+  const dlg = $("#dlg");
+  let onSubmit = null;
+  function field(id, label, html) { return `<div class="field"><label for="${id}">${label}</label>${html}</div>`; }
+  const inp = (id, attrs = "") => `<input id="${id}" ${attrs}>`;
+  const sel = (id, opts, cur) => `<select id="${id}">${opts.map(o => { const [v, l] = Array.isArray(o) ? o : [o, o]; return `<option value="${esc(v)}" ${v === cur ? "selected" : ""}>${esc(l)}</option>`; }).join("")}</select>`;
+  function open(title, body, buttons, submit) {
+    $("#dlgTitle").textContent = title; $("#dlgBody").innerHTML = body + `<div class="err" id="dlgErr"></div>`;
+    $("#dlgFoot").innerHTML = buttons; onSubmit = submit; dlg.showModal();
+  }
+  const err = m => { $("#dlgErr").textContent = m; };
+  $("#dlgForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const btn = e.submitter;
+    if (!onSubmit) return dlg.close();
+    btn && (btn.disabled = true);
+    const done = await onSubmit(btn ? btn.value : "save");
+    btn && (btn.disabled = false);
+    if (done) dlg.close();
+  });
+  $("#dlgForm").addEventListener("click", async e => {
+    if (e.target.closest("[data-dlgclose]")) return dlg.close();
+    const del = e.target.closest("[data-dlgdel]"); if (!del || !onSubmit) return;
+    if (!del.dataset.armed) { del.dataset.armed = "1"; del.textContent = "Tap again to delete"; return; }
+    del.disabled = true; const done = await onSubmit("delete"); del.disabled = false; if (done) dlg.close();
+  });
+  const foot = (del) => `${del ? `<button class="btn danger" type="button" data-dlgdel>Delete</button><span class="spacer"></span>` : ""}<button class="btn ghost" type="button" data-dlgclose>Cancel</button><button class="btn" value="save">Save</button>`;
+
+  async function uploadPhoto(inputId) {
+    const f = $("#" + inputId)?.files?.[0];
+    if (!f) return null;
+    const url = URL.createObjectURL(f);
+    try {
+      const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = url; });
+      const k = Math.min(1, 480 / Math.max(img.width, img.height));
+      const c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      return c.toDataURL("image/jpeg", 0.72);
+    } finally { URL.revokeObjectURL(url); }
+  }
+
+  function vehicleForm(x) {
+    const editing = !!x; x = x || { status: "Available", vehicleType: "Car", fuelType: "Petrol" };
+    open(editing ? "Edit vehicle" : "Add vehicle",
+      `<div class="two">${field("vNum","Number plate", inp("vNum",`value="${esc(x.vehicleNumber||"")}" placeholder="e.g. 4521 AB" maxlength="20"`))}
+        ${field("vModel","Model", inp("vModel",`value="${esc(x.model||"")}" placeholder="e.g. Toyota Hiace" maxlength="60"`))}</div>
+       <div class="two">${field("vType","Type", sel("vType", VEH_TYPES, x.vehicleType))}${field("vFuel","Fuel", sel("vFuel", FUELS, x.fuelType))}</div>
+       <div class="two">${field("vOdo","Odometer (km)", inp("vOdo",`type="number" inputmode="numeric" min="0" value="${esc(x.currentOdometer ?? "")}"`))}
+        ${field("vStatus","Status", x.status === "On Trip" ? `<input id="vStatus" value="On Trip" disabled>` : sel("vStatus", ["Available","Maintenance"], x.status))}</div>
+       ${assets ? field("vPhoto","Photo (optional)", `<input id="vPhoto" type="file" accept="image/*">`) : ""}`,
+      foot(editing),
+      async action => {
+        if (action === "delete") {
+          if (x.status === "On Trip") { err("This vehicle is out. Mark it in before deleting."); return false; }
+          return write(() => db.doc("vehicles/" + x._id).delete(), "Vehicle deleted");
+        }
+        const num = $("#vNum").value.trim().toUpperCase(), model = $("#vModel").value.trim(), odo = $("#vOdo").value;
+        if (!num || !model) return err("Enter the number plate and model."), false;
+        if (odo === "" || Number(odo) < 0) return err("Enter the current odometer reading."), false;
+        if (S.vehicles.some(v => v.vehicleNumber === num && v._id !== x._id)) return err("A vehicle with this number already exists."), false;
+        let photoId = x.photoId || null;
+        try { const p = await uploadPhoto("vPhoto"); if (p) photoId = p; } catch { err("The photo couldn't be uploaded. Save without it or try a smaller image."); return false; }
+        const body = { vehicleNumber: num, model, vehicleType: $("#vType").value, fuelType: $("#vFuel").value,
+          currentOdometer: Math.round(Number(odo)), status: x.status === "On Trip" ? "On Trip" : $("#vStatus").value, photoId, updatedAt: new Date().toISOString() };
+        return editing ? write(() => db.doc("vehicles/" + x._id).update(body), "Vehicle updated")
+                       : write(() => db.collection("vehicles").add({ ...body, createdAt: body.updatedAt }), "Vehicle added");
+      });
+  }
+
+  function driverForm(d) {
+    const editing = !!d; d = d || { status: "Available" };
+    open(editing ? "Edit driver" : "Add driver",
+      `${field("dName","Name", inp("dName",`value="${esc(d.name||"")}" maxlength="60"`))}
+       <div class="two">${field("dPhone","Phone", inp("dPhone",`type="tel" value="${esc(d.phone||"")}" maxlength="20"`))}
+        ${field("dLic","Licence no.", inp("dLic",`value="${esc(d.licenseNumber||"")}" maxlength="30"`))}</div>
+       ${field("dStatus","Status", d.status === "On Trip" ? `<input id="dStatus" value="On Trip" disabled>` : sel("dStatus", ["Available","Off Duty"], d.status))}`,
+      foot(editing),
+      async action => {
+        if (action === "delete") {
+          if (d.status === "On Trip") { err("This driver is on a trip. Mark the vehicle in first."); return false; }
+          return write(() => db.doc("drivers/" + d._id).delete(), "Driver deleted");
+        }
+        const name = $("#dName").value.trim(), phone = $("#dPhone").value.trim();
+        if (!name || !phone) return err("Enter the driver's name and phone."), false;
+        const body = { name, phone, licenseNumber: $("#dLic").value.trim(), status: d.status === "On Trip" ? "On Trip" : $("#dStatus").value, updatedAt: new Date().toISOString() };
+        return editing ? write(() => db.doc("drivers/" + d._id).update(body), "Driver updated")
+                       : write(() => db.collection("drivers").add({ ...body, createdAt: body.updatedAt }), "Driver added");
+      });
+  }
+
+  function dispatchForm(preV) {
+    const vs = S.vehicles.filter(v => v.status === "Available"), ds = S.drivers.filter(d => d.status === "Available");
+    if (!vs.length || !ds.length) {
+      open("Dispatch out", `<p class="hint">${!vs.length ? "No vehicle is available. Add a vehicle or mark one in first." : "No driver is available. Add a driver or mark a trip in first."}</p>`,
+        `<button class="btn" type="button" data-dlgclose>OK</button>`, null); return;
+    }
+    open("Dispatch out",
+      `<div class="two">${field("tVeh","Vehicle", sel("tVeh", vs.map(v => [v._id, `${v.vehicleNumber} · ${v.model}`])))}
+        ${field("tDrv","Driver", sel("tDrv", ds.map(d => [d._id, d.name])))}</div>
+       <div class="two">${field("tEmp","Employee", inp("tEmp",`maxlength="60" placeholder="Who is travelling"`))}
+        ${field("tDept","Department", inp("tDept",`maxlength="60"`))}</div>
+       ${field("tPlace","Place", inp("tPlace",`list="placeOpts" maxlength="80" autocomplete="off"`) + `<datalist id="placeOpts">${S.places.map(p => `<option value="${esc(p.name)}">`).join("")}</datalist>`)}
+       ${field("tPurpose","Purpose", inp("tPurpose",`maxlength="120"`))}
+       <div class="two">${field("tOut","Out time", inp("tOut",`type="datetime-local" value="${localInput(new Date())}"`))}
+        ${field("tOdo","Start odometer (km)", inp("tOdo",`type="number" inputmode="numeric" min="0" value="${esc(vs[0].currentOdometer ?? "")}"`))}</div>
+       ${field("tRem","Remarks (optional)", inp("tRem",`maxlength="200"`))}
+       ${gps.has ? `<label class="check" for="tTrack"><input type="checkbox" id="tTrack"><span>This phone goes with the vehicle. Track it live on the map.</span></label>` : ""}`,
+      `<button class="btn ghost" type="button" data-dlgclose>Cancel</button><button class="btn" value="save">Dispatch</button>`,
+      async () => {
+        const v = S.vehicles.find(x => x._id === $("#tVeh").value), d = S.drivers.find(x => x._id === $("#tDrv").value);
+        const emp = $("#tEmp").value.trim(), dept = $("#tDept").value.trim(), place = $("#tPlace").value.trim(), purpose = $("#tPurpose").value.trim(), odo = $("#tOdo").value;
+        if (!v || v.status !== "Available") return err("That vehicle was just taken on another phone. Pick another."), false;
+        if (!d || d.status !== "Available") return err("That driver was just assigned on another phone. Pick another."), false;
+        if (!emp || !dept || !place || !purpose) return err("Fill in employee, department, place and purpose."), false;
+        if (odo === "" || Number(odo) < 0) return err("Enter the start odometer."), false;
+        const outTime = new Date($("#tOut").value || Date.now()).toISOString();
+        const track = !!($("#tTrack") && $("#tTrack").checked); let newTripId = null;
+        const ok = await write(async () => {
+          const ref = await db.collection("trips").add({ dispatchedBy: myName(), vehicleId: v._id, vehicleNumber: v.vehicleNumber, vehiclePhotoId: v.photoId || null,
+            driverId: d._id, driverName: d.name, employeeName: emp, department: dept, place, purpose, outTime, inTime: null,
+            startOdometer: Math.round(Number(odo)), endOdometer: null, totalDistance: null, status: "Out", remarks: $("#tRem").value.trim() });
+          newTripId = ref.id;
+          await db.doc("vehicles/" + v._id).update({ status: "On Trip" });
+          await db.doc("drivers/" + d._id).update({ status: "On Trip" });
+          if (!S.places.some(p => p.name.toLowerCase() === place.toLowerCase())) await db.collection("places").add({ name: place });
+        }, `${v.vehicleNumber} dispatched`);
+        if (ok && newTripId) afterDispatch(newTripId, v, d, track);
+        return ok;
+      });
+    $("#tVeh").addEventListener("change", e => { const v = S.vehicles.find(x => x._id === e.target.value); if (v) $("#tOdo").value = v.currentOdometer ?? ""; });
+    if (preV && vs.some(x => x._id === preV)) { $("#tVeh").value = preV; $("#tVeh").dispatchEvent(new Event("change")); }
+  }
+
+  function markInForm(t) {
+    open("Mark vehicle in",
+      `<p class="hint"><span class="plate">${esc(t.vehicleNumber)}</span> · ${esc(t.driverName)} · left ${fmt(t.outTime)} at <span class="odo">${km(t.startOdometer)}</span></p>
+       <div class="two">${field("iIn","In time", inp("iIn",`type="datetime-local" value="${localInput(new Date())}"`))}
+        ${field("iOdo","End odometer (km)", inp("iOdo",`type="number" inputmode="numeric" min="${esc(t.startOdometer)}"`))}</div>
+       ${field("iRem","Remarks (optional)", inp("iRem",`maxlength="200" value="${esc(t.remarks||"")}"`))}`,
+      `<button class="btn ghost" type="button" data-dlgclose>Cancel</button><button class="btn" value="save">Mark in</button>`,
+      async () => {
+        const end = $("#iOdo").value;
+        if (end === "") return err("Enter the end odometer reading."), false;
+        if (Number(end) < Number(t.startOdometer)) return err(`End reading can't be below the start (${km(t.startOdometer)}).`), false;
+        const endN = Math.round(Number(end)), inTime = new Date($("#iIn").value || Date.now()).toISOString();
+        const ok = await write(async () => {
+          await db.doc("trips/" + t._id).update({ inTime, endOdometer: endN, totalDistance: endN - Number(t.startOdometer), status: "Returned", remarks: $("#iRem").value.trim(), markedInBy: myName() });
+          if (S.vehicles.some(v => v._id === t.vehicleId)) await db.doc("vehicles/" + t.vehicleId).update({ status: "Available", currentOdometer: endN });
+          if (S.drivers.some(d => d._id === t.driverId)) await db.doc("drivers/" + t.driverId).update({ status: "Available" });
+        }, `${t.vehicleNumber} is back · ${km(endN - Number(t.startOdometer))}`);
+        if (ok) afterMarkIn(t);
+        return ok;
+      });
+  }
+
+  /* ---------- events ---------- */
+  document.addEventListener("click", e => {
+    const b = e.target.closest("button, [data-act]"); if (!b) return;
+    if (!db && (b.dataset.act || b.dataset.editVehicle || b.dataset.editDriver || b.dataset.markin)) { toast("The shared register isn't connected."); return; }
+    if (b.dataset.act === "dispatch") dispatchForm();
+    else if (b.dataset.act === "addVehicle") vehicleForm();
+    else if (b.dataset.act === "addDriver") driverForm();
+    else if (b.dataset.editVehicle) { if (canWrite) vehicleForm(S.vehicles.find(v => v._id === b.dataset.editVehicle)); }
+    else if (b.dataset.editDriver) { if (canWrite) driverForm(S.drivers.find(d => d._id === b.dataset.editDriver)); }
+    else if (b.dataset.markin) markInForm(S.trips.find(t => t._id === b.dataset.markin));
+    else if (b.dataset.delPlace) write(() => db.doc("places/" + b.dataset.delPlace).delete(), "Place removed");
+    else if (b.dataset.track) { const t = S.trips.find(x => x._id === b.dataset.track); if (t) { gps.start(t); db.doc("trips/" + t._id).update({ tracked: true }).catch(() => {}); } }
+    else if (b.dataset.untrack) { gps.stop(); }
+    else if (b.dataset.maptrip) { routeTrip = S.positions.find(p => p._id === b.dataset.maptrip) || null; fitted = false; if (location.hash === "#map") renderMap(); else location.hash = "#map"; }
+    else if (b.dataset.route) {
+      db.doc("positions/" + b.dataset.route).get().then(d => {
+        if (!d || !d.path || !d.path.length) { toast("No GPS route was recorded for this trip."); return; }
+        routeTrip = d; fitted = false; if (location.hash === "#map") renderMap(); else location.hash = "#map";
+      }).catch(() => toast("Couldn't load the route. Check the internet connection."));
+    }
+    else if (b.id === "clearRoute") { routeTrip = null; fitted = false; renderMap(); }
+    else if (b.id === "fitBtn") { routeTrip = null; fitted = false; renderMap(); }
+    else if (b.dataset.f) { tripFilter = b.dataset.f; document.querySelectorAll("#tripSeg button").forEach(x => x.setAttribute("aria-pressed", x === b)); render(); }
+  });
+  $("#tripSearch").addEventListener("input", render);
+  setInterval(() => { if (document.visibilityState === "visible") render(); }, 30000);
+  $("#placeForm").addEventListener("submit", async e => {
+    e.preventDefault(); if (!db) return;
+    const name = $("#placeName").value.trim(); if (!name) return;
+    if (S.places.some(p => p.name.toLowerCase() === name.toLowerCase())) { toast("That place is already saved"); return; }
+    if (await write(() => db.collection("places").add({ name }), "Place added")) $("#placeName").value = "";
+  });
+  $("#exportBtn").addEventListener("click", async () => {
+    const cols = ["vehicleNumber","driverName","employeeName","department","place","purpose","outTime","inTime","startOdometer","endOdometer","totalDistance","status","remarks","outLocation","inLocation"];
+    const csv = [cols.join(",")].concat(S.trips.map(t0 => ({ ...t0, outLocation: t0.outLoc ? t0.outLoc.lat + " " + t0.outLoc.lng : "", inLocation: t0.inLoc ? t0.inLoc.lat + " " + t0.inLoc.lng : "" })).map(t => cols.map(c => `"${String(t[c] ?? "").replace(/"/g, '""')}"`).join(","))).join("\r\n");
+    try { window.Android.shareCsv(`trip-register-${new Date().toISOString().slice(0,10)}.csv`, "\ufeff" + csv); } catch { toast("Couldn't export the file."); }
+  });
+
+  /* ---------- live data ---------- */
+  /* ---------- live data: Supabase (table ovm_docs) ---------- */
+  const SB_URL = "https://ttxkexsrzuejwhxqetjl.supabase.co";
+  const SB_KEY = "sb_publishable_dfCrOnlBlLCWxWnyr6szdQ_xDE14jCM";
+  const COLS = ["vehicles","drivers","places","trips","positions"];
+
+  function makeDb(sb) {
+    const cache = {}, listeners = {};
+    const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+    function emit(col) {
+      if (!cache[col]) return;
+      const docs = [...cache[col].entries()].map(([id, data]) => ({ id, data: () => data }));
+      (listeners[col] || new Set()).forEach(fn => fn({ docs, metadata: { fromCache: false } }));
+    }
+    async function load(col) {
+      let qy = sb.from("ovm_docs").select("id,data").eq("collection", col);
+      if (col === "positions") qy = qy.eq("data->>active", "true");
+      const { data, error } = await qy.limit(10000);
+      if (error) throw error;
+      cache[col] = new Map(data.map(r => [r.id, r.data])); emit(col);
+    }
+    async function put(col, id, data) {
+      const { error } = await sb.from("ovm_docs").upsert({ collection: col, id, data, updated_at: new Date().toISOString() });
+      if (error) throw error;
+      (cache[col] ||= new Map()).set(id, data); emit(col);
+    }
+    function onChange(p) {
+      const row = p.eventType === "DELETE" ? p.old : p.new;
+      if (!row || !row.collection || !cache[row.collection]) return;
+      if (p.eventType === "DELETE" || (row.collection === "positions" && !(row.data && row.data.active))) cache[row.collection].delete(row.id); else cache[row.collection].set(row.id, row.data);
+      emit(row.collection);
+    }
+    return {
+      load, onChange, reloadAll: () => Promise.all(COLS.map(load)),
+      collection: col => ({
+        add: async data => { const id = newId(); await put(col, id, data); return { id }; },
+        onSnapshot(fn, errFn) { (listeners[col] ||= new Set()).add(fn); load(col).catch(e => errFn && errFn(e)); return () => listeners[col].delete(fn); },
+      }),
+      doc: path => {
+        const [col, id] = path.split("/");
+        return {
+          get: async () => {
+            const { data, error } = await sb.from("ovm_docs").select("data").eq("collection", col).eq("id", id).maybeSingle();
+            if (error) throw error;
+            return data ? data.data : null;
+          },
+          update: async patch => {
+            let cur = cache[col] && cache[col].get(id);
+            if (!cur) { const { data, error } = await sb.from("ovm_docs").select("data").eq("collection", col).eq("id", id).maybeSingle(); if (error) throw error; cur = data ? data.data : null; }
+            if (!cur) throw { code: "not_found" };
+            await put(col, id, { ...cur, ...patch });
+          },
+          delete: async () => {
+            const { error } = await sb.from("ovm_docs").delete().eq("collection", col).eq("id", id);
+            if (error) throw error;
+            cache[col] && cache[col].delete(id); emit(col);
+          },
+        };
+      },
+    };
+  }
+
+  /* ---------- login / logout ---------- */
+  let sb = null, me = null, booted = false, loggingOut = false, member = null, authMode = "login", waitTimer = null, teamRows = [];
+  const myName = () => (member && member.name) || (me && me.email) || "";
+  const LS = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+  const initials = e => String(e || "?").split("@")[0].split(/[._-]+/).filter(Boolean).slice(0, 2).map(x => x[0]).join("").toUpperCase() || "?";
+
+  function setMode(m) {
+    authMode = m;
+    document.querySelectorAll("#authSeg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === m));
+    $("#lNameWrap").hidden = $("#lPass2Wrap").hidden = m !== "signup";
+    $("#lBtn").textContent = m === "signup" ? "Create account" : "Log in";
+    $("#lHint").textContent = m === "signup" ? "Create your own account. Your office admin approves it before you can use the app." : "Log in with your email and password.";
+    $("#lPass").autocomplete = m === "signup" ? "new-password" : "current-password";
+    $("#lErr").textContent = "";
+  }
+  document.querySelectorAll("#authSeg button").forEach(b => b.addEventListener("click", () => { $("#lInfo").hidden = true; setMode(b.dataset.mode); }));
+  function showWaiting(title, html) {
+    document.body.classList.add("signed-out");
+    $("#login").hidden = true; $("#waiting").hidden = false;
+    $("#waitTitle").textContent = title; $("#waitMsg").innerHTML = html;
+    clearInterval(waitTimer); waitTimer = setInterval(() => { if (document.visibilityState === "visible") gate(); }, 15000);
+  }
+  async function myMember() {
+    const { data, error } = await sb.from("ovm_members").select("*").eq("user_id", me.id).maybeSingle();
+    if (error) throw error;
+    if (data) return data;
+    const r = await sb.rpc("ovm_join", { p_name: (me.user_metadata && me.user_metadata.name) || "" });
+    if (r.error) throw r.error;
+    return r.data;
+  }
+  async function gate() {
+    try { member = await myMember(); }
+    catch { showWaiting("Can't connect", "Couldn't check your account. Check the internet connection, then tap <b>Check again</b>."); return; }
+    if (member.status === "approved") { clearInterval(waitTimer); $("#waiting").hidden = true; enterApp(); }
+    else if (member.status === "blocked") showWaiting("Access removed", "Your access to this app was removed. Contact your office admin if this is a mistake.");
+    else showWaiting("Waiting for approval", `Your account <b>${esc(member.email)}</b> is created. Ask your office admin to approve it. The app opens by itself once you're approved.`);
+  }
+  $("#waitCheck").addEventListener("click", () => gate());
+  $("#waitLogout").addEventListener("click", () => doLogout());
+  async function doLogout() {
+    loggingOut = true;
+    if (gps.tracking()) gps.stop();
+    try { window.Android && window.Android.clearTrackingAuth && window.Android.clearTrackingAuth(); } catch {}
+    await sb.auth.signOut({ scope: "local" }).catch(() => {});
+    location.hash = "#dashboard"; location.reload();
+  }
+
+  /* ---------- team (admin) ---------- */
+  async function loadTeam() {
+    const { data, error } = await sb.from("ovm_members").select("*").order("created_at");
+    if (!error) { teamRows = data || []; renderTeam(); }
+  }
+  function renderTeam() {
+    const pend = teamRows.filter(r => r.status === "pending"), rest = teamRows.filter(r => r.status !== "pending");
+    const ub = $("#userBtn"); if (pend.length) ub.dataset.badge = pend.length; else delete ub.dataset.badge;
+    const tn = $("#teamNotice");
+    tn.hidden = !pend.length;
+    tn.innerHTML = pend.length ? `${pend.length === 1 ? "1 person is" : pend.length + " people are"} waiting for approval. <a class="linkbtn" href="#team">Review</a>` : "";
+    const nm = r => `<div class="t">${esc(r.name || r.email.split("@")[0])}</div><div class="s">${esc(r.email)}</div>`;
+    $("#teamPending").innerHTML = pend.length ? pend.map(r => `<div class="row"><div class="main">${nm(r)}<div class="s">Asked ${fmt(r.created_at)}</div></div>
+      <div class="actions"><button class="btn small" type="button" data-approve="${esc(r.user_id)}">Approve</button><button class="btn ghost small" type="button" data-block="${esc(r.user_id)}">Reject</button></div></div>`).join("")
+      : `<div class="empty">No one is waiting. New sign-ups appear here.</div>`;
+    $("#teamMembers").innerHTML = rest.map(r => {
+      const self = me && r.user_id === me.id;
+      const chips = `${r.role === "admin" ? `<span class="chip ok">Admin</span>` : ""}${r.status === "blocked" ? `<span class="chip bad">Removed</span>` : ""}${self ? `<span class="chip mute">You</span>` : ""}`;
+      const btns = self ? "" : r.status === "blocked"
+        ? `<button class="btn ghost small" type="button" data-approve="${esc(r.user_id)}">Restore access</button>`
+        : `<button class="btn ghost small" type="button" data-role="${esc(r.user_id)}" data-to="${r.role === "admin" ? "member" : "admin"}">${r.role === "admin" ? "Make member" : "Make admin"}</button><button class="btn danger small" type="button" data-block="${esc(r.user_id)}">Remove access</button>`;
+      return `<div class="row" style="flex-wrap:wrap"><div class="main">${nm(r)}<div class="gps-row">${chips}</div></div><div class="actions">${btns}</div></div>`;
+    }).join("") || `<div class="empty">No members yet.</div>`;
+  }
+  async function setMember(id, patch, msg) {
+    const { error } = await sb.from("ovm_members").update(patch).eq("user_id", id);
+    if (error) toast("Couldn't update. Check the connection and try again."); else { toast(msg); loadTeam(); }
+  }
+  document.addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b || !member || member.role !== "admin") return;
+    if (b.dataset.approve) setMember(b.dataset.approve, { status: "approved" }, "Approved");
+    else if (b.dataset.block) {
+      if (!b.dataset.armed) { b.dataset.armed = "1"; b.textContent = "Tap again to confirm"; return; }
+      setMember(b.dataset.block, { status: "blocked" }, "Access removed");
+    }
+    else if (b.dataset.role) setMember(b.dataset.role, { role: b.dataset.to }, b.dataset.to === "admin" ? "Now an admin" : "Now a member");
+  });
+  function startTeam() {
+    if (!member || member.role !== "admin") return;
+    loadTeam();
+    sb.channel("ovm-team").on("postgres_changes", { event: "*", schema: "public", table: "ovm_members" }, () => loadTeam()).subscribe();
+    setInterval(() => { if (document.visibilityState === "visible") loadTeam(); }, 60000);
+  }
+
+  function showLogin(msg) {
+    document.body.classList.add("signed-out");
+    $("#waiting").hidden = true;
+    $("#login").hidden = false;
+    if (!$("#lEmail").value) $("#lEmail").value = LS.get("ovm_email") || "";
+    $("#lErr").textContent = msg || "";
+    setTimeout(() => ($("#lEmail").value ? $("#lPass") : $("#lEmail")).focus(), 50);
+  }
+  function signedIn(session) {
+    me = session.user;
+    $("#login").hidden = true;
+    gate();
+  }
+  function enterApp() {
+    document.body.classList.remove("signed-out");
+    $("#login").hidden = true;
+    const ub = $("#userBtn"); ub.hidden = false; ub.textContent = initials(me.email); ub.title = me.email;
+    if (!booted) {
+      booted = true; boot(); startTeam();
+      // If an admin removes this person's access, return them to the waiting screen
+      setInterval(async () => {
+        if (document.visibilityState !== "visible") return;
+        const { data, error } = await sb.from("ovm_members").select("status").eq("user_id", me.id).maybeSingle();
+        if (!error && (!data || data.status !== "approved")) location.reload();
+      }, 120000);
+    }
+    route();
+  }
+  async function trackingSession(email, password) {
+    if (!gps.has || !window.Android.setTrackingAuth) return;
+    try {
+      const r = await fetch(SB_URL + "/auth/v1/token?grant_type=password", { method: "POST", headers: { apikey: SB_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
+      if (!r.ok) return;
+      const j = await r.json();
+      window.Android.setTrackingAuth(j.access_token, j.refresh_token, String(j.expires_at || 0));
+    } catch {}
+  }
+  $("#lShow").addEventListener("change", e => { $("#lPass").type = e.target.checked ? "text" : "password"; });
+  $("#loginForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const email = $("#lEmail").value.trim().toLowerCase(), password = $("#lPass").value;
+    if (!email || !password) { $("#lErr").textContent = "Enter your email and password."; return; }
+    if (!sb) { $("#lErr").textContent = "The app couldn't start. Close and reopen it."; return; }
+    if (authMode === "signup") return signUp(email, password);
+    const btn = $("#lBtn"); btn.disabled = true; btn.textContent = "Logging in…"; $("#lErr").textContent = "";
+    const { data, error } = await sb.auth.signInWithPassword({ email, password }).catch(err => ({ error: err }));
+    btn.disabled = false; btn.textContent = "Log in";
+    if (error || !data || !data.session) {
+      const m = String((error && error.message) || "");
+      $("#lErr").textContent = /invalid login|invalid_credentials|invalid grant/i.test(m) ? "Wrong email or password."
+        : /not confirmed/i.test(m) ? "This account isn't activated yet. Ask your admin to confirm it."
+        : /fetch|network|failed to/i.test(m) ? "No internet connection. Connect and try again."
+        : (m || "Couldn't log in. Try again.");
+      return;
+    }
+    LS.set("ovm_email", email);
+    trackingSession(email, password);
+    $("#lPass").value = "";
+    signedIn(data.session);
+  });
+  async function signUp(email, password) {
+    const name = $("#lName").value.trim();
+    if (!name) { $("#lErr").textContent = "Enter your name."; return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { $("#lErr").textContent = "Enter a valid email address."; return; }
+    if (password.length < 6) { $("#lErr").textContent = "Use a password with at least 6 characters."; return; }
+    if (password !== $("#lPass2").value) { $("#lErr").textContent = "The two passwords don't match."; return; }
+    const btn = $("#lBtn"); btn.disabled = true; btn.textContent = "Creating account…"; $("#lErr").textContent = "";
+    const { data, error } = await sb.auth.signUp({ email, password, options: { data: { name } } }).catch(err => ({ error: err }));
+    btn.disabled = false; btn.textContent = "Create account";
+    if (error) {
+      const m = String(error.message || "");
+      $("#lErr").textContent = /already|exists|registered/i.test(m) ? "An account with this email already exists. Log in instead."
+        : /fetch|network|failed to/i.test(m) ? "No internet connection. Connect and try again."
+        : /rate|too many/i.test(m) ? "Too many attempts. Wait a minute and try again."
+        : m || "Couldn't create the account. Try again.";
+      return;
+    }
+    LS.set("ovm_email", email);
+    $("#lPass2").value = "";
+    if (data && data.session) {
+      trackingSession(email, password);
+      $("#lPass").value = "";
+      signedIn(data.session);
+    } else {
+      setMode("login");
+      $("#lInfo").hidden = false;
+      $("#lInfo").innerHTML = `Account created. We sent a confirmation link to <b>${esc(email)}</b>. Open it, then come back and log in here.`;
+      $("#lPass").value = "";
+    }
+  }
+
+  /* ---------- app updates (native shell checks GitHub) ---------- */
+  let upd = null, apkState = "";
+  const appInfo = () => { try { return JSON.parse(window.Android.appInfo()); } catch { return null; } };
+  function renderUpdateBar() {
+    const bar = $("#updateBar"); if (!bar) return;
+    const ic = `<span class="ub-ic"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></span>`;
+    if (upd && upd.apk) {
+      const busy = apkState === "apk-downloading";
+      bar.innerHTML = `${ic}<div class="ub-txt"><b>New app version ${esc(upd.apk.versionName || "")} available</b><span>${esc(upd.apk.notes || "Download it and tap Install.")}${apkState === "apk-failed" ? " · Download failed, try again." : ""}</span></div>
+        <button class="btn small" type="button" id="ubApk" ${busy ? "disabled" : ""}>${busy ? "Downloading…" : apkState === "apk-ready" ? "Install again" : "Download & install"}</button>`;
+      bar.hidden = false;
+    } else if (upd && upd.web && upd.web.ready) {
+      bar.innerHTML = `${ic}<div class="ub-txt"><b>Update available</b><span>${esc(upd.web.notes || "Improvements to the app.")}</span></div><button class="btn small" type="button" id="ubWeb">Update now</button>`;
+      bar.hidden = false;
+    } else bar.hidden = true;
+  }
+  window.__appUpdate = info => { upd = info; renderUpdateBar(); };
+  window.__appUpdateEvent = kind => {
+    if (kind === "latest") toast("You have the latest version");
+    else if (kind === "check-failed") toast("Couldn't check for updates. Check the internet connection.");
+    else if (kind === "web-not-ready") toast("The update is still downloading. Try again in a minute.");
+    else { apkState = kind; if (kind === "apk-failed") toast("Couldn't download the new version. Try again."); if (kind === "apk-ready") toast("Tap Install on the next screen"); renderUpdateBar(); }
+  };
+  document.addEventListener("click", e => {
+    if (e.target.closest("#ubWeb")) { try { window.Android.applyWebUpdate(); } catch {} }
+    else if (e.target.closest("#ubApk")) { try { window.Android.installApk(); } catch {} }
+    else if (e.target.closest("#checkUpd")) { toast("Checking for updates…"); try { window.Android.checkUpdates(); } catch {} }
+  });
+  try { const st = window.Android && window.Android.updateState && window.Android.updateState(); if (st) upd = JSON.parse(st); } catch {}
+  renderUpdateBar();
+
+  function accountDialog() {
+    if (!me) return;
+    const tracking = gps.tracking();
+    const pend = teamRows.filter(r => r.status === "pending").length;
+    const team = member && member.role === "admin" ? `<a class="btn ghost" href="#team" id="goTeam">Manage team${pend ? ` · ${pend} waiting` : ""}</a>` : "";
+    const ai = window.Android && window.Android.appInfo ? appInfo() : null;
+    const ver = ai ? `<div class="row" style="padding:10px 12px"><div class="main"><div class="t">App version ${esc(ai.versionName)}</div><div class="s">Update ${esc(String(ai.web))}</div></div><button class="btn ghost small" type="button" id="checkUpd">Check for updates</button></div>` : "";
+    open("Account", `<p style="margin:0">Logged in as<br><b>${esc(myName())}</b><br><span class="hint">${esc(me.email)}${member && member.role === "admin" ? " · Admin" : ""}</span></p>${team}${ver}${tracking ? `<p class="hint" style="margin:0">Live tracking is running on this phone. Logging out stops it.</p>` : ""}`,
+      `<button class="btn ghost" type="button" data-dlgclose>Cancel</button><button class="btn danger" value="save">Log out</button>`,
+      async () => { await doLogout(); return true; });
+    const g = $("#goTeam"); if (g) g.addEventListener("click", () => dlg.close());
+  }
+  $("#userBtn").addEventListener("click", accountDialog);
+
+  async function start() {
+    try { $("#loginHero").innerHTML = ART.hero(); } catch {}
+    route(); render();
+    assets = true; downloads = !!window.Android; canWrite = true; applyWrite();
+    if (!window.supabase) { showLogin("The app couldn't start. Close and reopen it."); return; }
+    sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storageKey: "ovm-auth" } });
+    sb.auth.onAuthStateChange((ev, session) => {
+      if (session && session.user) me = session.user;
+      if (ev === "SIGNED_OUT" && booted && !loggingOut) { location.hash = "#dashboard"; location.reload(); }
+    });
+    let session = null;
+    try { const r = await sb.auth.getSession(); session = r.data && r.data.session; } catch {}
+    if (session) signedIn(session); else showLogin();
+  }
+
+  async function boot() {
+    db = makeDb(sb);
+
+    const sorters = {
+      vehicles: (a, b) => String(a.vehicleNumber).localeCompare(b.vehicleNumber),
+      positions: (a, b) => String(a.vehicleNumber).localeCompare(b.vehicleNumber),
+      drivers: (a, b) => String(a.name).localeCompare(b.name),
+      places: (a, b) => String(a.name).localeCompare(b.name),
+      trips: (a, b) => String(b.outTime).localeCompare(String(a.outTime)),
+    };
+    let loaded = new Set(), live = false;
+    const status = () => {
+      if (loaded.size === COLS.length && live) { setSync("live", "Live"); notice(""); }
+      else if (loaded.size === COLS.length) setSync("", "Syncing…");
+    };
+    const timer = setTimeout(() => { if (loaded.size < COLS.length) { setSync("off", "No internet"); notice("Can't reach the shared register. Check the internet connection; the app keeps trying."); } }, 10000);
+    for (const col of COLS) {
+      db.collection(col).onSnapshot(snap => {
+        S[col] = snap.docs.map(d => ({ ...d.data(), _id: d.id })).sort(sorters[col]);
+        loaded.add(col); if (loaded.size === COLS.length) clearTimeout(timer);
+        if (col === "trips") { const tr = gps.tracking(); const tt = tr && S.trips.find(x => x._id === tr); if (tt && tt.status !== "Out") gps.stop(); }
+        status(); render();
+      }, () => { setSync("off", "No internet"); });
+    }
+
+    sb.channel("ovm-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "ovm_docs" }, p => db.onChange(p))
+      .subscribe(st => {
+        if (st === "SUBSCRIBED") { const wasDown = !live; live = true; if (wasDown && loaded.size === COLS.length) db.reloadAll().catch(() => {}); status(); }
+        else if (st === "CHANNEL_ERROR" || st === "TIMED_OUT" || st === "CLOSED") { live = false; setSync("off", "Reconnecting…"); }
+      });
+
+    // Catch up on anything missed while the phone was locked or the app was in the background
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") db.reloadAll().then(() => { if (!live) setSync("", "Syncing…"); else status(); }).catch(() => setSync("off", "No internet"));
+    });
+    setInterval(() => { if (document.visibilityState === "visible") db.reloadAll().catch(() => {}); }, 60000);
+  }
+  start();
+})();
+</script>
+
+</body></html>

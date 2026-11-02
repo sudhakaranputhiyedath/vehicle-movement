@@ -1,0 +1,47 @@
+{
+  "app": "Office Vehicle Manager",
+  "web": {
+    "version": 14,
+    "notes": "First version with automatic updates.",
+    "files": [
+      {
+        "name": "index.html",
+        "sha256": "06a971bd79a64fe1900660de4b41a9b7b38cf502f7ddded97b5dfba4c2863c57",
+        "size": 175891
+      },
+      {
+        "name": "art.js",
+        "sha256": "df9df774976d15c4500ba3efc083986d5a4d0e4098b5f9d57f165708e362c627",
+        "size": 11408
+      },
+      {
+        "name": "supabase.js",
+        "sha256": "ee3be8de192b97cb1d73d1e95d6b82bb1f6b658c0f97c4ef757fc331996ed3d3",
+        "size": 218252
+      },
+      {
+        "name": "leaflet.js",
+        "sha256": "db49d009c841f5ca34a888c96511ae936fd9f5533e90d8b2c4d57596f4e5641a",
+        "size": 147552
+      },
+      {
+        "name": "maplibre-gl.js",
+        "sha256": "be9633c4d870e26fb37f1cfe5c5a77181667114003ea16207ac7850d8da8add1",
+        "size": 803086
+      },
+      {
+        "name": "leaflet-maplibre-gl.js",
+        "sha256": "1c33367962e7755c1a16d1f85658fdc96b5baa36f81adfca9493174cd1b526ce",
+        "size": 13069
+      }
+    ],
+    "minNative": 14
+  },
+  "apk": {
+    "versionCode": 14,
+    "versionName": "2.3",
+    "notes": "Adds automatic app updates.",
+    "file": "apk/OfficeVehicleManager.apk",
+    "sha256": "0b1efd2644d57fe5d548707cde68888679ecf89446cd0087ab0535643b043727"
+  }
+}
