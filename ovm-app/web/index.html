@@ -1020,7 +1020,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <a class="more-tile" href="#drivers"><span class="ic t-ok"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg></span><b>Drivers</b><span id="mDrv">Driver list</span></a>
       <a class="more-tile" href="#fuel"><span class="ic t-warn"><svg viewBox="0 0 24 24"><path d="M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16"/><path d="M3 21h13M15 9h2a2 2 0 0 1 2 2v5a1.5 1.5 0 0 0 3 0V8l-3-3"/><path d="M7 7h5v4H7z"/></svg></span><b>Fuel &amp; service</b><span id="mFuel">Fill-ups and servicing</span></a>
       <a class="more-tile" href="#reports"><span class="ic t-bad"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><b>Reports</b><span>Charts and monthly export</span></a>
-      <a class="more-tile" href="#places"><span class="ic t-mute"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span><b>Places</b><span>Saved destinations</span></a>
+      <a class="more-tile" href="#places"><span class="ic t-mute"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span><b>Places &amp; departments</b><span>Lists for the dispatch form</span></a>
       <a class="more-tile" href="#team" id="mTeam" hidden><span class="ic t-acc"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c.8-3.5 3.6-5.5 7-5.5s6.2 2 7 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2 .7 3.4 2.4 4 5.2"/></svg></span><b>Team</b><span id="mTeamSub">Approvals and passwords</span></a>
     </div>
   </section>
@@ -1042,6 +1042,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <button class="btn" type="submit">Add</button>
     </form>
     <div class="list" id="placeList"></div>
+    <div class="head" style="margin-top:22px"><h2>Departments</h2></div>
+    <form id="deptForm" class="filters" data-w>
+      <input class="search" id="deptName" placeholder="New department, e.g. Accounts" maxlength="60" autocomplete="off">
+      <button class="btn" type="submit">Add</button>
+    </form>
+    <div class="list" id="deptList"></div>
   </section>
 
   <section id="v-team" data-view hidden>
@@ -1146,7 +1152,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 (() => {
   const $ = s => document.querySelector(s);
   const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
-  const S = { vehicles: [], drivers: [], places: [], trips: [], positions: [], fuel: [], services: [] };
+  const S = { vehicles: [], drivers: [], places: [], departments: [], trips: [], positions: [], fuel: [], services: [] };
 
   /* ---------- GPS (native bridge) ---------- */
   const gpsWait = {};
@@ -1281,6 +1287,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <div class="row"><div class="main"><div class="t">${esc(p.name)}</div></div>
         ${canWrite ? `<button class="btn ghost small" type="button" data-del-place="${esc(p._id)}">Remove</button>` : ""}</div>`).join("")
       : `<div class="empty">${ART.empty("places")}No saved places. Places you add here appear in the dispatch form.</div>`;
+    $("#deptList").innerHTML = S.departments.length ? S.departments.map(p => `
+      <div class="row"><div class="main"><div class="t">${esc(p.name)}</div></div>
+        ${canWrite ? `<button class="btn ghost small" type="button" data-del-dept="${esc(p._id)}">Remove</button>` : ""}</div>`).join("")
+      : `<div class="empty">No departments yet. Add them here and pick one from the list when dispatching.</div>`;
 
     const q = $("#tripSearch").value.trim().toLowerCase();
     const trips = S.trips.filter(t => (tripFilter === "all" || t.status === tripFilter) &&
@@ -1890,7 +1900,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       `<div class="two">${field("tVeh","Vehicle", sel("tVeh", vs.map(v => [v._id, `${v.vehicleNumber} · ${v.model}`])))}
         ${field("tDrv","Driver", sel("tDrv", ds.map(d => [d._id, d.name])))}</div>
        <div class="two">${field("tEmp","Employee", inp("tEmp",`maxlength="60" placeholder="Who is travelling"`))}
-        ${field("tDept","Department", inp("tDept",`maxlength="60"`))}</div>
+        ${field("tDeptSel","Department", deptNames().length ? sel("tDeptSel", [["", "Select…"], ...deptNames(), ["__new", "+ Add new…"]], "") + inp("tDept",`maxlength="60" placeholder="New department" style="margin-top:8px" hidden`) : inp("tDept",`maxlength="60" placeholder="e.g. Accounts"`))}</div>
        ${field("tPlace","Place", inp("tPlace",`list="placeOpts" maxlength="80" autocomplete="off"`) + `<datalist id="placeOpts">${S.places.map(p => `<option value="${esc(p.name)}">`).join("")}</datalist>`)}
        ${field("tPurpose","Purpose", inp("tPurpose",`maxlength="120"`))}
        <div class="two">${field("tOut","Out time", inp("tOut",`type="datetime-local" value="${localInput(new Date())}"`))}
@@ -1901,7 +1911,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
       `<button class="btn ghost" type="button" data-dlgclose>Cancel</button><button class="btn" value="save">Dispatch</button>`,
       async () => {
         const v = S.vehicles.find(x => x._id === $("#tVeh").value), d = S.drivers.find(x => x._id === $("#tDrv").value);
-        const emp = $("#tEmp").value.trim(), dept = $("#tDept").value.trim(), place = $("#tPlace").value.trim(), purpose = $("#tPurpose").value.trim(), odo = $("#tOdo").value;
+        const ds0 = $("#tDeptSel"), dept = (ds0 && ds0.value !== "__new" ? ds0.value : $("#tDept").value).trim();
+        const emp = $("#tEmp").value.trim(), place = $("#tPlace").value.trim(), purpose = $("#tPurpose").value.trim(), odo = $("#tOdo").value;
         if (!v || v.status !== "Available") return err("That vehicle was just taken on another phone. Pick another."), false;
         if (!d || d.status !== "Available") return err("That driver was just assigned on another phone. Pick another."), false;
         if (!emp || !dept || !place || !purpose) return err("Fill in employee, department, place and purpose."), false;
@@ -1918,11 +1929,13 @@ svg.leaflet-image-layer.leaflet-interactive path {
           await db.doc("vehicles/" + v._id).update({ status: "On Trip" });
           await db.doc("drivers/" + d._id).update({ status: "On Trip" });
           if (!S.places.some(p => p.name.toLowerCase() === place.toLowerCase())) await db.collection("places").add({ name: place });
+          if (!S.departments.some(p => String(p.name).toLowerCase() === dept.toLowerCase())) await db.collection("departments").add({ name: dept });
         }, `${v.vehicleNumber} dispatched`);
         if (ok && newTripId) afterDispatch(newTripId, v, d, track);
         return ok;
       });
     $("#tVeh").addEventListener("change", e => { const v = S.vehicles.find(x => x._id === e.target.value); if (v) $("#tOdo").value = v.currentOdometer ?? ""; });
+    if ($("#tDeptSel")) $("#tDeptSel").addEventListener("change", e => { const nw = e.target.value === "__new"; $("#tDept").hidden = !nw; if (nw) $("#tDept").focus(); });
     if (preV && vs.some(x => x._id === preV)) { $("#tVeh").value = preV; $("#tVeh").dispatchEvent(new Event("change")); }
   }
 
@@ -1962,6 +1975,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     else if (b.dataset.editDriver) { if (canWrite) driverForm(S.drivers.find(d => d._id === b.dataset.editDriver)); }
     else if (b.dataset.markin) markInForm(S.trips.find(t => t._id === b.dataset.markin));
     else if (b.dataset.delPlace) write(() => db.doc("places/" + b.dataset.delPlace).delete(), "Place removed");
+    else if (b.dataset.delDept) write(() => db.doc("departments/" + b.dataset.delDept).delete(), "Department removed");
     else if (b.dataset.track) { const t = S.trips.find(x => x._id === b.dataset.track); if (t) { gps.start(t); db.doc("trips/" + t._id).update({ tracked: true }).catch(() => {}); } }
     else if (b.dataset.untrack) { gps.stop(); }
     else if (b.dataset.maptrip) { routeTrip = S.positions.find(p => p._id === b.dataset.maptrip) || null; fitted = false; if (location.hash === "#map") renderMap(); else location.hash = "#map"; }
@@ -2004,6 +2018,19 @@ svg.leaflet-image-layer.leaflet-interactive path {
     if (S.places.some(p => p.name.toLowerCase() === name.toLowerCase())) { toast("That place is already saved"); return; }
     if (await write(() => db.collection("places").add({ name }), "Place added")) $("#placeName").value = "";
   });
+  $("#deptForm").addEventListener("submit", async e => {
+    e.preventDefault(); if (!db) return;
+    const name = $("#deptName").value.trim(); if (!name) return;
+    if (S.departments.some(p => p.name.toLowerCase() === name.toLowerCase())) { toast("That department is already saved"); return; }
+    if (await write(() => db.collection("departments").add({ name }), "Department added")) $("#deptName").value = "";
+  });
+  // Department names for the dispatch list: saved ones plus any used on earlier trips
+  function deptNames() {
+    const seen = new Map();
+    S.departments.forEach(d => { const n = String(d.name || "").trim(); if (n) seen.set(n.toLowerCase(), n); });
+    S.trips.forEach(t => { const n = String(t.department || "").trim(); if (n && !seen.has(n.toLowerCase())) seen.set(n.toLowerCase(), n); });
+    return [...seen.values()].sort((a, b) => a.localeCompare(b));
+  }
   $("#exportBtn").addEventListener("click", async () => {
     const cols = ["vehicleNumber","driverName","employeeName","department","place","purpose","outTime","inTime","startOdometer","endOdometer","totalDistance","status","remarks","outLocation","inLocation"];
     const csv = [cols.join(",")].concat(S.trips.map(t0 => ({ ...t0, outLocation: t0.outLoc ? t0.outLoc.lat + " " + t0.outLoc.lng : "", inLocation: t0.inLoc ? t0.inLoc.lat + " " + t0.inLoc.lng : "" })).map(t => cols.map(c => `"${String(t[c] ?? "").replace(/"/g, '""')}"`).join(","))).join("\r\n");
@@ -2014,7 +2041,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   /* ---------- live data: Supabase (table ovm_docs) ---------- */
   const SB_URL = "https://ttxkexsrzuejwhxqetjl.supabase.co";
   const SB_KEY = "sb_publishable_dfCrOnlBlLCWxWnyr6szdQ_xDE14jCM";
-  const COLS = ["vehicles","drivers","places","trips","positions","fuel","services"];
+  const COLS = ["vehicles","drivers","places","departments","trips","positions","fuel","services"];
 
   function makeDb(sb) {
     const cache = {}, listeners = {};
@@ -2705,6 +2732,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       positions: (a, b) => String(a.vehicleNumber).localeCompare(b.vehicleNumber),
       drivers: (a, b) => String(a.name).localeCompare(b.name),
       places: (a, b) => String(a.name).localeCompare(b.name),
+      departments: (a, b) => String(a.name).localeCompare(b.name),
       trips: (a, b) => String(b.outTime).localeCompare(String(a.outTime)),
       fuel: (a, b) => String(b.date).localeCompare(String(a.date)),
       services: (a, b) => String(b.date).localeCompare(String(a.date)),

@@ -1,13 +1,13 @@
 {
   "app": "Office Vehicle Manager",
   "web": {
-    "version": 21,
-    "notes": "Log in with your fingerprint, face or phone PIN",
+    "version": 22,
+    "notes": "Department is now a list to pick from",
     "files": [
       {
         "name": "index.html",
-        "sha256": "c8e613ee8de2fdcce18078fd4a88ed784ec1db54d9481c046c6f766db20cb7dc",
-        "size": 242785
+        "sha256": "6e47918a19f94b09fbc7df5fdec7a81ff2183a810b629ed6065cd8640e012a4c",
+        "size": 245311
       },
       {
         "name": "art.js",
