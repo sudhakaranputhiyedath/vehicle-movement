@@ -961,6 +961,21 @@ svg.leaflet-image-layer.leaflet-interactive path {
 	}
 
 
+
+/* Info slides under "Vehicles out now": Muscat weather + driving tips */
+.slides-wrap { margin-top: 14px; }
+.slides { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 10px; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+.slides::-webkit-scrollbar { display: none; }
+.slide { flex: 0 0 100%; scroll-snap-align: start; height: 150px; border-radius: 16px; padding: 14px 16px; color: #fff; display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-content: center; position: relative; overflow: hidden; box-shadow: 0 6px 16px rgba(0,0,0,.12); }
+.slide .k { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .85; grid-column: 1 / -1; }
+.slide .t { font-family: var(--f-display); font-weight: 700; font-size: 21px; line-height: 1.1; text-transform: uppercase; letter-spacing: .02em; }
+.slide .d { font-size: 13.5px; line-height: 1.35; opacity: .95; grid-column: 1; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.slide .em { grid-column: 2; grid-row: 2 / span 2; font-size: 46px; line-height: 1; align-self: center; filter: drop-shadow(0 3px 6px rgba(0,0,0,.2)); }
+.slide::after { content: ""; position: absolute; right: -30px; bottom: -40px; width: 130px; height: 130px; border-radius: 50%; background: rgba(255,255,255,.12); }
+.slide.wx .temp { font-family: var(--f-num); font-size: 34px; font-weight: 500; line-height: 1; }
+.slide-dots { display: flex; justify-content: center; gap: 6px; margin-top: 8px; }
+.slide-dots i { width: 7px; height: 7px; border-radius: 4px; background: var(--line); transition: width .25s, background .25s; }
+.slide-dots i.on { width: 18px; background: #0E7C8C; }
 /* ===== Colourful theme (web 26) ===== */
 .homebtn { text-decoration: none; cursor: pointer; transition: transform .12s ease, background .15s; }
 @media (max-width: 380px) { .brand { font-size: 17px; gap: 8px; letter-spacing: .01em; } .top-right { gap: 6px; } }
@@ -1132,6 +1147,10 @@ body.signed-out { background: var(--page) fixed; }
     <div class="kpis" id="kpis"></div>
     <h3>Vehicles out now</h3>
     <div class="list" id="openTrips"></div>
+    <div class="slides-wrap" id="slidesWrap">
+      <div class="slides" id="slides" aria-roledescription="carousel" aria-label="Weather and driving tips"></div>
+      <div class="slide-dots" id="slideDots"></div>
+    </div>
   </section>
 
   <section id="v-more" data-view hidden>
@@ -2219,6 +2238,86 @@ body.signed-out { background: var(--page) fixed; }
     if (S.places.some(p => p.name.toLowerCase() === name.toLowerCase())) { toast("That place is already saved"); return; }
     if (await write(() => db.collection("places").add({ name }), "Place added")) $("#placeName").value = "";
   });
+
+  /* ---------- info slides: Muscat weather (Open-Meteo, no key) + driving tips ---------- */
+  const TIPS = [
+    ["Seat belts", "Everyone in the vehicle, front and back, must wear a seat belt on every trip.", "🔒", "#2563EB,#60A5FA"],
+    ["Phone down", "Don't hold or use your phone while driving. Stop safely first, or use hands-free.", "📵", "#DC2626,#F87171"],
+    ["Watch your speed", "Speed cameras are on most roads in Oman. Keep to the posted limit, even when the road is empty.", "📸", "#EA580C,#FBBF24"],
+    ["Hot weather", "Check tyre pressure and coolant in summer. Never leave anyone or anything sensitive in a parked car.", "🌡️", "#DB2777,#F472B6"],
+    ["Wadis and rain", "Never drive through a flowing wadi. Water is deeper and faster than it looks. Wait for it to pass.", "🌊", "#0369A1,#38BDF8"],
+    ["Roundabouts", "Give way to vehicles already in the roundabout. Pick your lane early and signal when leaving.", "🔄", "#7C3AED,#C084FC"],
+    ["Keep your distance", "Leave at least 2 seconds behind the vehicle in front, more at night, in fog or in rain.", "↔️", "#0D9488,#5EEAD4"],
+    ["Fog and dust", "In fog or a sandstorm: slow down, switch on low beams and keep more distance. Don't use hazard lights while moving.", "🌫️", "#64748B,#94A3B8"],
+    ["Animals on the road", "On interior roads, camels and goats can cross, especially at night. Slow down and stay alert.", "🐪", "#A16207,#FACC15"],
+    ["Rest on long trips", "On long drives, take a break about every 2 hours. If you feel sleepy, stop somewhere safe.", "☕", "#15803D,#4ADE80"],
+    ["Before you leave", "Quick check: fuel, tyres, lights and mirrors. Report any problem when you mark the vehicle in.", "✅", "#0E7C8C,#2F5FD0"],
+  ];
+  const WX = { 0: ["Clear sky", "☀️"], 1: ["Mostly clear", "🌤️"], 2: ["Partly cloudy", "⛅"], 3: ["Cloudy", "☁️"], 45: ["Fog", "🌫️"], 48: ["Fog", "🌫️"],
+    51: ["Light drizzle", "🌦️"], 53: ["Drizzle", "🌦️"], 55: ["Drizzle", "🌦️"], 61: ["Light rain", "🌧️"], 63: ["Rain", "🌧️"], 65: ["Heavy rain", "🌧️"],
+    80: ["Showers", "🌦️"], 81: ["Showers", "🌧️"], 82: ["Heavy showers", "⛈️"], 95: ["Thunderstorm", "⛈️"], 96: ["Thunderstorm", "⛈️"], 99: ["Thunderstorm", "⛈️"] };
+  let wx = null, slideIdx = 0, slideTimer = null, slideTouch = 0;
+  try { wx = JSON.parse(localStorage.getItem("ovm_wx") || "null"); } catch {}
+  function wxAdvice(w) {
+    const c = w.code, t = w.max;
+    if ([95, 96, 99, 65, 82].includes(c)) return "Storm or heavy rain: avoid wadis and low roads, drive slowly.";
+    if (c >= 51 && c <= 81) return "Wet roads: slow down and keep more distance.";
+    if (c === 45 || c === 48) return "Fog: low beams on, slow down, more distance.";
+    if (w.wind >= 40) return "Strong wind: watch for dust and keep both hands on the wheel.";
+    if (t >= 42) return "Very hot: check tyres and coolant, carry water.";
+    if (t >= 36) return "Hot day: carry water and park in the shade where you can.";
+    return "Good driving weather. Drive safe!";
+  }
+  function slidesHtml() {
+    const out = [];
+    if (wx && wx.temp != null) {
+      const [label, em] = WX[wx.code] || ["Weather", "🌡️"];
+      const night = wx.isDay === 0, bg = night ? "#1E293B,#475569" : wx.temp >= 38 ? "#EA580C,#F59E0B" : "#0284C7,#38BDF8";
+      out.push(`<div class="slide wx" style="background:linear-gradient(135deg,${bg})"><span class="k">Muscat weather now</span>
+        <div><span class="temp">${Math.round(wx.temp)}°C</span> <span class="t" style="font-size:18px">${esc(night && wx.code <= 1 ? "Clear night" : label)}</span></div>
+        <div class="d">High ${Math.round(wx.max)}° · Low ${Math.round(wx.min)}° · Wind ${Math.round(wx.wind)} km/h · Humidity ${Math.round(wx.hum)}%<br>${esc(wxAdvice(wx))}</div>
+        <span class="em">${night && wx.code <= 1 ? "🌙" : em}</span></div>`);
+    }
+    const day = Math.floor(Date.now() / 86400000);
+    for (let i = 0; i < 5; i++) {
+      const [t, d, em, g] = TIPS[(day * 5 + i) % TIPS.length];
+      out.push(`<div class="slide" style="background:linear-gradient(135deg,${g})"><span class="k">Driving tip</span><div class="t">${esc(t)}</div><div class="d">${esc(d)}</div><span class="em">${em}</span></div>`);
+    }
+    return out;
+  }
+  function renderSlides() {
+    const box = $("#slides"); if (!box) return;
+    const items = slidesHtml(), html = items.join("");
+    if (box.dataset.sig !== html) { box.innerHTML = html; box.dataset.sig = html; box.scrollLeft = 0; slideIdx = 0; }
+    $("#slideDots").innerHTML = items.map((_, i) => `<i class="${i === slideIdx ? "on" : ""}"></i>`).join("");
+  }
+  function showSlide(i, smooth) {
+    const box = $("#slides"); if (!box || !box.children.length) return;
+    slideIdx = (i + box.children.length) % box.children.length;
+    box.scrollTo({ left: box.children[slideIdx].offsetLeft - box.offsetLeft, behavior: smooth ? "smooth" : "auto" });
+    document.querySelectorAll("#slideDots i").forEach((d, k) => d.classList.toggle("on", k === slideIdx));
+  }
+  $("#slides").addEventListener("scroll", () => {
+    const box = $("#slides"); const i = Math.round(box.scrollLeft / Math.max(1, box.clientWidth + 10));
+    if (i !== slideIdx) { slideIdx = i; document.querySelectorAll("#slideDots i").forEach((d, k) => d.classList.toggle("on", k === slideIdx)); }
+  }, { passive: true });
+  $("#slides").addEventListener("touchstart", () => { slideTouch = Date.now(); }, { passive: true });
+  slideTimer = setInterval(() => {
+    if (document.visibilityState !== "visible" || $("#v-dashboard").hidden || Date.now() - slideTouch < 10000) return;
+    showSlide(slideIdx + 1, true);
+  }, 7000);
+  async function loadWeather() {
+    if (wx && Date.now() - (wx.at || 0) < 30 * 60000) return;
+    try {
+      const ctl = new AbortController(); setTimeout(() => ctl.abort(), 12000);
+      const r = await fetch("https://api.open-meteo.com/v1/forecast?latitude=23.588&longitude=58.3829&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,is_day&daily=temperature_2m_max,temperature_2m_min&timezone=Asia%2FMuscat&forecast_days=1", { signal: ctl.signal });
+      const j = await r.json();
+      wx = { at: Date.now(), temp: j.current.temperature_2m, hum: j.current.relative_humidity_2m, code: j.current.weather_code, wind: j.current.wind_speed_10m, isDay: j.current.is_day, max: j.daily.temperature_2m_max[0], min: j.daily.temperature_2m_min[0] };
+      try { localStorage.setItem("ovm_wx", JSON.stringify(wx)); } catch {}
+      renderSlides();
+    } catch {}
+  }
+  renderSlides(); loadWeather(); setInterval(loadWeather, 10 * 60000);
   $("#sendMyLoc").addEventListener("click", sendMyLocation);
   $("#homeBtn").addEventListener("click", e => {
     e.preventDefault();

@@ -1,13 +1,13 @@
 {
   "app": "Office Vehicle Manager",
   "web": {
-    "version": 33,
-    "notes": "Fix: screen no longer shakes when the info changes",
+    "version": 34,
+    "notes": "Muscat weather and driving tips on the home page",
     "files": [
       {
         "name": "index.html",
-        "sha256": "88a15a091fc49ec375c0d6b8dba7fe9bc8c975e715463f4530d95c717c8bf1ee",
-        "size": 267303
+        "sha256": "d27ff1be1911c69f0a98e24ad595832709c8bb01bf1503f15bcb1016558e0c0a",
+        "size": 275947
       },
       {
         "name": "art.js",
