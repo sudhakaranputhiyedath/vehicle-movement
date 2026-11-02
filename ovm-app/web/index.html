@@ -952,7 +952,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <p class="hint" style="margin:0" id="lHint">Log in with your email and password.</p>
     <div class="info" id="lInfo" hidden></div>
     <div class="field" id="lNameWrap" hidden><label for="lName">Your name</label><input id="lName" autocomplete="name" maxlength="60"></div>
-    <div class="field" id="lEmailWrap"><label for="lEmail">Email</label><input id="lEmail" type="email" autocomplete="username" inputmode="email" autocapitalize="off"></div>
+    <div class="field" id="lEmailWrap"><label for="lEmail" id="lEmailLabel">Email or mobile number</label><input id="lEmail" type="text" autocomplete="username" autocapitalize="off" spellcheck="false"></div>
+    <div class="field" id="lPhoneWrap" hidden><label for="lPhone">Mobile number</label><input id="lPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="e.g. 9123 4567" maxlength="20"></div>
     <div class="field" id="lPassWrap"><label for="lPass">Password</label><input id="lPass" type="password" autocomplete="current-password"></div>
     <div class="field" id="lCodeWrap" hidden><label for="lCode">Code from the email</label><input id="lCode" inputmode="numeric" autocomplete="one-time-code" maxlength="10" style="font-family:var(--f-num);font-size:22px;letter-spacing:.3em;text-align:center"></div>
     <div class="field" id="lPass2Wrap" hidden><label for="lPass2">Confirm password</label><input id="lPass2" type="password" autocomplete="new-password"></div>
@@ -988,6 +989,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <div class="hello" id="hello"></div>
     <div class="notice" id="teamNotice" hidden></div>
     <div class="notice" id="svcAlert" hidden></div>
+    <div class="info" id="phoneHint" hidden style="margin-bottom:12px"></div>
     <div class="kpis" id="kpis"></div>
     <h3>Vehicles out now</h3>
     <div class="list" id="openTrips"></div>
@@ -2053,6 +2055,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
   function setMode(m) {
     authMode = m;
     $("#lNameWrap").hidden = m !== "signup";
+    $("#lPhoneWrap").hidden = m !== "signup";
+    $("#lEmailLabel").textContent = m === "signup" || m === "otp" ? "Email" : "Email or mobile number";
     $("#lPass2Wrap").hidden = m !== "signup";
     $("#lPassWrap").hidden = $("#lShowWrap").hidden = m === "forgot" || m === "otp" || m === "code";
     $("#lEmailWrap").hidden = m === "code";
@@ -2063,9 +2067,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
     $("#lSwitch").textContent = m === "login" ? "Create account" : "Back to log in";
     $("#lBtn").textContent = m === "signup" ? "Create account" : m === "forgot" ? "Ask admin to reset" : m === "otp" ? "Send code" : m === "code" ? "Verify" : "Log in";
     $("#lHint").textContent = m === "signup" ? "Create your account. Your office admin approves it before you can use the app."
-      : m === "forgot" ? "Enter your email. Your office admin will set a temporary password and send it to you."
+      : m === "forgot" ? "Enter your email or mobile number. Your office admin will set a temporary password and send it to you."
       : m === "otp" ? "Enter your email. We'll send you a login code."
-      : m === "code" ? "" : "Log in with your email and password.";
+      : m === "code" ? "" : "Log in with your email or mobile number and your password.";
     $("#lPass").autocomplete = m === "signup" ? "new-password" : "current-password";
     $("#lErr").textContent = "";
     setTimeout(() => (m === "signup" ? $("#lName") : m === "code" ? $("#lCode") : $("#lEmail").value && m === "login" ? $("#lPass") : $("#lEmail")).focus(), 50);
@@ -2119,6 +2123,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
     : /password/i.test(m) ? "Use a password with at least 6 characters."
     : (m || "Something went wrong. Try again.");
   const info = html => { $("#lInfo").hidden = false; $("#lInfo").innerHTML = html; };
+  function normPhone(p) { let d = String(p || "").replace(/\D/g, "").replace(/^00/, ""); if (d.length < 7 || d.length > 15) return null; if (d.length === 8) d = "968" + d; return d; }
+  const showPhone = d => !d ? "" : d.startsWith("968") && d.length === 11 ? `+968 ${d.slice(3, 7)} ${d.slice(7)}` : "+" + d;
 
   function showWaiting(title, html) {
     document.body.classList.add("signed-out");
@@ -2164,7 +2170,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     const tn = $("#teamNotice");
     tn.hidden = !nBadge;
     tn.innerHTML = nBadge ? [pend.length ? `${pend.length === 1 ? "1 person is" : pend.length + " people are"} waiting for approval.` : "", resetRows.length ? `${resetRows.length === 1 ? "1 password reset request." : resetRows.length + " password reset requests."}` : ""].filter(Boolean).join(" ") + ` <a class="linkbtn" href="#team">Review</a>` : "";
-    const nm = r => `<div class="t">${esc(r.name || r.email.split("@")[0])}</div><div class="s">${esc(r.email)}</div>`;
+    const nm = r => `<div class="t">${esc(r.name || r.email.split("@")[0])}</div><div class="s">${esc(r.email)}${r.phone ? " · " + esc(showPhone(r.phone)) : ""}</div>`;
     $("#teamPending").innerHTML = pend.length ? pend.map(r => `<div class="row"><div class="main">${nm(r)}<div class="s">Asked ${fmt(r.created_at)}</div></div>
       <div class="actions"><button class="btn small" type="button" data-approve="${esc(r.user_id)}">Approve</button><button class="btn ghost small" type="button" data-block="${esc(r.user_id)}">Reject</button></div></div>`).join("")
       : `<div class="empty">No one is waiting. New sign-ups appear here.</div>`;
@@ -2311,7 +2317,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     $("#login").hidden = true;
     const ub = $("#userBtn"); ub.hidden = false; ub.textContent = initials(me.email); ub.title = me.email;
     if (!booted) {
-      booted = true; boot(); startTeam();
+      booted = true; boot(); startTeam(); renderPhoneHint();
       ensureDeviceKey().then(() => {
         try {
           if (member && member.role === "admin" && window.Android && window.Android.setNotifications && LS.get("ovm_notify_set") !== "1" && window.Android.hasTrackingToken()) {
@@ -2351,7 +2357,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
       return sendCode(em, false);
     }
     const email = $("#lEmail").value.trim().toLowerCase(), password = $("#lPass").value;
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { $("#lErr").textContent = "Enter a valid email address."; return; }
+    const isPhone = !email.includes("@") && (authMode === "login" || authMode === "forgot");
+    if (isPhone) {
+      if (!normPhone(email)) { $("#lErr").textContent = "Enter a valid email address or mobile number."; return; }
+    } else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { $("#lErr").textContent = "Enter a valid email address."; return; }
     const btn = $("#lBtn"), label = btn.textContent; $("#lErr").textContent = "";
     const done = () => { btn.disabled = false; btn.textContent = label; };
 
@@ -2362,7 +2371,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if (error) { $("#lErr").textContent = authErr(String(error.message || "")); return; }
       LS.set("ovm_email", email);
       setMode("login");
-      info(`Request sent. Your office admin will set a temporary password for <b>${esc(email)}</b> and send it to you. Log in with it, then change it under your account.`);
+      info(`Request sent. Your office admin will set a temporary password for <b>${esc(isPhone ? showPhone(normPhone(email)) : email)}</b> and send it to you. Log in with it, then change it under your account.`);
       return;
     }
     if (!password) { $("#lErr").textContent = "Enter your password."; return; }
@@ -2372,8 +2381,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if (!name) { $("#lErr").textContent = "Enter your name."; return; }
       if (password.length < 6) { $("#lErr").textContent = "Use a password with at least 6 characters."; return; }
       if (password !== $("#lPass2").value) { $("#lErr").textContent = "The two passwords don't match."; return; }
+      const phone = normPhone($("#lPhone").value);
+      if (!phone) { $("#lErr").textContent = "Enter your mobile number."; return; }
       btn.disabled = true; btn.textContent = "Creating account…";
-      const { data, error } = await sb.auth.signUp({ email, password, options: { data: { name } } }).catch(err => ({ error: err }));
+      const { data, error } = await sb.auth.signUp({ email, password, options: { data: { name, phone } } }).catch(err => ({ error: err }));
       done();
       if (error) { $("#lErr").textContent = authErr(String(error.message || "")); return; }
       LS.set("ovm_email", email);
@@ -2388,6 +2399,25 @@ svg.leaflet-image-layer.leaflet-interactive path {
     }
 
     btn.disabled = true; btn.textContent = "Logging in…";
+    if (isPhone) {
+      const r = await sb.functions.invoke("ovm-phone-login", { body: { phone: email, password } }).catch(err => ({ error: err }));
+      let code = (r.data && r.data.error) || "";
+      try { if (!code && r.error && r.error.context && r.error.context.json) code = (await r.error.context.json()).error; } catch {}
+      if (r.data && r.data.access_token) {
+        const set = await sb.auth.setSession({ access_token: r.data.access_token, refresh_token: r.data.refresh_token }).catch(err => ({ error: err }));
+        done();
+        if (set.error || !set.data || !set.data.session) { $("#lErr").textContent = "Couldn't log in. Try again."; return; }
+        LS.set("ovm_email", email); $("#lPass").value = "";
+        signedIn(set.data.session);
+        return;
+      }
+      done();
+      $("#lErr").textContent = code === "rate" ? "Too many attempts. Wait a few minutes and try again."
+        : code === "not_confirmed" ? "This account isn't confirmed yet. Ask your admin to set a password for you."
+        : code === "invalid" ? "Wrong mobile number or password. If you haven't added your mobile number yet, log in with your email."
+        : "Couldn't log in. Check the internet connection and try again.";
+      return;
+    }
     const { data, error } = await sb.auth.signInWithPassword({ email, password }).catch(err => ({ error: err }));
     done();
     if (error || !data || !data.session) { $("#lErr").textContent = authErr(String((error && error.message) || "")); return; }
@@ -2395,6 +2425,30 @@ svg.leaflet-image-layer.leaflet-interactive path {
     $("#lPass").value = "";
     signedIn(data.session);
   });
+
+  function phoneDialog() {
+    open(member && member.phone ? "Change mobile number" : "Add mobile number",
+      `${field("pnNum", "Mobile number", inp("pnNum", `type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="e.g. 9123 4567" value="${esc(member && member.phone ? showPhone(member.phone) : "")}"`))}
+       <p class="hint" style="margin:0">After this you can log in with this number and your password. Numbers without a country code are taken as Oman (+968).</p>`,
+      `<button class="btn ghost" type="button" data-dlgclose>Cancel</button><button class="btn" value="save">Save</button>`,
+      async () => {
+        const v = normPhone($("#pnNum").value);
+        if (!v) return err("Enter a valid mobile number."), false;
+        const { data, error } = await sb.rpc("ovm_set_phone", { p_phone: v }).catch(e => ({ error: e }));
+        if (error) return err("Couldn't save. Check the connection and try again."), false;
+        if (data === "taken") return err("This number is already used by another account."), false;
+        if (data !== "ok") return err("Enter a valid mobile number."), false;
+        member.phone = v; renderPhoneHint();
+        toast("Mobile number saved");
+        return true;
+      });
+  }
+  function renderPhoneHint() {
+    const el = $("#phoneHint"); if (!el) return;
+    el.hidden = !member || !!member.phone;
+    el.innerHTML = `Add your mobile number to log in with it next time. <button class="linkbtn" type="button" id="phoneHintBtn">Add number</button>`;
+    const b = $("#phoneHintBtn"); if (b) b.onclick = phoneDialog;
+  }
 
   function changePasswordDialog() {
     open("Change password",
@@ -2458,11 +2512,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
     const notifyBox = canNotify ? `<div class="td-card" style="padding:12px 14px"><label class="check" for="nOn" style="background:none;padding:0"><input type="checkbox" id="nOn" ${nOn ? "checked" : ""}><span><b>Trip notifications on this phone</b><br><span class="hint">Vehicle left, came back, or is out too long. Checked about every 15 minutes.</span></span></label>
       <div class="field"><label for="nHours">Warn when a vehicle is out longer than</label>${sel("nHours", [2, 3, 4, 6, 8, 12].map(h => [String(h), h + " hours"]), String(nHours))}</div></div>` : "";
     const ver = ai ? `<div class="row" style="padding:10px 12px"><div class="main"><div class="t">App version ${esc(ai.versionName)}</div><div class="s">Update ${esc(String(ai.web))}</div></div><button class="btn ghost small" type="button" id="checkUpd">Check for updates</button></div>` : "";
-    open("Account", `<p style="margin:0">Logged in as<br><b>${esc(myName())}</b><br><span class="hint">${esc(me.email)}${member && member.role === "admin" ? " · Admin" : ""}</span></p>${team}<button class="btn ghost" type="button" id="goChangePw">Change password</button>${notifyBox}${ver}${tracking ? `<p class="hint" style="margin:0">Live tracking is running on this phone. Logging out stops it.</p>` : ""}`,
+    open("Account", `<p style="margin:0">Logged in as<br><b>${esc(myName())}</b><br><span class="hint">${esc(me.email)}${member && member.role === "admin" ? " · Admin" : ""}</span></p>${team}<button class="btn ghost" type="button" id="goPhone">${member && member.phone ? "Mobile " + esc(showPhone(member.phone)) + " · Change" : "Add mobile number for login"}</button><button class="btn ghost" type="button" id="goChangePw">Change password</button>${notifyBox}${ver}${tracking ? `<p class="hint" style="margin:0">Live tracking is running on this phone. Logging out stops it.</p>` : ""}`,
       `<button class="btn ghost" type="button" data-dlgclose>Cancel</button><button class="btn danger" value="save">Log out</button>`,
       async () => { await doLogout(); return true; });
     const g = $("#goTeam"); if (g) g.addEventListener("click", () => dlg.close());
     $("#goChangePw").addEventListener("click", () => { dlg.close(); setTimeout(changePasswordDialog, 50); });
+    $("#goPhone").addEventListener("click", () => { dlg.close(); setTimeout(phoneDialog, 50); });
     if ($("#nOn")) {
       $("#nOn").addEventListener("change", async e => {
         await ensureDeviceKey();

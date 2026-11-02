@@ -1,13 +1,13 @@
 {
   "app": "Office Vehicle Manager",
   "web": {
-    "version": 18,
-    "notes": "New look, Dispatch button, Fuel & service log, Reports, trip photos.",
+    "version": 19,
+    "notes": "Log in with your mobile number. Add it under your account (tap your initials).",
     "files": [
       {
         "name": "index.html",
-        "sha256": "2cbddfcbe7cc27959bde8f7881862102f5ee20f031bf0959005d6079cb30cd23",
-        "size": 226277
+        "sha256": "858d4d853487a491bd9f27f42732cc3d3fd9f40ab9b2ac319974af0e060a48b7",
+        "size": 230691
       },
       {
         "name": "art.js",
