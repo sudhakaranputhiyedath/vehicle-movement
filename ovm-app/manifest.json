@@ -1,13 +1,13 @@
 {
   "app": "Office Vehicle Manager",
   "web": {
-    "version": 38,
-    "notes": "Recent trips on the home page and update fixes",
+    "version": 39,
+    "notes": "New colourful page background",
     "files": [
       {
         "name": "index.html",
-        "sha256": "bce36c418171c5373126c4f0b62f49d420728a0df434821809446c2389d3b55c",
-        "size": 280442
+        "sha256": "66ef3a2262664eefa055fae04b4928e1e37a896c3b89d6aed907124bdd6dc72a",
+        "size": 280771
       },
       {
         "name": "art.js",

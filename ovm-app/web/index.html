@@ -1013,6 +1013,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
 .rt-main b { font-size: 14px; } .rt-main span { font-size: 12px; color: var(--muted); }
 .rt-side { display: grid; justify-items: end; flex: none; }
 .rt-side b { font-family: var(--f-num); font-size: 13px; color: #15803D; } .rt-side span { font-size: 11px; color: var(--muted); }
+.empty { background: rgba(255,255,255,.55); border-color: rgba(14,124,140,.25); }
+.tabs { background: rgba(255,255,255,.92); backdrop-filter: blur(10px); border-top-color: rgba(14,124,140,.15); }
 /* ===== Colourful theme (web 26) ===== */
 .homebtn { text-decoration: none; cursor: pointer; transition: transform .12s ease, background .15s; }
 @media (max-width: 380px) { .brand { font-size: 17px; gap: 8px; letter-spacing: .01em; } .top-right { gap: 6px; } }
@@ -1022,7 +1024,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 :root { --g-head: linear-gradient(120deg, #0D6A5B 0%, #0E7C8C 55%, #2F5FD0 100%);
   --g-btn: linear-gradient(135deg, #0D6A5B, #1497A0);
   --c1: #16A34A; --c2: #F97316; --c3: #2563EB; --c4: #9333EA; --c5: #E11D48; --c6: #0891B2; --c7: #CA8A04; --c8: #DB2777;
-  --page: linear-gradient(180deg, #E8F6F2 0%, #F2F1FB 55%, #FDF3EC 100%); }
+  --page: radial-gradient(120% 60% at 100% 0%, #B9E6F2 0%, transparent 60%), radial-gradient(90% 50% at 0% 100%, #E3D3F7 0%, transparent 65%), linear-gradient(170deg, #BFE9DD 0%, #CBDDF7 50%, #DCD2F3 100%); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --page: linear-gradient(180deg, #0E1715 0%, #13121F 60%, #1A1410 100%); } }
 :root[data-theme="dark"] { --page: linear-gradient(180deg, #0E1715 0%, #13121F 60%, #1A1410 100%); }
 html, body { background: var(--bg); }
