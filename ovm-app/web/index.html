@@ -1015,6 +1015,19 @@ svg.leaflet-image-layer.leaflet-interactive path {
 .rt-side b { font-family: var(--f-num); font-size: 13px; color: #15803D; } .rt-side span { font-size: 11px; color: var(--muted); }
 .empty { background: rgba(255,255,255,.55); border-color: rgba(14,124,140,.25); }
 .tabs { background: rgba(255,255,255,.92); backdrop-filter: blur(10px); border-top-color: rgba(14,124,140,.15); }
+/* Dialogs (Dispatch, Mark in, forms): soft coloured background, white fields */
+:root { --dlg-bg: linear-gradient(170deg, #DDF3EC 0%, #E1EAFB 55%, #ECE3FA 100%); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --dlg-bg: linear-gradient(170deg, #12201D 0%, #151B2A 60%, #1C1828 100%); } }
+:root[data-theme="dark"] { --dlg-bg: linear-gradient(170deg, #12201D 0%, #151B2A 60%, #1C1828 100%); }
+dialog { background: var(--dlg-bg); }
+.dlg footer { border-top-color: rgba(14,124,140,.18); background: rgba(255,255,255,.35); }
+.field input, .field select, .field textarea { background: var(--surface); border-color: rgba(14,124,140,.22); }
+.field label { color: #0E6E7C; }
+.dlg .check { background: rgba(255,255,255,.6); }
+.two > * { min-width: 0; }
+.two:has(input[type="datetime-local"]) { grid-template-columns: 1.45fr 1fr; }
+.field input[type="datetime-local"], .field input[type="date"] { min-width: 0; max-width: 100%; font-size: 14px; padding-left: 8px; padding-right: 6px; -webkit-appearance: none; appearance: none; }
+.dlg .td-card, .dlg .loc-msg, .share-opts a, .share-opts button { background: var(--surface); }
 /* ===== Colourful theme (web 26) ===== */
 .homebtn { text-decoration: none; cursor: pointer; transition: transform .12s ease, background .15s; }
 @media (max-width: 380px) { .brand { font-size: 17px; gap: 8px; letter-spacing: .01em; } .top-right { gap: 6px; } }
@@ -2172,7 +2185,7 @@ body.signed-out { background: var(--page) fixed; }
        ${field("tPlace","Place", inp("tPlace",`list="placeOpts" maxlength="80" autocomplete="off"`) + `<datalist id="placeOpts">${S.places.map(p => `<option value="${esc(p.name)}">`).join("")}</datalist>`)}
        ${field("tPurpose","Purpose", inp("tPurpose",`maxlength="120"`))}
        <div class="two">${field("tOut","Out time", inp("tOut",`type="datetime-local" value="${localInput(new Date())}"`))}
-        ${field("tOdo","Start odometer (km)", inp("tOdo",`type="number" inputmode="numeric" min="0" value="${esc(vs[0].currentOdometer ?? "")}"`))}</div>
+        ${field("tOdo","Start km", inp("tOdo",`type="number" inputmode="numeric" min="0" value="${esc(vs[0].currentOdometer ?? "")}"`))}</div>
        ${field("tRem","Remarks (optional)", inp("tRem",`maxlength="200"`))}
        ${field("tPhoto","Photo of the vehicle (optional)", `<input id="tPhoto" type="file" accept="image/*" capture="environment">`)}
        ${gps.has ? `<label class="check" for="tTrack"><input type="checkbox" id="tTrack"><span>This phone goes with the vehicle. Track it live on the map.</span></label>` : ""}`,
@@ -2211,7 +2224,7 @@ body.signed-out { background: var(--page) fixed; }
     open("Mark vehicle in",
       `<p class="hint"><span class="plate">${esc(t.vehicleNumber)}</span> · ${esc(t.driverName)} · left ${fmt(t.outTime)} at <span class="odo">${km(t.startOdometer)}</span></p>
        <div class="two">${field("iIn","In time", inp("iIn",`type="datetime-local" value="${localInput(new Date())}"`))}
-        ${field("iOdo","End odometer (km)", inp("iOdo",`type="number" inputmode="numeric" min="${esc(t.startOdometer)}"`))}</div>
+        ${field("iOdo","End km", inp("iOdo",`type="number" inputmode="numeric" min="${esc(t.startOdometer)}"`))}</div>
        ${field("iRem","Remarks (optional)", inp("iRem",`maxlength="200" value="${esc(t.remarks||"")}"`))}
        ${field("iPhoto","Photo of the vehicle (optional)", `<input id="iPhoto" type="file" accept="image/*" capture="environment">`)}`,
       `<button class="btn ghost" type="button" data-dlgclose>Cancel</button><button class="btn" value="save">Mark in</button>`,

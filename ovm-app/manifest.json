@@ -1,13 +1,13 @@
 {
   "app": "Office Vehicle Manager",
   "web": {
-    "version": 39,
-    "notes": "New colourful page background",
+    "version": 40,
+    "notes": "Colourful forms",
     "files": [
       {
         "name": "index.html",
-        "sha256": "66ef3a2262664eefa055fae04b4928e1e37a896c3b89d6aed907124bdd6dc72a",
-        "size": 280771
+        "sha256": "3368d0f2a3b7472fb41e216520b0b5d8eaaac5650cacc526ed63c88ae96d81aa",
+        "size": 281891
       },
       {
         "name": "art.js",
