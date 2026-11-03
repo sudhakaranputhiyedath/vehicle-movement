@@ -1435,6 +1435,7 @@ body.signed-out { background: var(--page) fixed; }
       if (e && e.code === "invalid_argument" && !canWrite) return false;
       if (e && e.code === "invalid_argument") { canWrite = false; applyWrite(); notice("You can view this register but can't change it. Ask the owner for edit access."); }
       else if (e && e.code === "quota_exceeded") notice("Storage is full. Delete old trips to add new ones.");
+      else if (/only the person who dispatched/i.test(String((e && (e.message || (e.error && e.error.message))) || ""))) toast("Only the person who dispatched this vehicle (or an admin) can mark it in.");
       else toast("Couldn't save. Check the connection and try again.");
       return false;
     }
