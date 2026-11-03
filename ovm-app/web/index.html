@@ -1028,6 +1028,8 @@ dialog { background: var(--dlg-bg); }
 .two:has(input[type="datetime-local"]) { grid-template-columns: 1.45fr 1fr; }
 .field input[type="datetime-local"], .field input[type="date"] { min-width: 0; max-width: 100%; font-size: 14px; padding-left: 8px; padding-right: 6px; -webkit-appearance: none; appearance: none; }
 .dlg .td-card, .dlg .loc-msg, .share-opts a, .share-opts button { background: var(--surface); }
+.lock-note { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #9A3412; background: #FFF1E6; border-radius: 10px; padding: 8px 10px; }
+.lock-note svg { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 /* ===== Colourful theme (web 26) ===== */
 .homebtn { text-decoration: none; cursor: pointer; transition: transform .12s ease, background .15s; }
 @media (max-width: 380px) { .brand { font-size: 17px; gap: 8px; letter-spacing: .01em; } .top-right { gap: 6px; } }
@@ -1702,7 +1704,7 @@ body.signed-out { background: var(--page) fixed; }
       </div></div>
       ${t.hasOutPhoto || t.hasInPhoto ? `<div class="td-card"><h4>Photos</h4><div class="photo-row" data-photos="${esc(t._id)}">${photoCells(t)}</div></div>` : ""}
       ${gpsBlock(t) ? `<div class="td-card"><h4>Location</h4>${gpsBlock(t)}</div>` : ""}
-      ${isOut && canWrite ? `<button class="btn" type="button" data-markin="${esc(t._id)}" style="justify-content:center;padding:13px">Mark vehicle in</button>` : ""}`;
+      ${isOut && canWrite ? markInBlock(t, true) : ""}`;
   }
 
   // Taps that open windows
@@ -1889,7 +1891,7 @@ body.signed-out { background: var(--page) fixed; }
         <div style="grid-column:1/-1"><em>Purpose</em> ${esc(t.purpose)}${t.remarks ? " · " + esc(t.remarks) : ""}</div>
       </div>
       ${gpsBlock(t)}
-      ${open && canWrite ? `<div><button class="btn small" type="button" data-markin="${esc(t._id)}">Mark vehicle in</button></div>` : ""}
+      ${open && canWrite ? markInBlock(t, false) : ""}
     </div>`;
   }
 
@@ -2203,7 +2205,7 @@ body.signed-out { background: var(--page) fixed; }
         const track = !!($("#tTrack") && $("#tTrack").checked); let newTripId = null;
         let outPhoto = null; try { outPhoto = await uploadPhoto("tPhoto", 1024, 0.6); } catch { return err("That photo couldn't be read. Try another or leave it out."), false; }
         const ok = await write(async () => {
-          const ref = await db.collection("trips").add({ dispatchedBy: myName(), hasOutPhoto: !!outPhoto, vehicleId: v._id, vehicleNumber: v.vehicleNumber, vehiclePhotoId: v.photoId || null,
+          const ref = await db.collection("trips").add({ dispatchedBy: myName(), dispatchedById: me ? me.id : null, dispatchedByEmail: me ? (me.email || "") : "", hasOutPhoto: !!outPhoto, vehicleId: v._id, vehicleNumber: v.vehicleNumber, vehiclePhotoId: v.photoId || null,
             driverId: d._id, driverName: d.name, employeeName: emp, department: dept, place, purpose, outTime, inTime: null,
             startOdometer: Math.round(Number(odo)), endOdometer: null, totalDistance: null, status: "Out", remarks: $("#tRem").value.trim() });
           newTripId = ref.id;
@@ -2221,7 +2223,19 @@ body.signed-out { background: var(--page) fixed; }
     if (preV && vs.some(x => x._id === preV)) { $("#tVeh").value = preV; $("#tVeh").dispatchEvent(new Event("change")); }
   }
 
+  // Only the person who dispatched a trip (or an admin) can mark it in
+  function canMarkIn(t) {
+    if (!t || !me) return false;
+    if (member && member.role === "admin") return true;
+    if (t.dispatchedById) return t.dispatchedById === me.id;
+    if (t.dispatchedByEmail) return t.dispatchedByEmail === (me.email || "");
+    return !t.dispatchedBy || t.dispatchedBy === myName() || t.dispatchedBy === me.email;
+  }
+  const markInBlock = (t, big) => canMarkIn(t)
+    ? (big ? `<button class="btn" type="button" data-markin="${esc(t._id)}" style="justify-content:center;padding:13px">Mark vehicle in</button>` : `<div><button class="btn small" type="button" data-markin="${esc(t._id)}">Mark vehicle in</button></div>`)
+    : `<div class="lock-note"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>Only <b>${esc(t.dispatchedBy || "the person who dispatched it")}</b> can mark this vehicle in.</span></div>`;
   function markInForm(t) {
+    if (!canMarkIn(t)) { toast(`Only ${t && t.dispatchedBy ? t.dispatchedBy : "the person who dispatched it"} can mark this vehicle in.`); return; }
     open("Mark vehicle in",
       `<p class="hint"><span class="plate">${esc(t.vehicleNumber)}</span> · ${esc(t.driverName)} · left ${fmt(t.outTime)} at <span class="odo">${km(t.startOdometer)}</span></p>
        <div class="two">${field("iIn","In time", inp("iIn",`type="datetime-local" value="${localInput(new Date())}"`))}

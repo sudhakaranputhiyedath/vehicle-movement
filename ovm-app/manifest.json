@@ -1,13 +1,13 @@
 {
   "app": "Office Vehicle Manager",
   "web": {
-    "version": 41,
-    "notes": "Pick the driver from the list",
+    "version": 42,
+    "notes": "Only the person who dispatched a vehicle can mark it in",
     "files": [
       {
         "name": "index.html",
-        "sha256": "712f081e7aaf30d03565483f6a5127ecebf2409cf749b359b79fe317070af030",
-        "size": 281991
+        "sha256": "e35f404d7b2d47faa0e14cb25234cb451b0874ccdaebeff48bfec75fe7e20bb8",
+        "size": 283321
       },
       {
         "name": "art.js",
