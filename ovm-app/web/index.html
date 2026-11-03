@@ -2179,7 +2179,7 @@ body.signed-out { background: var(--page) fixed; }
     }
     open("Dispatch out",
       `<div class="two">${field("tVeh","Vehicle", sel("tVeh", vs.map(v => [v._id, `${v.vehicleNumber} · ${v.model}`])))}
-        ${field("tDrv","Driver", sel("tDrv", ds.map(d => [d._id, d.name])))}</div>
+        ${field("tDrv","Driver", sel("tDrv", [["", "Select…"], ...ds.map(d => [d._id, d.name])], ""))}</div>
        <div class="two">${field("tEmp","Employee", inp("tEmp",`maxlength="60" placeholder="Who is travelling"`))}
         ${field("tDeptSel","Department", deptNames().length ? sel("tDeptSel", [["", "Select…"], ...deptNames(), ["__new", "+ Add new…"]], "") + inp("tDept",`maxlength="60" placeholder="New department" style="margin-top:8px" hidden`) : inp("tDept",`maxlength="60" placeholder="e.g. Accounts"`))}</div>
        ${field("tPlace","Place", inp("tPlace",`list="placeOpts" maxlength="80" autocomplete="off"`) + `<datalist id="placeOpts">${S.places.map(p => `<option value="${esc(p.name)}">`).join("")}</datalist>`)}
@@ -2195,6 +2195,7 @@ body.signed-out { background: var(--page) fixed; }
         const ds0 = $("#tDeptSel"), dept = (ds0 && ds0.value !== "__new" ? ds0.value : $("#tDept").value).trim();
         const emp = $("#tEmp").value.trim(), place = $("#tPlace").value.trim(), purpose = $("#tPurpose").value.trim(), odo = $("#tOdo").value;
         if (!v || v.status !== "Available") return err("That vehicle was just taken on another phone. Pick another."), false;
+        if (!$("#tDrv").value) return err("Select the driver."), false;
         if (!d || d.status !== "Available") return err("That driver was just assigned on another phone. Pick another."), false;
         if (!emp || !dept || !place || !purpose) return err("Fill in employee, department, place and purpose."), false;
         if (odo === "" || Number(odo) < 0) return err("Enter the start odometer."), false;

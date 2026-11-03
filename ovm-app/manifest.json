@@ -1,13 +1,13 @@
 {
   "app": "Office Vehicle Manager",
   "web": {
-    "version": 40,
-    "notes": "Colourful forms",
+    "version": 41,
+    "notes": "Pick the driver from the list",
     "files": [
       {
         "name": "index.html",
-        "sha256": "3368d0f2a3b7472fb41e216520b0b5d8eaaac5650cacc526ed63c88ae96d81aa",
-        "size": 281891
+        "sha256": "712f081e7aaf30d03565483f6a5127ecebf2409cf749b359b79fe317070af030",
+        "size": 281991
       },
       {
         "name": "art.js",
