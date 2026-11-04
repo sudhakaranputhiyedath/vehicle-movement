@@ -1,13 +1,13 @@
 {
   "app": "Office Vehicle Manager",
   "web": {
-    "version": 44,
-    "notes": "Vehicle pictures on the live map",
+    "version": 45,
+    "notes": "Website version for computer and iPhone",
     "files": [
       {
         "name": "index.html",
-        "sha256": "58c53a2a5e6b2bc143e58568d78ab059f1b5f0b2f6131a45199657cb0aca3e3a",
-        "size": 285515
+        "sha256": "bfc6f1bf67e085813584b070f7a8e75ab8307c5b1bd12bbaf1511c774f3c15d5",
+        "size": 286158
       },
       {
         "name": "art.js",
