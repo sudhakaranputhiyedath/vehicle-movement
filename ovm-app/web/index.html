@@ -1030,6 +1030,19 @@ dialog { background: var(--dlg-bg); }
 .dlg .td-card, .dlg .loc-msg, .share-opts a, .share-opts button { background: var(--surface); }
 .lock-note { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #9A3412; background: #FFF1E6; border-radius: 10px; padding: 8px 10px; }
 .lock-note svg { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Map marker: car picture in a bubble with its number plate */
+.carpin { position: absolute; left: 0; top: 0; transform: translate(-50%, -100%); display: grid; justify-items: center; gap: 2px; pointer-events: auto; }
+.carpin .cp-bubble { position: relative; width: 62px; height: 46px; border-radius: 16px; background: #fff; border: 3px solid #16A34A; box-shadow: 0 4px 12px rgba(0,0,0,.3); display: grid; place-items: center; }
+.carpin .cp-bubble::after { content: ""; position: absolute; bottom: -10px; left: 50%; margin-left: -8px; border: 8px solid transparent; border-top-color: #16A34A; border-bottom: 0; }
+.carpin .cp-car { width: 50px; display: block; } .carpin .cp-car svg { width: 100%; height: auto; display: block; }
+.carpin .cp-car.flip { transform: scaleX(-1); }
+.carpin .cp-plate { margin-top: 8px; background: var(--plate); color: var(--plate-ink); border: 2px solid #1A1A1A; border-radius: 5px; font: 700 12px/1.35 var(--f-display); letter-spacing: .05em; padding: 0 5px; white-space: nowrap; box-shadow: 0 2px 5px rgba(0,0,0,.3); }
+.carpin.stale .cp-bubble { border-color: #94A3B8; } .carpin.stale .cp-bubble::after { border-top-color: #94A3B8; } .carpin.stale { opacity: .75; }
+@media (prefers-reduced-motion: no-preference) {
+  .carpin.live .cp-bubble::before { content: ""; position: absolute; inset: -3px; border-radius: 16px; border: 3px solid #22C55E; animation: cpPulse 1.8s ease-out infinite; }
+  @keyframes cpPulse { from { opacity: .8; transform: scale(1); } to { opacity: 0; transform: scale(1.35); } }
+}
 /* ===== Colourful theme (web 26) ===== */
 .homebtn { text-decoration: none; cursor: pointer; transition: transform .12s ease, background .15s; }
 @media (max-width: 380px) { .brand { font-size: 17px; gap: 8px; letter-spacing: .01em; } .top-right { gap: 6px; } }
@@ -1856,7 +1869,11 @@ body.signed-out { background: var(--page) fixed; }
       pts.push(...line);
     }
     live.forEach(p => {
-      L.marker([p.lat, p.lng], { icon: L.divIcon({ className: "pinwrap", html: `<span class="pin ${fresh(p.at) ? "" : "stale"}">${esc(p.vehicleNumber)}</span>`, iconSize: [0, 0] }) })
+      const vv = S.vehicles.find(x => x.vehicleNumber === p.vehicleNumber) || {};
+      const path = p.path || [], a = path[path.length - 2], z = path[path.length - 1];
+      const west = a && z && z[1] < a[1] - 0.00002; // facing the way it is driving (left or right)
+      let car = ""; try { car = ART.vehicle(vv.type); } catch {}
+      L.marker([p.lat, p.lng], { icon: L.divIcon({ className: "pinwrap", html: `<div class="carpin ${fresh(p.at) ? "live" : "stale"}"><div class="cp-bubble"><span class="cp-car${west ? " flip" : ""}">${car}</span></div><span class="cp-plate">${esc(p.vehicleNumber)}</span></div>`, iconSize: [0, 0] }) })
         .addTo(mapLayer).bindPopup(`<b>${esc(p.vehicleNumber)}</b><br>${esc(p.driverName)}<br>${ago(p.at)}`);
       if (!routeTrip) pts.push([p.lat, p.lng]);
     });

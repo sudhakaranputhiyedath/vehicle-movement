@@ -1,13 +1,13 @@
 {
   "app": "Office Vehicle Manager",
   "web": {
-    "version": 43,
-    "notes": "Only the person who dispatched a vehicle can mark it in",
+    "version": 44,
+    "notes": "Vehicle pictures on the live map",
     "files": [
       {
         "name": "index.html",
-        "sha256": "1bd427ddf6f466f0b11e24eebe5afe14141589b53637d56ee392b6badbddfcdb",
-        "size": 283526
+        "sha256": "58c53a2a5e6b2bc143e58568d78ab059f1b5f0b2f6131a45199657cb0aca3e3a",
+        "size": 285515
       },
       {
         "name": "art.js",
